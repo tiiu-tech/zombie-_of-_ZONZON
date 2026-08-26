@@ -56,7 +56,7 @@
   }
 
   .serif{font-family:'Shippori Mincho',serif;}
-  .display{font-family:'Anton','Dela Gothic One',sans-serif;}
+  .display{font-family:'Playfair Display',serif;}
   .type{font-family:'Courier Prime',monospace;}
 
   .fx-link{transition:letter-spacing .18s ease, color .18s ease; cursor:var(--cursor-tap);}
@@ -70,7 +70,7 @@
     border:none; padding:4px 10px; cursor:var(--cursor-tap);}
   .lang-btn:hover{background:var(--red);}
   .masthead{display:flex; align-items:center; justify-content:center; padding:16px 0 8px; text-align:center;}
-  .masthead h1{font-family:'Anton','Dela Gothic One',sans-serif; font-weight:900; font-size:44px; margin:0; letter-spacing:.01em; line-height:1;
+  .masthead h1{font-family:'Playfair Display',serif; font-weight:900; font-size:44px; margin:0; letter-spacing:.01em; line-height:1;
     position:relative; display:inline-block;}
   .masthead h1 .txt{opacity:0; transition:opacity .4s ease;}
   .masthead h1 canvas{position:absolute; left:0; top:0; opacity:1; transition:opacity .4s ease;}
@@ -103,7 +103,7 @@
   .case-box{border:1px solid var(--ink); background:var(--paper-2); padding:20px 22px; margin-bottom:10px;}
   .case-kicker{font-family:'Courier Prime',monospace; font-size:11px; letter-spacing:.14em; color:var(--red); margin-bottom:8px;}
   .case-kicker::before{content:'▍ ';}
-  .case-box h2{font-family:'Anton','Dela Gothic One',sans-serif; font-weight:900; font-size:20px; margin:0 0 10px;}
+  .case-box h2{font-family:'Playfair Display',serif; font-weight:900; font-size:20px; margin:0 0 10px;}
   .case-box p{font-family:'Shippori Mincho',serif; font-size:13.5px; line-height:1.95; color:var(--ink-soft); margin:0;}
 
   /* ---------- cast ---------- */
@@ -174,49 +174,56 @@
   /* ---------- section headers ---------- */
   .section{margin-top:38px;}
   .section-head{display:flex; align-items:baseline; gap:12px; margin-bottom:14px;}
-  .section-head h3{font-family:'Anton','Dela Gothic One',sans-serif; font-weight:900; font-size:19px; margin:0; white-space:nowrap;}
+  .section-head h3{font-family:'Playfair Display',serif; font-weight:900; font-size:19px; margin:0; white-space:nowrap;}
   .section-head .rule{flex:1; height:2px; background:var(--ink);}
   .section-note{font-family:'Courier Prime',monospace; font-size:10.5px; color:var(--ink-soft); white-space:nowrap;}
 
-  /* ---------- hero ---------- */
-  .hero{display:none; grid-template-columns:1.35fr 1fr; gap:24px; margin-top:44px; padding-bottom:26px; margin-bottom:6px; border-bottom:3px double var(--ink);}
-  @media (max-width:720px){ .hero{grid-template-columns:1fr;} }
-  .hero-photo{position:relative; background:#000; aspect-ratio:16/10; overflow:hidden; border:1px solid var(--ink);}
-  .hero-photo.pop{animation:heroPop .5s cubic-bezier(.34,1.56,.64,1);}
+  /* ---------- stage: the big hero + selector, built to actually dominate the
+     screen instead of sitting as a small photo+text pair ---------- */
+  .stage{display:none; position:relative; margin-top:28px; padding:30px 0 8px;
+    background-color:var(--stage-tint, transparent); transition:background-color .6s ease;}
+  .stage-inner{max-width:1080px; margin:0 auto; padding:0 24px;}
+  .stage-photo{position:relative; background:#000; width:100%; height:clamp(300px,58vh,600px);
+    overflow:hidden; border:1px solid var(--ink); box-shadow:0 20px 44px rgba(28,24,17,0.28);}
+  .stage-photo.pop{animation:heroPop .5s cubic-bezier(.34,1.56,.64,1);}
   @keyframes heroPop{
     0%{ transform:scale(1,1); }
     30%{ transform:scale(0.93,1.05); }
     62%{ transform:scale(1.06,0.95); }
     100%{ transform:scale(1,1); }
   }
-  .hero-photo.portrait{aspect-ratio:9/16; max-width:260px; margin:0 auto;}
-  .hero-photo img{width:100%; height:100%; object-fit:cover; filter:grayscale(65%) sepia(28%) contrast(1.08) brightness(.92);}
-  .hero-preview{position:absolute; inset:0; opacity:0; pointer-events:none; transition:opacity .35s ease; background:#000;}
+  .stage-photo.portrait{width:min(320px,72vw); height:clamp(380px,66vh,600px); margin:0 auto;}
+  .stage-photo img{width:100%; height:100%; object-fit:cover; filter:grayscale(60%) sepia(26%) contrast(1.1) brightness(.88);}
+  .hero-preview{position:absolute; inset:0; opacity:0; pointer-events:none; transition:opacity .35s ease; background:#000; z-index:1;}
   .hero-preview.show{opacity:1;}
   .hero-preview iframe{position:absolute; inset:0; width:100%; height:100%; border:0;}
-  .hero-photo .play-btn{position:absolute; inset:0; margin:auto; width:58px; height:58px; border-radius:50%;
-    background:rgba(233,225,205,0.9); border:2px solid var(--ink); display:flex; align-items:center; justify-content:center;
+  .stage-photo .play-btn{position:absolute; inset:0; margin:auto; width:78px; height:78px; border-radius:50%; z-index:3;
+    background:rgba(233,225,205,0.92); border:2px solid var(--ink); display:flex; align-items:center; justify-content:center;
     cursor:var(--cursor-tap); transition:transform .15s ease;}
-  .hero-photo .play-btn:hover{transform:scale(1.07);}
-  .hero-photo .caption-bar{position:absolute; left:0; right:0; bottom:0; background:rgba(28,24,17,0.82); color:var(--paper);
-    font-family:'Courier Prime',monospace; font-size:10px; letter-spacing:.05em; padding:5px 9px; display:flex; justify-content:space-between;}
-  .hero-body{display:flex; flex-direction:column; justify-content:center; padding:4px 0;}
-  .kicker{font-family:'Courier Prime',monospace; font-size:11px; letter-spacing:.14em; color:var(--red); margin-bottom:8px;}
+  .stage-photo .play-btn:hover{transform:scale(1.08);}
+  .stage-photo .caption-bar{position:absolute; left:0; right:0; top:0; z-index:3; background:rgba(28,24,17,0.68); color:var(--paper);
+    font-family:'Courier Prime',monospace; font-size:10.5px; letter-spacing:.06em; padding:7px 12px; display:flex; justify-content:space-between;}
+  .stage-scrim{position:absolute; left:0; right:0; bottom:0; height:65%; z-index:1; pointer-events:none;
+    background:linear-gradient(to top, rgba(15,13,9,0.9), rgba(15,13,9,0.4) 58%, transparent);}
+  .stage-title-wrap{position:absolute; left:0; right:0; bottom:0; z-index:2; padding:20px 24px 22px;}
+  .kicker{font-family:'Courier Prime',monospace; font-size:11px; letter-spacing:.16em; color:var(--red-bright); margin-bottom:8px;}
   .kicker::before{content:'▍ ';}
-  .hero-body h2{font-family:'Anton','Dela Gothic One',sans-serif; font-weight:900; font-size:26px; margin:0 0 10px; line-height:1.28;}
-  .hero-body p{font-family:'Shippori Mincho',serif; font-size:13px; color:var(--ink-soft); line-height:1.9; margin:0 0 16px;}
-  .hero-progress{height:6px; background:var(--paper-2); border:1px solid var(--ink); position:relative;}
+  .stage-title{font-family:'Playfair Display',serif; font-weight:900; color:var(--paper);
+    font-size:clamp(32px,6.4vw,68px); line-height:1; margin:0 0 10px; text-shadow:0 4px 20px rgba(0,0,0,.65);}
+  .stage-desc{font-family:'Shippori Mincho',serif; font-size:13.5px; color:rgba(233,225,205,0.9); line-height:1.85;
+    max-width:640px; margin:0 0 12px; text-shadow:0 2px 10px rgba(0,0,0,.75);}
+  .hero-progress{height:6px; background:rgba(233,225,205,0.25); border:1px solid rgba(233,225,205,0.45); position:relative; max-width:320px;}
   .hero-progress i{display:block; height:100%; background:repeating-linear-gradient(45deg, var(--red) 0 6px, var(--red-bright) 6px 12px);}
-  .hero-progress-label{font-family:'Courier Prime',monospace; font-size:10px; margin-top:6px; color:var(--ink-soft);}
+  .hero-progress-label{font-family:'Courier Prime',monospace; font-size:10px; margin-top:6px; color:rgba(233,225,205,0.8);}
 
   /* ---------- episode fan: trading-card hand, horizontally scrollable ---------- */
-  .files-section{position:relative;}
-  .files-section::before{
-    content:''; position:absolute; z-index:0; inset:-16px -12px auto -12px; height:280px;
+  .stage-selector{position:relative; margin-top:6px;}
+  .stage-selector::before{
+    content:''; position:absolute; z-index:0; inset:-16px -12px auto -12px; height:260px;
     background:url('assets/wanted-board.png') center/contain no-repeat;
-    opacity:.16; filter:grayscale(55%) sepia(22%) contrast(1.05); pointer-events:none;
+    opacity:.14; filter:grayscale(55%) sepia(22%) contrast(1.05); pointer-events:none;
   }
-  .files-section > *{position:relative; z-index:1;}
+  .stage-selector > *{position:relative; z-index:1;}
   .fan-wrap{overflow-x:auto; overflow-y:visible; -webkit-overflow-scrolling:touch; padding:60px 6px 44px;}
   .fan-track{display:flex; align-items:flex-end; width:max-content; padding:0 26px;}
   .card{
@@ -290,7 +297,7 @@
 
   /* ---------- how to use ---------- */
   details.how{border:1px solid var(--ink); background:var(--paper-2); padding:4px 18px;}
-  details.how summary{font-family:'Anton','Dela Gothic One',sans-serif; font-weight:900; font-size:14px; padding:12px 0; cursor:var(--cursor-tap); list-style:none;}
+  details.how summary{font-family:'Playfair Display',serif; font-weight:900; font-size:14px; padding:12px 0; cursor:var(--cursor-tap); list-style:none;}
   details.how summary::-webkit-details-marker{display:none;}
   details.how summary::before{content:'▸ '; color:var(--red);}
   details.how[open] summary::before{content:'▾ ';}
@@ -336,7 +343,7 @@
     opacity:0; transform:translateY(6px); transition:opacity .2s ease, transform .2s ease; pointer-events:none;}
   .copy-toast.show{opacity:1; transform:translateY(0);}
   .player-bar{display:flex; justify-content:space-between; align-items:center; padding:12px 4px 4px;}
-  .player-bar h3{font-family:'Anton','Dela Gothic One',sans-serif; font-weight:900; font-size:15px; margin:0;}
+  .player-bar h3{font-family:'Playfair Display',serif; font-weight:900; font-size:15px; margin:0;}
   .close-btn{background:var(--ink); border:none; color:var(--paper); cursor:var(--cursor-tap); padding:7px 14px;
     font-family:'Courier Prime',monospace; font-size:11px; letter-spacing:.06em;}
   .close-btn:hover{background:var(--red);}
@@ -490,23 +497,11 @@
     100%{ transform:translate(-50%,-50%) scale(1) rotate(-3deg); opacity:.09; }
   }
 
-  /* newspaper-style geometric flourishes that pop in alongside the motif —
-     halftone dots, a hand-drawn spiral, a star burst, all in ink/red only */
+  /* fun character/prop cutouts that pop in around the motif */
   .motif-deco{position:fixed; left:50%; top:38%; z-index:0; pointer-events:none;
     width:1px; height:1px;}
   .deco-piece{position:absolute; opacity:0; color:var(--ink); transform-origin:center; --deco-rot:0deg;}
   .motif-deco.show .deco-piece{animation:decoPop .6s cubic-bezier(.22,1.6,.4,1) both;}
-  .deco-halftone{width:130px; height:130px; left:-372px; top:-172px; --deco-rot:-6deg;
-    background-image:radial-gradient(var(--ink) 3px, transparent 3.5px);
-    background-size:14px 14px; opacity:0; border-radius:50%;
-    -webkit-mask-image:radial-gradient(circle, #000 55%, transparent 78%);
-            mask-image:radial-gradient(circle, #000 55%, transparent 78%);}
-  .motif-deco.show .deco-halftone{animation-delay:.05s;}
-  .deco-spiral{width:90px; height:90px; left:265px; top:-205px; color:var(--red); --deco-rot:11deg;}
-  .motif-deco.show .deco-spiral{animation-delay:.18s;}
-  .deco-star{width:54px; height:54px; left:312px; top:106px; background:var(--ink); --deco-rot:-16deg;
-    clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
-  .motif-deco.show .deco-star{animation-delay:.3s;}
   .deco-tanuki{width:76px; height:auto; left:-248px; top:126px; filter:sepia(20%) contrast(1.05); --deco-rot:7deg;}
   .deco-tanuki img{display:block; width:100%; height:auto;}
   .motif-deco.show .deco-tanuki{animation-delay:.42s;}
@@ -557,11 +552,6 @@
 
 <div class="bg-motif" id="bgMotif"></div>
 <div class="motif-deco" id="motifDeco">
-  <div class="deco-piece deco-halftone"></div>
-  <svg class="deco-piece deco-spiral" viewBox="0 0 100 100" aria-hidden="true">
-    <path d="M50 50 m0 -34 a34 34 0 1 1 -24 10 a23 23 0 1 0 16 -7 a12 12 0 1 1 -8 3.5" fill="none" stroke="currentColor" stroke-width="4"/>
-  </svg>
-  <div class="deco-piece deco-star"></div>
   <div class="deco-piece deco-tanuki"><img src="assets/deco-tanuki.png" alt=""></div>
   <div class="deco-piece deco-ghost"><img src="assets/deco-ghost-garden.png" alt=""></div>
   <div class="deco-piece deco-menu"><img src="assets/deco-ramen-menu.png" alt=""></div>
@@ -605,28 +595,30 @@
     <div class="cast-grid" id="castGrid"></div>
   </section>
 
-  <section class="hero" id="heroSection">
-    <div class="hero-photo">
-      <img id="heroImg" alt="">
-      <div class="hero-preview" id="heroPreview"><div id="heroPreviewPlayer"></div></div>
-      <div class="play-btn" id="heroPlay">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="#1c1811"><path d="M8 5v14l11-7z"/></svg>
+  <section class="stage" id="heroSection">
+    <div class="stage-inner">
+      <div class="stage-photo">
+        <img id="heroImg" alt="">
+        <div class="hero-preview" id="heroPreview"><div id="heroPreviewPlayer"></div></div>
+        <div class="stage-scrim"></div>
+        <div class="play-btn" id="heroPlay">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="#1c1811"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+        <div class="caption-bar"><span id="heroFileTag"></span><span id="heroCaptionR"></span></div>
+        <div class="stage-title-wrap">
+          <div class="kicker" id="heroKicker"></div>
+          <h2 class="stage-title" id="heroTitle"></h2>
+          <p class="stage-desc" id="heroDesc"></p>
+          <div class="hero-progress"><i id="heroProgressBar" style="width:0%"></i></div>
+          <div class="hero-progress-label" id="heroMeta"></div>
+        </div>
       </div>
-      <div class="caption-bar"><span id="heroFileTag"></span><span id="heroCaptionR"></span></div>
+      <div class="stage-selector">
+        <div class="section-head"><h3 id="filesTitle"></h3><div class="rule"></div><div class="section-note" id="epCount"></div></div>
+        <div class="fan-hint" id="fanHint"></div>
+        <div class="fan-wrap"><div class="fan-track" id="episodeGrid"></div></div>
+      </div>
     </div>
-    <div class="hero-body">
-      <div class="kicker" id="heroKicker"></div>
-      <h2 id="heroTitle"></h2>
-      <p id="heroDesc"></p>
-      <div class="hero-progress"><i id="heroProgressBar" style="width:0%"></i></div>
-      <div class="hero-progress-label" id="heroMeta"></div>
-    </div>
-  </section>
-
-  <section class="section reveal files-section">
-    <div class="section-head"><h3 id="filesTitle"></h3><div class="rule"></div><div class="section-note" id="epCount"></div></div>
-    <div class="fan-hint" id="fanHint"></div>
-    <div class="fan-wrap"><div class="fan-track" id="episodeGrid"></div></div>
   </section>
 
   <section class="section reveal">
@@ -725,24 +717,24 @@
    EPISODES — edit to match your own videos
    ============================================================ */
 const EPISODES = [
-  { id:'ep1',  file:'FILE No.01', youtubeId:'mmNg6tUpvl8', motif:'🚕' },
-  { id:'ep2',  file:'FILE No.02', youtubeId:'abehBqF2MDI', motif:'👣' },
-  { id:'ep3',  file:'FILE No.03', youtubeId:'Jxdf2ShIVHs', motif:'🌆' },
-  { id:'ep4',  file:'FILE No.04', youtubeId:'T1yh4oK0NpE', motif:'🧹' },
-  { id:'ep5',  file:'FILE No.05', youtubeId:'IOipqTv6x9A', motif:'👮' },
-  { id:'ep6',  file:'FILE No.06', youtubeId:'DmPEd5VoYGo', motif:'🎨', motifImg:'assets/motif-graffiti-pole.jpg' },
-  { id:'ep7',  file:'FILE No.07', youtubeId:'IjHa2xjz2ac', motif:'✈️' },
-  { id:'ep8',  file:'FILE No.08', youtubeId:'lG2Ct3yzTP0', motif:'🗄️' },
-  { id:'ep9',  file:'FILE No.09', youtubeId:'bYoKzdgqxT8', landscape:true, motif:'💃' },
-  { id:'ep10', file:'FILE No.10', youtubeId:'lBQiqaEwZ_s', motif:'🚲' },
-  { id:'ep11', file:'FILE No.11', youtubeId:'NOmnHm29CTU', motif:'🍽️' },
-  { id:'ep12', file:'FILE No.12', youtubeId:'h0PvusGBk54', motif:'🚿' },
-  { id:'ep13', file:'FILE No.13', youtubeId:'iuTsbSdC3UQ', motif:'💈' },
-  { id:'ep14', file:'FILE No.14', youtubeId:'Zu4xZ1Dxhsk', motif:'🎈' },
-  { id:'ep15', file:'FILE No.15', youtubeId:'NwntQ6asoQc', motif:'📄' },
-  { id:'ep16', file:'FILE No.16', coming:true, motifImg:'assets/motif-hq-raid.jpg' },
-  { id:'ep17', file:'FILE No.17', coming:true, motifImg:'assets/motif-gochagocha-base.jpg', landscape:true },
-  { id:'ep18', file:'FILE No.18', coming:true, motifImg:'assets/motif-rusty-raider.png' },
+  { id:'ep1',  file:'FILE No.01', youtubeId:'mmNg6tUpvl8', motif:'🚕', mood:'#8a6a2a' },
+  { id:'ep2',  file:'FILE No.02', youtubeId:'abehBqF2MDI', motif:'👣', mood:'#6a4a4a' },
+  { id:'ep3',  file:'FILE No.03', youtubeId:'Jxdf2ShIVHs', motif:'🌆', mood:'#7a5248' },
+  { id:'ep4',  file:'FILE No.04', youtubeId:'T1yh4oK0NpE', motif:'🧹', mood:'#5a5a3a' },
+  { id:'ep5',  file:'FILE No.05', youtubeId:'IOipqTv6x9A', motif:'👮', mood:'#33465a' },
+  { id:'ep6',  file:'FILE No.06', youtubeId:'DmPEd5VoYGo', motif:'🎨', motifImg:'assets/motif-graffiti-pole.png', mood:'#4a5a2e' },
+  { id:'ep7',  file:'FILE No.07', youtubeId:'IjHa2xjz2ac', motif:'✈️', mood:'#2e5a52' },
+  { id:'ep8',  file:'FILE No.08', youtubeId:'lG2Ct3yzTP0', motif:'🗄️', mood:'#5a4a32' },
+  { id:'ep9',  file:'FILE No.09', youtubeId:'bYoKzdgqxT8', landscape:true, motif:'💃', mood:'#8a4a32' },
+  { id:'ep10', file:'FILE No.10', youtubeId:'lBQiqaEwZ_s', motif:'🚲', mood:'#2e5266' },
+  { id:'ep11', file:'FILE No.11', youtubeId:'NOmnHm29CTU', motif:'🍽️', mood:'#8a6e2a' },
+  { id:'ep12', file:'FILE No.12', youtubeId:'h0PvusGBk54', motif:'🚿', mood:'#4a4460' },
+  { id:'ep13', file:'FILE No.13', youtubeId:'iuTsbSdC3UQ', motif:'💈', mood:'#7a3232' },
+  { id:'ep14', file:'FILE No.14', youtubeId:'Zu4xZ1Dxhsk', motif:'🎈', mood:'#565248' },
+  { id:'ep15', file:'FILE No.15', youtubeId:'NwntQ6asoQc', motif:'📄', mood:'#4a4438' },
+  { id:'ep16', file:'FILE No.16', coming:true, motifImg:'assets/motif-hq-raid.png', mood:'#3a4048' },
+  { id:'ep17', file:'FILE No.17', coming:true, motifImg:'assets/motif-gochagocha-base.png', landscape:true, mood:'#2e3a52' },
+  { id:'ep18', file:'FILE No.18', coming:true, motifImg:'assets/motif-rusty-raider.png', mood:'#6a4030' },
   // { id:'ep19', file:'FILE No.19', youtubeId:'', coming:true },  // ← add more like this
 ];
 
@@ -1021,6 +1013,12 @@ function applyStaticText(){
   document.querySelectorAll('[data-tap]').forEach(el=>{ el.textContent = currentLang==='ja' ? 'タップ →' : 'TAP →'; });
 }
 
+// tints the whole stage background toward the episode's mood color —
+// muted, not a full Y2K palette swap, but enough that the scene visibly reacts
+function setStageMood(ep){
+  document.getElementById('heroSection').style.setProperty('--stage-tint', ep.mood || 'transparent');
+}
+
 function renderHero(){
   const S = STRINGS[currentLang];
   const watchedIds = Object.keys(progressCache).sort((a,b)=>progressCache[b].lastWatchedAt-progressCache[a].lastWatchedAt);
@@ -1030,7 +1028,7 @@ function renderHero(){
 
   if(heroEp){
     const n = EPISODES.findIndex(e=>e.id===heroEp.id);
-    hero.style.display = 'grid';
+    hero.style.display = 'block';
     revealHeroOnce(hero);
     bounceHero();
     document.getElementById('heroImg').parentElement.classList.toggle('portrait', !heroEp.landscape);
@@ -1038,6 +1036,7 @@ function renderHero(){
     document.getElementById('heroImg').onerror = function(){ this.onerror=null; this.src = thumbLo(heroEp.youtubeId); };
     document.getElementById('heroFileTag').textContent = heroEp.file;
     kineticText(document.getElementById('heroTitle'), epTitle(n));
+    setStageMood(heroEp);
     const syn = SYNOPSIS[heroEp.id] && SYNOPSIS[heroEp.id][currentLang] ? SYNOPSIS[heroEp.id][currentLang] : SYNOPSIS_FALLBACK[currentLang];
     document.getElementById('heroDesc').textContent = syn.split('\n')[0];
     if(continueId){
@@ -1058,7 +1057,7 @@ function renderHero(){
 // while a fan card is selected, the big screen's text syncs to that episode too —
 // not just the silent preview video
 function bounceHero(){
-  const photo = document.querySelector('.hero-photo');
+  const photo = document.querySelector('.stage-photo');
   if(!photo) return;
   photo.classList.remove('pop');
   void photo.offsetWidth; // force reflow so the animation can restart every time
@@ -1067,12 +1066,13 @@ function bounceHero(){
 function previewHeroText(ep, idx, title){
   const S = STRINGS[currentLang];
   const hero = document.getElementById('heroSection');
-  hero.style.display = 'grid';
+  hero.style.display = 'block';
   bounceHero();
   document.getElementById('heroImg').parentElement.classList.toggle('portrait', !ep.landscape);
   document.getElementById('heroFileTag').textContent = ep.file;
   kineticText(document.getElementById('heroTitle'), title);
   setBgMotif(ep);
+  setStageMood(ep);
   const syn = SYNOPSIS[ep.id] && SYNOPSIS[ep.id][currentLang] ? SYNOPSIS[ep.id][currentLang] : SYNOPSIS_FALLBACK[currentLang];
   document.getElementById('heroDesc').textContent = syn.split('\n')[0];
   document.getElementById('heroKicker').textContent = currentLang==='ja' ? 'プレビュー中' : 'NOW PREVIEWING';
@@ -1087,7 +1087,7 @@ function previewHeroText(ep, idx, title){
 // just the hero art and title so the background motif can show it off
 function previewComingSoon(ep, title){
   const hero = document.getElementById('heroSection');
-  hero.style.display = 'grid';
+  hero.style.display = 'block';
   bounceHero();
   document.getElementById('heroImg').parentElement.classList.remove('portrait');
   document.getElementById('heroImg').src = ep.motifImg;
@@ -1101,6 +1101,7 @@ function previewComingSoon(ep, title){
   document.getElementById('heroMeta').textContent = '';
   document.getElementById('heroPlay').onclick = null;
   setBgMotif(ep);
+  setStageMood(ep);
 }
 
 function render(){
@@ -1651,7 +1652,7 @@ function pixelAssembleTitle(){
   const canvas = document.getElementById('titleCanvas');
   const text = txtEl.textContent;
   const fontSize = 44;
-  const font = `900 ${fontSize}px 'Anton', 'Dela Gothic One', sans-serif`;
+  const font = `900 ${fontSize}px 'Playfair Display', serif`;
   const measure = document.createElement('canvas').getContext('2d');
   measure.font = font;
   const w = Math.ceil(measure.measureText(text).width) + 8;
@@ -1796,7 +1797,7 @@ document.getElementById('bgmNote').textContent = currentLang==='ja'
 // the background glows a soft red wherever the cursor hovers a
 // card/photo, like the scene is reacting to what you're looking at
 const spotlightEl = document.getElementById('spotlight');
-const SPOTLIGHT_TARGETS = '.cast-card, .card:not(.coming), .hero-photo, .history-row';
+const SPOTLIGHT_TARGETS = '.cast-card, .card:not(.coming), .stage-photo, .history-row';
 document.addEventListener('mousemove', (e)=>{
   if(e.target.closest(SPOTLIGHT_TARGETS)){
     spotlightEl.classList.add('show');
