@@ -408,6 +408,19 @@
   @keyframes neonFlicker{
     0%{opacity:0;} 8%{opacity:1;} 13%{opacity:.35;} 21%{opacity:1;} 29%{opacity:.55;} 38%{opacity:1;} 100%{opacity:1;}
   }
+  .bgm-zoom-preview{position:fixed; z-index:70; width:300px; pointer-events:none;
+    opacity:0; transform:scale(.82); transform-origin:bottom right;
+    transition:opacity .16s ease, transform .22s cubic-bezier(.22,1.5,.36,1);
+    border-radius:6px; overflow:hidden; background:#0c0c10;
+    box-shadow:0 18px 44px rgba(0,0,0,0.55), 0 0 0 2px var(--red-bright);}
+  .bgm-zoom-preview.show{opacity:1; transform:scale(1);}
+  .bgm-zoom-preview img{display:block; width:100%; height:auto;}
+  .bgm-zoom-highlight{position:absolute; border:2px solid var(--red-bright); border-radius:4px;
+    box-shadow:0 0 0 3px rgba(178,58,72,.35), 0 0 18px 5px rgba(178,58,72,.55);}
+  .bgm-zoom-caption{position:absolute; left:0; right:0; bottom:0; padding:7px 10px;
+    background:linear-gradient(to top, rgba(0,0,0,.85), transparent);
+    font-family:'Anton',sans-serif; letter-spacing:.05em; font-size:15px; color:#eafcff;
+    text-shadow:0 0 6px #4fd6ff; text-align:center;}
   .bgm-note{font-family:'Courier Prime',monospace; font-size:8.5px; color:var(--ink-soft); margin-top:2px; line-height:1.5;}
 
   /* ---------- motion upgrade: hover spotlight, magnetic buttons, kinetic type, ink bursts ---------- */
@@ -660,6 +673,11 @@
       <a class="bgm-hotspot" id="bgmHotspot1" target="_blank" rel="noopener" style="left:38.2%; top:57.0%; width:25.3%; height:8.6%;"></a>
       <a class="bgm-hotspot" id="bgmHotspot2" target="_blank" rel="noopener" style="left:71.4%; top:34.5%; width:13.2%; height:38.6%;"></a>
       <div class="bgm-hotspot-label" id="bgmHotspotLabel"></div>
+    </div>
+    <div class="bgm-zoom-preview" id="bgmZoomPreview">
+      <img src="assets/bgm-station.png" alt="">
+      <div class="bgm-zoom-highlight" id="bgmZoomHighlight"></div>
+      <div class="bgm-zoom-caption" id="bgmZoomCaption"></div>
     </div>
     <div class="bgm-note" id="bgmNote"></div>
   </div>
@@ -1663,6 +1681,9 @@ const BGM_TRACKS = [
 
 function buildBgmLinks(){
   const label = document.getElementById('bgmHotspotLabel');
+  const zoom = document.getElementById('bgmZoomPreview');
+  const zoomHighlight = document.getElementById('bgmZoomHighlight');
+  const zoomCaption = document.getElementById('bgmZoomCaption');
   BGM_TRACKS.forEach((t, i)=>{
     const a = document.getElementById('bgmHotspot'+i);
     if(!a) return;
@@ -1677,8 +1698,23 @@ function buildBgmLinks(){
       label.classList.remove('show');
       void label.offsetWidth;
       label.classList.add('show');
+
+      // pop a bigger version of the whole sign board up above the panel,
+      // with the hovered sign ringed and named, so it's obvious what you're about to open
+      const panelRect = document.getElementById('bgmPanel').getBoundingClientRect();
+      zoom.style.right = (window.innerWidth - panelRect.right) + 'px';
+      zoom.style.bottom = (window.innerHeight - panelRect.top + 12) + 'px';
+      zoomHighlight.style.left = a.style.left;
+      zoomHighlight.style.top = a.style.top;
+      zoomHighlight.style.width = a.style.width;
+      zoomHighlight.style.height = a.style.height;
+      zoomCaption.textContent = t.label;
+      zoom.classList.add('show');
     });
-    a.addEventListener('mouseleave', ()=> label.classList.remove('show'));
+    a.addEventListener('mouseleave', ()=>{
+      label.classList.remove('show');
+      zoom.classList.remove('show');
+    });
   });
 }
 
