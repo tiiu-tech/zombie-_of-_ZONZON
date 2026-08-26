@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>THE FILE — 事件簿</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Shippori+Mincho:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&family=Courier+Prime:wght@400;700&family=Anton&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Shippori+Mincho:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&family=Courier+Prime:wght@400;700&family=Anton&family=Dela+Gothic+One&display=swap" rel="stylesheet">
 <style>
 
   /* ============================================================
@@ -56,7 +56,7 @@
   }
 
   .serif{font-family:'Shippori Mincho',serif;}
-  .display{font-family:'Anton','Shippori Mincho',sans-serif;}
+  .display{font-family:'Anton','Dela Gothic One',sans-serif;}
   .type{font-family:'Courier Prime',monospace;}
 
   .fx-link{transition:letter-spacing .18s ease, color .18s ease; cursor:var(--cursor-tap);}
@@ -70,7 +70,7 @@
     border:none; padding:4px 10px; cursor:var(--cursor-tap);}
   .lang-btn:hover{background:var(--red);}
   .masthead{display:flex; align-items:center; justify-content:center; padding:16px 0 8px; text-align:center;}
-  .masthead h1{font-family:'Anton','Shippori Mincho',sans-serif; font-weight:900; font-size:44px; margin:0; letter-spacing:.01em; line-height:1;
+  .masthead h1{font-family:'Anton','Dela Gothic One',sans-serif; font-weight:900; font-size:44px; margin:0; letter-spacing:.01em; line-height:1;
     position:relative; display:inline-block;}
   .masthead h1 .txt{opacity:0; transition:opacity .4s ease;}
   .masthead h1 canvas{position:absolute; left:0; top:0; opacity:1; transition:opacity .4s ease;}
@@ -103,7 +103,7 @@
   .case-box{border:1px solid var(--ink); background:var(--paper-2); padding:20px 22px; margin-bottom:10px;}
   .case-kicker{font-family:'Courier Prime',monospace; font-size:11px; letter-spacing:.14em; color:var(--red); margin-bottom:8px;}
   .case-kicker::before{content:'▍ ';}
-  .case-box h2{font-family:'Anton','Shippori Mincho',sans-serif; font-weight:900; font-size:20px; margin:0 0 10px;}
+  .case-box h2{font-family:'Anton','Dela Gothic One',sans-serif; font-weight:900; font-size:20px; margin:0 0 10px;}
   .case-box p{font-family:'Shippori Mincho',serif; font-size:13.5px; line-height:1.95; color:var(--ink-soft); margin:0;}
 
   /* ---------- cast ---------- */
@@ -153,7 +153,7 @@
   /* ---------- section headers ---------- */
   .section{margin-top:38px;}
   .section-head{display:flex; align-items:baseline; gap:12px; margin-bottom:14px;}
-  .section-head h3{font-family:'Anton','Shippori Mincho',sans-serif; font-weight:900; font-size:19px; margin:0; white-space:nowrap;}
+  .section-head h3{font-family:'Anton','Dela Gothic One',sans-serif; font-weight:900; font-size:19px; margin:0; white-space:nowrap;}
   .section-head .rule{flex:1; height:2px; background:var(--ink);}
   .section-note{font-family:'Courier Prime',monospace; font-size:10.5px; color:var(--ink-soft); white-space:nowrap;}
 
@@ -182,7 +182,7 @@
   .hero-body{display:flex; flex-direction:column; justify-content:center; padding:4px 0;}
   .kicker{font-family:'Courier Prime',monospace; font-size:11px; letter-spacing:.14em; color:var(--red); margin-bottom:8px;}
   .kicker::before{content:'▍ ';}
-  .hero-body h2{font-family:'Anton','Shippori Mincho',sans-serif; font-weight:900; font-size:26px; margin:0 0 10px; line-height:1.28;}
+  .hero-body h2{font-family:'Anton','Dela Gothic One',sans-serif; font-weight:900; font-size:26px; margin:0 0 10px; line-height:1.28;}
   .hero-body p{font-family:'Shippori Mincho',serif; font-size:13px; color:var(--ink-soft); line-height:1.9; margin:0 0 16px;}
   .hero-progress{height:6px; background:var(--paper-2); border:1px solid var(--ink); position:relative;}
   .hero-progress i{display:block; height:100%; background:repeating-linear-gradient(45deg, var(--red) 0 6px, var(--red-bright) 6px 12px);}
@@ -269,7 +269,7 @@
 
   /* ---------- how to use ---------- */
   details.how{border:1px solid var(--ink); background:var(--paper-2); padding:4px 18px;}
-  details.how summary{font-family:'Anton','Shippori Mincho',sans-serif; font-weight:900; font-size:14px; padding:12px 0; cursor:var(--cursor-tap); list-style:none;}
+  details.how summary{font-family:'Anton','Dela Gothic One',sans-serif; font-weight:900; font-size:14px; padding:12px 0; cursor:var(--cursor-tap); list-style:none;}
   details.how summary::-webkit-details-marker{display:none;}
   details.how summary::before{content:'▸ '; color:var(--red);}
   details.how[open] summary::before{content:'▾ ';}
@@ -315,7 +315,7 @@
     opacity:0; transform:translateY(6px); transition:opacity .2s ease, transform .2s ease; pointer-events:none;}
   .copy-toast.show{opacity:1; transform:translateY(0);}
   .player-bar{display:flex; justify-content:space-between; align-items:center; padding:12px 4px 4px;}
-  .player-bar h3{font-family:'Anton','Shippori Mincho',sans-serif; font-weight:900; font-size:15px; margin:0;}
+  .player-bar h3{font-family:'Anton','Dela Gothic One',sans-serif; font-weight:900; font-size:15px; margin:0;}
   .close-btn{background:var(--ink); border:none; color:var(--paper); cursor:var(--cursor-tap); padding:7px 14px;
     font-family:'Courier Prime',monospace; font-size:11px; letter-spacing:.06em;}
   .close-btn:hover{background:var(--red);}
@@ -408,12 +408,28 @@
   @keyframes neonFlicker{
     0%{opacity:0;} 8%{opacity:1;} 13%{opacity:.35;} 21%{opacity:1;} 29%{opacity:.55;} 38%{opacity:1;} 100%{opacity:1;}
   }
-  .bgm-zoom-preview{position:fixed; z-index:70; width:300px; pointer-events:none;
+  .bgm-zoom-preview{position:fixed; z-index:70; width:420px; max-width:88vw; pointer-events:none;
     opacity:0; transform:scale(.82); transform-origin:bottom right;
-    transition:opacity .16s ease, transform .22s cubic-bezier(.22,1.5,.36,1);
+    transition:opacity .1s ease, transform .22s cubic-bezier(.22,1.5,.36,1);
     border-radius:6px; overflow:hidden; background:#0c0c10;
     box-shadow:0 18px 44px rgba(0,0,0,0.55), 0 0 0 2px var(--red-bright);}
-  .bgm-zoom-preview.show{opacity:1; transform:scale(1);}
+  .bgm-zoom-preview.show{opacity:1; transform:scale(1); animation:tubeFlicker .9s linear;}
+  @keyframes tubeFlicker{
+    0%{ filter:brightness(0.15) saturate(.6); }
+    4%{ filter:brightness(1.5) saturate(1.2); }
+    8%{ filter:brightness(0.25) saturate(.6); }
+    13%{ filter:brightness(1.3); }
+    19%{ filter:brightness(0.12); }
+    25%{ filter:brightness(1.6) saturate(1.3); }
+    31%{ filter:brightness(0.4); }
+    40%{ filter:brightness(1.15); }
+    48%{ filter:brightness(0.2); }
+    58%{ filter:brightness(1.35); }
+    68%{ filter:brightness(0.65); }
+    78%{ filter:brightness(1.05); }
+    88%{ filter:brightness(0.85); }
+    100%{ filter:brightness(1) saturate(1); }
+  }
   .bgm-zoom-preview img{display:block; width:100%; height:auto;}
   .bgm-zoom-highlight{position:absolute; border:2px solid var(--red-bright); border-radius:4px;
     box-shadow:0 0 0 3px rgba(178,58,72,.35), 0 0 18px 5px rgba(178,58,72,.55);}
@@ -1003,7 +1019,6 @@ function renderHero(){
     document.getElementById('heroImg').onerror = function(){ this.onerror=null; this.src = thumbLo(heroEp.youtubeId); };
     document.getElementById('heroFileTag').textContent = heroEp.file;
     kineticText(document.getElementById('heroTitle'), epTitle(n));
-    setBgMotif(heroEp);
     const syn = SYNOPSIS[heroEp.id] && SYNOPSIS[heroEp.id][currentLang] ? SYNOPSIS[heroEp.id][currentLang] : SYNOPSIS_FALLBACK[currentLang];
     document.getElementById('heroDesc').textContent = syn.split('\n')[0];
     if(continueId){
@@ -1110,6 +1125,7 @@ function render(){
         const r = card.getBoundingClientRect();
         burstInk(r.left+r.width/2, r.top+8);
       });
+      card.addEventListener('mouseleave', hideBgMotif);
     }
     track.appendChild(card);
   });
@@ -1164,6 +1180,7 @@ function deselectCard(card){
     activeCard = null;
     clearTimeout(dwellTimer);
     clearTimeout(previewTimer);
+    hideBgMotif();
     // intentionally NOT calling hideHeroPreview()/renderHero() here —
     // the big screen keeps showing/playing whatever was last selected
     // instead of snapping back to "continue watching" / episode 1.
@@ -1615,7 +1632,7 @@ function pixelAssembleTitle(){
   const canvas = document.getElementById('titleCanvas');
   const text = txtEl.textContent;
   const fontSize = 44;
-  const font = `900 ${fontSize}px 'Anton', 'Shippori Mincho', sans-serif`;
+  const font = `900 ${fontSize}px 'Anton', 'Dela Gothic One', sans-serif`;
   const measure = document.createElement('canvas').getContext('2d');
   measure.font = font;
   const w = Math.ceil(measure.measureText(text).width) + 8;
@@ -1843,6 +1860,14 @@ function setBgMotif(ep){
     void deco.offsetWidth;
     deco.classList.add('show');
   }, 220);
+}
+// stops the hop/drift loop and hides the motif the moment the cursor
+// leaves the episode card — it should only move while you're pointing at it
+function hideBgMotif(){
+  clearTimeout(window.__motifSwap);
+  document.getElementById('bgMotif').classList.remove('show');
+  document.getElementById('motifDeco').classList.remove('show');
+  bgMotifCurrent = null;
 }
 
 // a little burst of ink flecks radiating from a point — used when a
