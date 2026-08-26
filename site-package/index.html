@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>THE FILE — 事件簿</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Shippori+Mincho:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Shippori+Mincho:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&family=Courier+Prime:wght@400;700&family=Anton&display=swap" rel="stylesheet">
 <style>
 
   /* ============================================================
@@ -25,6 +25,19 @@
     --rule: rgba(28,24,17,0.55);
     --rule-soft: rgba(28,24,17,0.18);
     --cursor-tap: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30'%3E%3Ctext y='24' font-size='24'%3E%F0%9F%91%86%3C/text%3E%3C/svg%3E") 6 22, pointer;
+  }
+  body.jscursor{ --cursor-tap: none; }
+  .custom-cursor{position:fixed; left:0; top:0; width:46px; pointer-events:none; z-index:200; opacity:0;
+    transition:opacity .15s ease;}
+  .custom-cursor.show{opacity:1;}
+  .custom-cursor img{display:block; width:100%; height:auto; filter:drop-shadow(0 3px 5px rgba(0,0,0,.35));
+    transform-origin:30% 55%;}
+  .custom-cursor img.nudge{animation:cursorNudge .55s ease-in-out;}
+  @keyframes cursorNudge{
+    0%, 100%{ transform:rotate(0deg) scale(1); }
+    22%{ transform:rotate(-14deg) scale(0.9); }
+    45%{ transform:rotate(8deg) scale(1.06); }
+    68%{ transform:rotate(-6deg) scale(0.97); }
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;background:var(--paper); color:var(--ink);
@@ -113,8 +126,29 @@
   .cast-face .icon img{width:100%; height:100%; object-fit:cover; object-position:center 15%;}
   .cast-face .name{font-family:'Shippori Mincho',serif; font-size:11.5px; font-weight:700; line-height:1.4;}
   .cast-face .tap{font-family:'Courier Prime',monospace; font-size:9px; color:var(--ink-soft); margin-top:6px;}
-  .cast-back{background:var(--ink); color:var(--paper); transform:rotateY(180deg);}
-  .cast-back p{font-family:'Shippori Mincho',serif; font-size:11px; line-height:1.7; margin:0;}
+  .cast-back{background:var(--ink); color:var(--paper); transform:rotateY(180deg); gap:8px;}
+  .cast-back p{font-family:'Shippori Mincho',serif; font-size:10.5px; line-height:1.65; margin:0;}
+  .cast-badge{display:inline-block; background:var(--red); color:var(--paper); border:2px solid var(--paper);
+    padding:3px 10px; font-size:12px; transform:rotate(-8deg); box-shadow:2px 2px 0 rgba(0,0,0,0.4);}
+  .cast-file{font-family:'Courier Prime',monospace; font-size:8.5px; letter-spacing:.1em; color:rgba(233,225,205,0.6); margin-bottom:2px;}
+  .cast-evidence{position:absolute; right:7px; bottom:14px; width:34px; border:3px solid var(--paper);
+    box-shadow:0 2px 6px rgba(0,0,0,0.55); transform:rotate(7deg);}
+  .cast-evidence img{display:block; width:100%; height:auto;}
+  .cast-evidence::after{content:'EVIDENCE'; position:absolute; bottom:-10px; left:50%; transform:translateX(-50%);
+    font-family:'Courier Prime',monospace; font-size:5px; letter-spacing:.04em; color:var(--paper); white-space:nowrap;}
+  .cast-evidence{transition:transform .2s cubic-bezier(.34,1.56,.64,1);}
+  .cast-evidence:hover{transform:rotate(0deg) scale(1.12);}
+
+  .evidence-flash{position:fixed; inset:0; z-index:95; background:#fff; opacity:0; pointer-events:none;}
+  .evidence-flash.go{animation:flashPop .5s ease-out forwards;}
+  @keyframes flashPop{ 0%{opacity:.95;} 100%{opacity:0;} }
+  .evidence-lightbox{position:fixed; inset:0; z-index:90; background:rgba(10,8,5,0.92); display:none;
+    align-items:center; justify-content:center; padding:30px; cursor:var(--cursor-tap);}
+  .evidence-lightbox.open{display:flex;}
+  .evidence-lightbox img{max-width:min(380px,86vw); max-height:82vh; border:7px solid var(--paper);
+    box-shadow:0 0 50px 8px rgba(255,255,255,0.18), 0 20px 40px rgba(0,0,0,0.6);
+    animation:evidencePop .4s cubic-bezier(.22,1.4,.36,1);}
+  @keyframes evidencePop{ 0%{transform:scale(.7); opacity:0;} 100%{transform:scale(1); opacity:1;} }
 
   /* ---------- section headers ---------- */
   .section{margin-top:38px;}
@@ -155,6 +189,13 @@
   .hero-progress-label{font-family:'Courier Prime',monospace; font-size:10px; margin-top:6px; color:var(--ink-soft);}
 
   /* ---------- episode fan: trading-card hand, horizontally scrollable ---------- */
+  .files-section{position:relative;}
+  .files-section::before{
+    content:''; position:absolute; z-index:0; inset:-16px -12px auto -12px; height:280px;
+    background:url('assets/wanted-board.png') center/contain no-repeat;
+    opacity:.16; filter:grayscale(55%) sepia(22%) contrast(1.05); pointer-events:none;
+  }
+  .files-section > *{position:relative; z-index:1;}
   .fan-wrap{overflow-x:auto; overflow-y:visible; -webkit-overflow-scrolling:touch; padding:60px 6px 44px;}
   .fan-track{display:flex; align-items:flex-end; width:max-content; padding:0 26px;}
   .card{
@@ -303,6 +344,8 @@
     background:var(--red); color:var(--paper); border:none; cursor:var(--cursor-tap); padding:9px 0;
     font-family:'Courier Prime',monospace; font-weight:700; font-size:11.5px; letter-spacing:.08em;}
   .sp-play:hover{background:var(--red-bright);}
+  .sp-stamp{display:inline-block; font-size:22px; color:var(--red); border:3px solid var(--red); padding:2px 12px;
+    transform:rotate(-8deg); margin:2px 0 10px; opacity:.85;}
   .sp-body{font-family:'Shippori Mincho',serif; font-size:12.5px; line-height:1.85; color:var(--ink-soft); max-height:200px; overflow-y:auto;}
   .sp-body .mc{display:inline-block;}
   .ty-cursor{display:inline-block; color:var(--red); animation:blink 1s step-start infinite;}
@@ -343,6 +386,19 @@
   .bgm-link-row:hover{border-color:var(--red); color:var(--red);}
   .bgm-link-row .label{font-family:'Shippori Mincho',serif; font-size:12px; font-weight:700;}
   .bgm-link-row .go{font-family:'Courier Prime',monospace; font-size:10px;}
+
+  .bgm-station{position:relative; width:100%; margin-bottom:8px; background:#0c0c10; border-radius:4px; overflow:hidden;}
+  .bgm-station img{display:block; width:100%; height:auto;}
+  .bgm-hotspot{position:absolute; display:block; border-radius:4px; cursor:var(--cursor-tap);
+    box-shadow:0 0 0 1px rgba(120,220,255,0.35); animation:hotspotPulse 2.6s ease-in-out infinite;}
+  .bgm-hotspot:nth-child(2){animation-delay:.3s;}
+  .bgm-hotspot:nth-child(3){animation-delay:.6s;}
+  .bgm-hotspot:hover{background:rgba(255,255,255,0.14);
+    box-shadow:0 0 0 2px var(--red-bright), 0 0 16px 4px rgba(178,58,72,.6); animation-play-state:paused;}
+  @keyframes hotspotPulse{
+    0%, 100%{ box-shadow:0 0 0 1px rgba(120,220,255,0.3), 0 0 6px 1px rgba(120,220,255,0.15); }
+    50%{ box-shadow:0 0 0 1px rgba(120,220,255,0.6), 0 0 12px 3px rgba(120,220,255,0.4); }
+  }
   .bgm-note{font-family:'Courier Prime',monospace; font-size:8.5px; color:var(--ink-soft); margin-top:2px; line-height:1.5;}
 
   /* ---------- motion upgrade: hover spotlight, magnetic buttons, kinetic type, ink bursts ---------- */
@@ -359,9 +415,59 @@
     transform:translate(-50%,-50%) rotate(-6deg) scale(.9);
     transition:opacity .6s ease, transform .8s cubic-bezier(.22,1,.36,1);}
   .bg-motif.show{opacity:.09; animation:motifDrift 9s ease-in-out infinite;}
+  .bg-motif.is-image{width:60vw; height:38vw; max-width:640px; max-height:400px; font-size:0;
+    background-size:cover; background-position:center; border-radius:6px;
+    -webkit-mask-image:linear-gradient(to bottom, #000 55%, transparent 96%);
+            mask-image:linear-gradient(to bottom, #000 55%, transparent 96%);}
+  .bg-motif.teaser-burst{animation:teaserBurst .7s cubic-bezier(.22,1.6,.4,1) both,
+    motifDrift 9s ease-in-out infinite .7s;}
+  @keyframes teaserBurst{
+    0%{ transform:translate(-50%,-50%) scale(.35) rotate(-14deg); opacity:0; }
+    55%{ transform:translate(-50%,-50%) scale(1.14) rotate(4deg); opacity:.13; }
+    100%{ transform:translate(-50%,-50%) scale(1) rotate(-5deg); opacity:.09; }
+  }
   @keyframes motifDrift{
     0%, 100%{ transform:translate(-50%,-50%) rotate(-5deg) scale(1); }
     50%{ transform:translate(-50%,-50%) rotate(5deg) scale(1.06); }
+  }
+
+  /* newspaper-style geometric flourishes that pop in alongside the motif —
+     halftone dots, a hand-drawn spiral, a star burst, all in ink/red only */
+  .motif-deco{position:fixed; left:50%; top:38%; z-index:0; pointer-events:none;
+    width:1px; height:1px;}
+  .deco-piece{position:absolute; opacity:0; color:var(--ink); transform-origin:center; --deco-rot:0deg;}
+  .motif-deco.show .deco-piece{animation:decoPop .6s cubic-bezier(.22,1.6,.4,1) both;}
+  .deco-halftone{width:130px; height:130px; left:-372px; top:-172px; --deco-rot:-6deg;
+    background-image:radial-gradient(var(--ink) 3px, transparent 3.5px);
+    background-size:14px 14px; opacity:0; border-radius:50%;
+    -webkit-mask-image:radial-gradient(circle, #000 55%, transparent 78%);
+            mask-image:radial-gradient(circle, #000 55%, transparent 78%);}
+  .motif-deco.show .deco-halftone{animation-delay:.05s;}
+  .deco-spiral{width:90px; height:90px; left:265px; top:-205px; color:var(--red); --deco-rot:11deg;}
+  .motif-deco.show .deco-spiral{animation-delay:.18s;}
+  .deco-star{width:54px; height:54px; left:312px; top:106px; background:var(--ink); --deco-rot:-16deg;
+    clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
+  .motif-deco.show .deco-star{animation-delay:.3s;}
+  .deco-tanuki{width:76px; height:auto; left:-248px; top:126px; filter:sepia(20%) contrast(1.05); --deco-rot:7deg;}
+  .deco-tanuki img{display:block; width:100%; height:auto;}
+  .motif-deco.show .deco-tanuki{animation-delay:.42s;}
+  .deco-ghost{width:84px; height:auto; left:232px; top:163px; filter:sepia(15%) contrast(1.05); --deco-rot:-9deg;}
+  .deco-ghost img{display:block; width:100%; height:auto;}
+  .motif-deco.show .deco-ghost{animation-delay:.54s;}
+  .deco-menu{width:78px; height:auto; left:-172px; top:-197px; filter:sepia(12%) contrast(1.03); --deco-rot:13deg;
+    box-shadow:0 6px 14px rgba(0,0,0,0.35);}
+  .deco-menu img{display:block; width:100%; height:auto;}
+  .motif-deco.show .deco-menu{animation-delay:.66s;}
+  .deco-bakemono{width:120px; height:auto; left:74px; top:-237px; filter:sepia(10%) contrast(1.03); --deco-rot:-4deg;}
+  .deco-bakemono img{display:block; width:100%; height:auto;}
+  .motif-deco.show .deco-bakemono{animation-delay:.78s;}
+  .deco-camera{width:96px; height:auto; left:-102px; top:-88px; filter:sepia(8%) contrast(1.03); --deco-rot:-11deg;}
+  .deco-camera img{display:block; width:100%; height:auto;}
+  .motif-deco.show .deco-camera{animation-delay:.15s;}
+  @keyframes decoPop{
+    0%{ opacity:0; transform:scale(.3) rotate(calc(var(--deco-rot) - 25deg)); }
+    65%{ opacity:.16; transform:scale(1.08) rotate(calc(var(--deco-rot) + 4deg)); }
+    100%{ opacity:.13; transform:scale(1) rotate(var(--deco-rot)); }
   }
 
   .magnetic{transition:transform .18s cubic-bezier(.34,1.56,.64,1);}
@@ -369,6 +475,16 @@
   .kt-char{display:inline-block; opacity:0; transform:translateY(18px) rotate(7deg) scale(.82);
     transition:opacity .5s cubic-bezier(.22,1,.36,1), transform .6s cubic-bezier(.34,1.56,.64,1);}
   .kt-char.in{opacity:1; transform:translateY(0) rotate(0) scale(1);}
+
+  .stamp{font-family:'Anton',sans-serif; text-transform:uppercase; letter-spacing:.03em;}
+  .stamp-in{opacity:0; transform:scale(2.4) rotate(-16deg);}
+  .stamp-in.go{animation:stampSlam .55s cubic-bezier(.15,1.5,.4,1) forwards;}
+  @keyframes stampSlam{
+    0%{ opacity:0; transform:scale(2.4) rotate(-16deg); }
+    55%{ opacity:1; transform:scale(0.88) rotate(-7deg); }
+    75%{ transform:scale(1.05) rotate(-9deg); }
+    100%{ opacity:1; transform:scale(1) rotate(-8deg); }
+  }
 
   .ink-dot{position:fixed; border-radius:50%; pointer-events:none; z-index:75; left:0; top:0;
     transform:translate(-50%,-50%); animation:inkFly .65s cubic-bezier(.22,1,.36,1) forwards;}
@@ -381,7 +497,20 @@
 <body>
 
 <div class="bg-motif" id="bgMotif"></div>
+<div class="motif-deco" id="motifDeco">
+  <div class="deco-piece deco-halftone"></div>
+  <svg class="deco-piece deco-spiral" viewBox="0 0 100 100" aria-hidden="true">
+    <path d="M50 50 m0 -34 a34 34 0 1 1 -24 10 a23 23 0 1 0 16 -7 a12 12 0 1 1 -8 3.5" fill="none" stroke="currentColor" stroke-width="4"/>
+  </svg>
+  <div class="deco-piece deco-star"></div>
+  <div class="deco-piece deco-tanuki"><img src="assets/deco-tanuki.png" alt=""></div>
+  <div class="deco-piece deco-ghost"><img src="assets/deco-ghost-garden.png" alt=""></div>
+  <div class="deco-piece deco-menu"><img src="assets/deco-ramen-menu.png" alt=""></div>
+  <div class="deco-piece deco-bakemono"><img src="assets/deco-bakemono-coffee.png" alt=""></div>
+  <div class="deco-piece deco-camera"><img src="assets/deco-evidence-camera.png" alt=""></div>
+</div>
 <div class="spotlight" id="spotlight"></div>
+<div class="custom-cursor" id="customCursor"><img src="assets/cursor-arrow.png" alt=""></div>
 
 <header>
   <div class="masthead-top">
@@ -435,7 +564,7 @@
     </div>
   </section>
 
-  <section class="section reveal">
+  <section class="section reveal files-section">
     <div class="section-head"><h3 id="filesTitle"></h3><div class="rule"></div><div class="section-note" id="epCount"></div></div>
     <div class="fan-hint" id="fanHint"></div>
     <div class="fan-wrap"><div class="fan-track" id="episodeGrid"></div></div>
@@ -485,6 +614,7 @@
       <span class="sp-file" id="spFile"></span>
       <button class="sp-speak" id="spSpeak" title="Read aloud">🔊</button>
     </div>
+    <div class="sp-stamp stamp stamp-in" id="spStamp"></div>
     <div class="sp-body" id="spBody"></div>
     <button class="sp-play" id="spPlay">▶ <span id="spPlayLabel">PLAY</span></button>
     <div class="sp-hint" id="spHint"></div>
@@ -493,6 +623,11 @@
 </div>
 
 <div class="lens" id="lens"><div class="lens-inner" id="lensInner"></div></div>
+
+<div class="evidence-flash" id="evidenceFlash"></div>
+<div class="evidence-lightbox" id="evidenceLightbox">
+  <img id="evidenceLightboxImg" src="" alt="">
+</div>
 
 <div class="bgm-panel" id="bgmPanel">
   <div class="bgm-head" id="bgmHead">
@@ -508,7 +643,12 @@
       </div>
       <input type="range" class="bgm-volume" id="bgmVolume" min="0" max="100" value="55" aria-label="Volume">
     </div>
-    <div id="bgmLinks"></div>
+    <div class="bgm-station" id="bgmStation">
+      <img src="assets/bgm-station.png" alt="">
+      <a class="bgm-hotspot" id="bgmHotspot0" target="_blank" rel="noopener" style="left:38.4%; top:44.5%; width:25.6%; height:11.7%;"></a>
+      <a class="bgm-hotspot" id="bgmHotspot1" target="_blank" rel="noopener" style="left:38.2%; top:57.0%; width:25.3%; height:8.6%;"></a>
+      <a class="bgm-hotspot" id="bgmHotspot2" target="_blank" rel="noopener" style="left:71.4%; top:34.5%; width:13.2%; height:38.6%;"></a>
+    </div>
     <div class="bgm-note" id="bgmNote"></div>
   </div>
 </div>
@@ -525,7 +665,7 @@ const EPISODES = [
   { id:'ep3',  file:'FILE No.03', youtubeId:'Jxdf2ShIVHs', motif:'🌆' },
   { id:'ep4',  file:'FILE No.04', youtubeId:'T1yh4oK0NpE', motif:'🧹' },
   { id:'ep5',  file:'FILE No.05', youtubeId:'IOipqTv6x9A', motif:'👮' },
-  { id:'ep6',  file:'FILE No.06', youtubeId:'DmPEd5VoYGo', motif:'🎨' },
+  { id:'ep6',  file:'FILE No.06', youtubeId:'DmPEd5VoYGo', motif:'🎨', motifImg:'assets/motif-graffiti-pole.jpg' },
   { id:'ep7',  file:'FILE No.07', youtubeId:'IjHa2xjz2ac', motif:'✈️' },
   { id:'ep8',  file:'FILE No.08', youtubeId:'lG2Ct3yzTP0', motif:'🗄️' },
   { id:'ep9',  file:'FILE No.09', youtubeId:'bYoKzdgqxT8', landscape:true, motif:'💃' },
@@ -535,7 +675,10 @@ const EPISODES = [
   { id:'ep13', file:'FILE No.13', youtubeId:'iuTsbSdC3UQ', motif:'💈' },
   { id:'ep14', file:'FILE No.14', youtubeId:'Zu4xZ1Dxhsk', motif:'🎈' },
   { id:'ep15', file:'FILE No.15', youtubeId:'NwntQ6asoQc', motif:'📄' },
-  // { id:'ep16', file:'FILE No.16', youtubeId:'', coming:true },  // ← add more like this
+  { id:'ep16', file:'FILE No.16', coming:true, motifImg:'assets/motif-hq-raid.jpg' },
+  { id:'ep17', file:'FILE No.17', coming:true, motifImg:'assets/motif-gochagocha-base.jpg', landscape:true },
+  { id:'ep18', file:'FILE No.18', coming:true, motifImg:'assets/motif-rusty-raider.png' },
+  // { id:'ep19', file:'FILE No.19', youtubeId:'', coming:true },  // ← add more like this
 ];
 
 const SYNOPSIS = {
@@ -568,8 +711,10 @@ const STRINGS = {
     caseBrief:'One day, Fluffy Mask Master — who holds the strange power to turn any object into colorful, fuzzy fluff — turned a taxi fluffy. The passenger inside it was transformed into the Green Monster. To turn him back into a human, Fluffy Mask Master now has to chase the Green Monster down.',
     castTitle:'PERSONS OF INTEREST', castNote:'Tap a face to open the file.',
     c1n:'Fluffy Mask Master (a.k.a. Zombie Zonzon)',
+    c1tag:'FLUFF-IFIES ANYTHING',
     c1b:'Holds a strange power that turns any object — even a taxi — into colorful fluff. Now chasing the Green Monster to undo what his power caused.',
     c2n:'The Green Monster (a.k.a. GochaGocha)',
+    c2tag:'ON THE RUN',
     c2b:'Once an ordinary taxi passenger. Transformed into a monster the instant the taxi went fluffy. Now on the run — last seen jumping from New York all the way to a Miami beach.',
     heroContinueKicker:'CONTINUE READING', heroStartKicker:'START HERE',
     heroCaptionContinue:'Tap to resume', heroCaptionStart:'Tap to begin the case',
@@ -598,8 +743,10 @@ const STRINGS = {
     caseBrief:'ある日、物体をカラフルなモフモフに変化させる力を持ったフラッフィーマスクマスターがタクシーをモフモフにしたら、乗客だった人が緑のモンスターになってしまった。人間に戻すため、フラッフィーマスクマスターは緑のモンスターを追うことになった。',
     castTitle:'登場人物ファイル', castNote:'顔をタップしてファイルを開く',
     c1n:'フラッフィーマスクマスター（ゾンビのゾンゾン）',
+    c1tag:'何でもモフモフ化',
     c1b:'あらゆる物をカラフルなモフモフに変える不思議な力を持つ。自分の力が引き起こした事態を解決するため、緑のモンスターを追いかけている。',
     c2n:'緑のモンスター（通称：ゴチャゴチャ）',
+    c2tag:'現在逃走中',
     c2b:'元はごく普通のタクシーの乗客。タクシーがモフモフになった瞬間、モンスターに変わってしまった。今はニューヨークからマイアミのビーチまで飛んで逃走中らしい。',
     heroContinueKicker:'つづきから', heroStartKicker:'ここから始める',
     heroCaptionContinue:'タップして再開', heroCaptionStart:'タップして事件を追う',
@@ -623,8 +770,8 @@ const STRINGS = {
 };
 
 const CAST = [
-  { icon:'assets/character-fluffy-mask-master.png', nameKey:'c1n', bioKey:'c1b' },
-  { icon:'assets/character-gochagocha.png', nameKey:'c2n', bioKey:'c2b' },
+  { icon:'assets/character-fluffy-mask-master.png', nameKey:'c1n', bioKey:'c1b', tagKey:'c1tag', file:'SUSPECT 01', evidence:'assets/evidence-true-identity.jpg' },
+  { icon:'assets/character-gochagocha.png', nameKey:'c2n', bioKey:'c2b', tagKey:'c2tag', file:'SUSPECT 02', evidence:'assets/evidence-gochagoccha-wanted.jpg' },
 ];
 
 let currentLang = 'en';
@@ -674,7 +821,7 @@ function sfxSwipe(forward){
 document.addEventListener('pointerdown', ()=>ensureAudio(), { once:true });
 
 // simple buttons: hover+click via delegation (works well on desktop; click works on tap too)
-const SFX_SELECTOR = '#langBtn, #tickerBtn, #closeBtn, #ctrlPlay, #ctrlRewind, #ctrlMute, #ctrlShare, #bgmHead, .bgm-link-row, details.how summary, #spClose, #spSpeak, #spPlay, .history-row, .cast-card';
+const SFX_SELECTOR = '#langBtn, #tickerBtn, #closeBtn, #ctrlPlay, #ctrlRewind, #ctrlMute, #ctrlShare, #bgmHead, .bgm-link-row, .bgm-hotspot, details.how summary, #spClose, #spSpeak, #spPlay, .history-row, .cast-card';
 let sfxLastHover = null;
 document.addEventListener('mouseover', (e)=>{
   const el = e.target.closest(SFX_SELECTOR);
@@ -756,13 +903,32 @@ function buildCast(){
           <div class="name" data-key="${c.nameKey}"></div>
           <div class="tap" data-tap></div>
         </div>
-        <div class="cast-back"><p data-key="${c.bioKey}"></p></div>
+        <div class="cast-back">
+          <div class="cast-file">${c.file}</div>
+          <div class="cast-badge stamp stamp-in" data-key="${c.tagKey}"></div>
+          <p data-key="${c.bioKey}"></p>
+          ${c.evidence ? `<div class="cast-evidence"><img src="${c.evidence}" alt=""></div>` : ''}
+        </div>
       </div>`;
     card.onclick = ()=>{
+      const flipping = !card.classList.contains('flipped');
       card.classList.toggle('flipped');
       const r = card.getBoundingClientRect();
       burstInk(r.left+r.width/2, r.top+r.height/2);
+      if(flipping){
+        const badge = card.querySelector('.cast-badge');
+        badge.classList.remove('go');
+        void badge.offsetWidth;
+        badge.classList.add('go');
+      }
     };
+    const evidenceEl = card.querySelector('.cast-evidence');
+    if(evidenceEl){
+      evidenceEl.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        openEvidence(c.evidence);
+      });
+    }
     grid.appendChild(card);
   });
 }
@@ -807,7 +973,7 @@ function renderHero(){
     document.getElementById('heroImg').onerror = function(){ this.onerror=null; this.src = thumbLo(heroEp.youtubeId); };
     document.getElementById('heroFileTag').textContent = heroEp.file;
     kineticText(document.getElementById('heroTitle'), epTitle(n));
-    setBgMotif(heroEp.motif);
+    setBgMotif(heroEp);
     const syn = SYNOPSIS[heroEp.id] && SYNOPSIS[heroEp.id][currentLang] ? SYNOPSIS[heroEp.id][currentLang] : SYNOPSIS_FALLBACK[currentLang];
     document.getElementById('heroDesc').textContent = syn.split('\n')[0];
     if(continueId){
@@ -842,7 +1008,7 @@ function previewHeroText(ep, idx, title){
   document.getElementById('heroImg').parentElement.classList.toggle('portrait', !ep.landscape);
   document.getElementById('heroFileTag').textContent = ep.file;
   kineticText(document.getElementById('heroTitle'), title);
-  setBgMotif(ep.motif);
+  setBgMotif(ep);
   const syn = SYNOPSIS[ep.id] && SYNOPSIS[ep.id][currentLang] ? SYNOPSIS[ep.id][currentLang] : SYNOPSIS_FALLBACK[currentLang];
   document.getElementById('heroDesc').textContent = syn.split('\n')[0];
   document.getElementById('heroKicker').textContent = currentLang==='ja' ? 'プレビュー中' : 'NOW PREVIEWING';
@@ -851,6 +1017,26 @@ function previewHeroText(ep, idx, title){
   document.getElementById('heroProgressBar').style.width = p+'%';
   document.getElementById('heroMeta').textContent = p>0 ? S.watchedPct(p) : '';
   document.getElementById('heroPlay').onclick = ()=> openPlayer(ep);
+}
+
+// teaser preview for a locked "coming soon" card — no video, no synopsis,
+// just the hero art and title so the background motif can show it off
+function previewComingSoon(ep, title){
+  const hero = document.getElementById('heroSection');
+  hero.style.display = 'grid';
+  bounceHero();
+  document.getElementById('heroImg').parentElement.classList.remove('portrait');
+  document.getElementById('heroImg').src = ep.motifImg;
+  document.getElementById('heroFileTag').textContent = ep.file;
+  kineticText(document.getElementById('heroTitle'), title);
+  document.getElementById('heroDesc').textContent = currentLang==='ja'
+    ? '近日公開…続報を待て。' : 'Coming soon… stay tuned.';
+  document.getElementById('heroKicker').textContent = STRINGS[currentLang].comingSoon;
+  document.getElementById('heroCaptionR').textContent = '';
+  document.getElementById('heroProgressBar').style.width = '0%';
+  document.getElementById('heroMeta').textContent = '';
+  document.getElementById('heroPlay').onclick = null;
+  setBgMotif(ep);
 }
 
 function render(){
@@ -871,7 +1057,7 @@ function render(){
     card.style.zIndex = String(idx+1);
     card.dataset.baseT = baseT; card.dataset.lift = 0; card.dataset.z = String(idx+1);
     card.innerHTML = `
-      <div class="card-thumb${ep.landscape ? ' landscape' : ''}">        ${ep.coming ? `<div class="lock">${S.comingSoon}</div>` : `<img src="${thumbHi(ep.youtubeId)}" onerror="this.onerror=null;this.src='${thumbLo(ep.youtubeId)}'" alt="${title}">`}
+      <div class="card-thumb${ep.landscape ? ' landscape' : ''}">        ${ep.coming ? `${ep.motifImg ? `<img src="${ep.motifImg}" alt="${title}" style="filter:grayscale(70%) contrast(1.1) brightness(.6);">` : ''}<div class="lock">${S.comingSoon}</div>` : `<img src="${thumbHi(ep.youtubeId)}" onerror="this.onerror=null;this.src='${thumbLo(ep.youtubeId)}'" alt="${title}">`}
         <div class="file-tag type">${ep.file}</div>
         ${(!ep.coming && isWatched(ep.id)) ? `<div class="stamp">${S.viewedStamp}</div>` : ''}
         ${!ep.coming ? `<div class="progress"><i style="width:${p}%"></i></div>` : ''}
@@ -887,6 +1073,12 @@ function render(){
         if(suppressClick) return;
         sfxClick();
         openPlayer(ep);
+      });
+    } else if(ep.motifImg){
+      card.addEventListener('mouseenter', ()=>{
+        previewComingSoon(ep, title);
+        const r = card.getBoundingClientRect();
+        burstInk(r.left+r.width/2, r.top+8);
       });
     }
     track.appendChild(card);
@@ -1043,6 +1235,11 @@ let typeTimer = null;
 function showSynopsis(cardEl, ep, idx, title){
   const data = (SYNOPSIS[ep.id] && SYNOPSIS[ep.id][currentLang]) ? SYNOPSIS[ep.id][currentLang] : SYNOPSIS_FALLBACK[currentLang];
   spFile.textContent = `${ep.file} ／ ${title}`;
+  const spStamp = document.getElementById('spStamp');
+  spStamp.textContent = ep.file;
+  spStamp.classList.remove('go');
+  void spStamp.offsetWidth;
+  spStamp.classList.add('go');
   const r = cardEl.getBoundingClientRect();
   const popW = Math.min(310, window.innerWidth*0.82);
   let left = r.right + 12;
@@ -1453,15 +1650,13 @@ const BGM_TRACKS = [
 ];
 
 function buildBgmLinks(){
-  const wrap = document.getElementById('bgmLinks');
-  wrap.innerHTML = '';
-  BGM_TRACKS.forEach((t)=>{
-    const a = document.createElement('a');
-    a.className = 'bgm-link-row';
-    a.href = t.url; a.target = '_blank'; a.rel = 'noopener';
-    a.innerHTML = `<span class="label">${t.label}</span><span class="go">▶ ${currentLang==='ja' ? '開く':'OPEN'}</span>`;
+  BGM_TRACKS.forEach((t, i)=>{
+    const a = document.getElementById('bgmHotspot'+i);
+    if(!a) return;
+    a.href = t.url;
+    a.title = t.label;
+    a.setAttribute('aria-label', t.label);
     a.onclick = ()=> sfxClick();
-    wrap.appendChild(a);
   });
 }
 
@@ -1540,18 +1735,47 @@ function kineticText(el, text){
   });
 }
 
+// tapping a case-file evidence photo fires a camera flash, then lights it
+// up big in a dark lightbox — like an investigator slapping it on a lightboard
+function openEvidence(src){
+  sfxClick();
+  const flash = document.getElementById('evidenceFlash');
+  flash.classList.remove('go');
+  void flash.offsetWidth;
+  flash.classList.add('go');
+  document.getElementById('evidenceLightboxImg').src = src;
+  document.getElementById('evidenceLightbox').classList.add('open');
+}
+document.getElementById('evidenceLightbox').addEventListener('click', ()=>{
+  document.getElementById('evidenceLightbox').classList.remove('open');
+});
+
 // the giant background symbol cross-fades to match whichever episode
 // is currently showing in the hero
 let bgMotifCurrent = null;
-function setBgMotif(emoji){
+function setBgMotif(ep){
   const el = document.getElementById('bgMotif');
-  if(!emoji || emoji === bgMotifCurrent){ return; }
-  bgMotifCurrent = emoji;
+  const deco = document.getElementById('motifDeco');
+  const key = ep.motifImg || ep.motif;
+  if(!key || key === bgMotifCurrent){ return; }
+  bgMotifCurrent = key;
   el.classList.remove('show');
+  deco.classList.remove('show');
   clearTimeout(window.__motifSwap);
   window.__motifSwap = setTimeout(()=>{
-    el.textContent = emoji;
+    if(ep.motifImg){
+      el.textContent = '';
+      el.style.backgroundImage = `url('${ep.motifImg}')`;
+      el.classList.add('is-image');
+    } else {
+      el.style.backgroundImage = '';
+      el.classList.remove('is-image');
+      el.textContent = ep.motif;
+    }
+    el.classList.toggle('teaser-burst', !!ep.coming);
     el.classList.add('show');
+    void deco.offsetWidth;
+    deco.classList.add('show');
   }, 220);
 }
 
@@ -1573,6 +1797,29 @@ function burstInk(x, y){
     dot.addEventListener('animationend', ()=> dot.remove());
   }
 }
+
+// custom neon-arrow cursor over tappable elements — idly wiggles like it's
+// nudging you to click if you hover and stay still for a moment
+document.body.classList.add('jscursor');
+const CURSOR_SELECTOR = '.fx-link, .cast-card, .card:not(.coming), .history-row, details.how summary, .seek-track, .ctrl-btn, .scroll-close, .sp-speak, .sp-play, .bgm-head, .bgm-toggle, .bgm-link-row, .bgm-hotspot, .cast-evidence';
+const customCursor = document.getElementById('customCursor');
+const customCursorImg = customCursor.querySelector('img');
+let cursorLastMoveAt = Date.now();
+document.addEventListener('mousemove', (e)=>{
+  cursorLastMoveAt = Date.now();
+  customCursor.style.left = e.clientX + 'px';
+  customCursor.style.top = e.clientY + 'px';
+  customCursor.classList.toggle('show', !!e.target.closest(CURSOR_SELECTOR));
+});
+document.addEventListener('mouseleave', ()=> customCursor.classList.remove('show'));
+setInterval(()=>{
+  if(!customCursor.classList.contains('show')) return;
+  if(Date.now() - cursorLastMoveAt > 900){
+    customCursorImg.classList.remove('nudge');
+    void customCursorImg.offsetWidth;
+    customCursorImg.classList.add('nudge');
+  }
+}, 1500);
 
 loadProgress();
 
