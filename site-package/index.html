@@ -56,7 +56,7 @@
   }
 
   .serif{font-family:'Shippori Mincho',serif;}
-  .display{font-family:'Playfair Display',serif;}
+  .display{font-family:'Anton','Shippori Mincho',sans-serif;}
   .type{font-family:'Courier Prime',monospace;}
 
   .fx-link{transition:letter-spacing .18s ease, color .18s ease; cursor:var(--cursor-tap);}
@@ -70,7 +70,7 @@
     border:none; padding:4px 10px; cursor:var(--cursor-tap);}
   .lang-btn:hover{background:var(--red);}
   .masthead{display:flex; align-items:center; justify-content:center; padding:16px 0 8px; text-align:center;}
-  .masthead h1{font-family:'Playfair Display',serif; font-weight:900; font-size:44px; margin:0; letter-spacing:.01em; line-height:1;
+  .masthead h1{font-family:'Anton','Shippori Mincho',sans-serif; font-weight:900; font-size:44px; margin:0; letter-spacing:.01em; line-height:1;
     position:relative; display:inline-block;}
   .masthead h1 .txt{opacity:0; transition:opacity .4s ease;}
   .masthead h1 canvas{position:absolute; left:0; top:0; opacity:1; transition:opacity .4s ease;}
@@ -103,7 +103,7 @@
   .case-box{border:1px solid var(--ink); background:var(--paper-2); padding:20px 22px; margin-bottom:10px;}
   .case-kicker{font-family:'Courier Prime',monospace; font-size:11px; letter-spacing:.14em; color:var(--red); margin-bottom:8px;}
   .case-kicker::before{content:'▍ ';}
-  .case-box h2{font-family:'Playfair Display',serif; font-weight:900; font-size:20px; margin:0 0 10px;}
+  .case-box h2{font-family:'Anton','Shippori Mincho',sans-serif; font-weight:900; font-size:20px; margin:0 0 10px;}
   .case-box p{font-family:'Shippori Mincho',serif; font-size:13.5px; line-height:1.95; color:var(--ink-soft); margin:0;}
 
   /* ---------- cast ---------- */
@@ -153,7 +153,7 @@
   /* ---------- section headers ---------- */
   .section{margin-top:38px;}
   .section-head{display:flex; align-items:baseline; gap:12px; margin-bottom:14px;}
-  .section-head h3{font-family:'Playfair Display',serif; font-weight:900; font-size:19px; margin:0; white-space:nowrap;}
+  .section-head h3{font-family:'Anton','Shippori Mincho',sans-serif; font-weight:900; font-size:19px; margin:0; white-space:nowrap;}
   .section-head .rule{flex:1; height:2px; background:var(--ink);}
   .section-note{font-family:'Courier Prime',monospace; font-size:10.5px; color:var(--ink-soft); white-space:nowrap;}
 
@@ -182,7 +182,7 @@
   .hero-body{display:flex; flex-direction:column; justify-content:center; padding:4px 0;}
   .kicker{font-family:'Courier Prime',monospace; font-size:11px; letter-spacing:.14em; color:var(--red); margin-bottom:8px;}
   .kicker::before{content:'▍ ';}
-  .hero-body h2{font-family:'Playfair Display',serif; font-weight:900; font-size:26px; margin:0 0 10px; line-height:1.28;}
+  .hero-body h2{font-family:'Anton','Shippori Mincho',sans-serif; font-weight:900; font-size:26px; margin:0 0 10px; line-height:1.28;}
   .hero-body p{font-family:'Shippori Mincho',serif; font-size:13px; color:var(--ink-soft); line-height:1.9; margin:0 0 16px;}
   .hero-progress{height:6px; background:var(--paper-2); border:1px solid var(--ink); position:relative;}
   .hero-progress i{display:block; height:100%; background:repeating-linear-gradient(45deg, var(--red) 0 6px, var(--red-bright) 6px 12px);}
@@ -269,7 +269,7 @@
 
   /* ---------- how to use ---------- */
   details.how{border:1px solid var(--ink); background:var(--paper-2); padding:4px 18px;}
-  details.how summary{font-family:'Playfair Display',serif; font-weight:900; font-size:14px; padding:12px 0; cursor:var(--cursor-tap); list-style:none;}
+  details.how summary{font-family:'Anton','Shippori Mincho',sans-serif; font-weight:900; font-size:14px; padding:12px 0; cursor:var(--cursor-tap); list-style:none;}
   details.how summary::-webkit-details-marker{display:none;}
   details.how summary::before{content:'▸ '; color:var(--red);}
   details.how[open] summary::before{content:'▾ ';}
@@ -315,7 +315,7 @@
     opacity:0; transform:translateY(6px); transition:opacity .2s ease, transform .2s ease; pointer-events:none;}
   .copy-toast.show{opacity:1; transform:translateY(0);}
   .player-bar{display:flex; justify-content:space-between; align-items:center; padding:12px 4px 4px;}
-  .player-bar h3{font-family:'Playfair Display',serif; font-weight:900; font-size:15px; margin:0;}
+  .player-bar h3{font-family:'Anton','Shippori Mincho',sans-serif; font-weight:900; font-size:15px; margin:0;}
   .close-btn{background:var(--ink); border:none; color:var(--paper); cursor:var(--cursor-tap); padding:7px 14px;
     font-family:'Courier Prime',monospace; font-size:11px; letter-spacing:.06em;}
   .close-btn:hover{background:var(--red);}
@@ -399,6 +399,15 @@
     0%, 100%{ box-shadow:0 0 0 1px rgba(120,220,255,0.3), 0 0 6px 1px rgba(120,220,255,0.15); }
     50%{ box-shadow:0 0 0 1px rgba(120,220,255,0.6), 0 0 12px 3px rgba(120,220,255,0.4); }
   }
+  .bgm-hotspot-label{position:absolute; z-index:5; pointer-events:none; opacity:0;
+    font-family:'Anton',sans-serif; text-transform:uppercase; letter-spacing:.05em;
+    font-size:13px; color:#eafcff; text-align:center;
+    text-shadow:0 0 4px #9be8ff, 0 0 10px #9be8ff, 0 0 22px #4fd6ff, 0 0 2px #fff;
+    transform:translate(-50%,-50%); white-space:nowrap;}
+  .bgm-hotspot-label.show{opacity:1; animation:neonFlicker .7s ease-in-out;}
+  @keyframes neonFlicker{
+    0%{opacity:0;} 8%{opacity:1;} 13%{opacity:.35;} 21%{opacity:1;} 29%{opacity:.55;} 38%{opacity:1;} 100%{opacity:1;}
+  }
   .bgm-note{font-family:'Courier Prime',monospace; font-size:8.5px; color:var(--ink-soft); margin-top:2px; line-height:1.5;}
 
   /* ---------- motion upgrade: hover spotlight, magnetic buttons, kinetic type, ink bursts ---------- */
@@ -414,21 +423,23 @@
     font-size:38vw; line-height:1; opacity:0; filter:grayscale(1) sepia(.35) contrast(1.1);
     transform:translate(-50%,-50%) rotate(-6deg) scale(.9);
     transition:opacity .6s ease, transform .8s cubic-bezier(.22,1,.36,1);}
-  .bg-motif.show{opacity:.09; animation:motifDrift 9s ease-in-out infinite;}
-  .bg-motif.is-image{width:60vw; height:38vw; max-width:640px; max-height:400px; font-size:0;
-    background-size:cover; background-position:center; border-radius:6px;
-    -webkit-mask-image:linear-gradient(to bottom, #000 55%, transparent 96%);
-            mask-image:linear-gradient(to bottom, #000 55%, transparent 96%);}
+  .bg-motif.show{opacity:.09;}
+  .bg-motif.is-image{width:min(46vw,340px); height:min(46vw,340px); max-width:340px; max-height:340px; font-size:0;
+    background-size:contain; background-repeat:no-repeat; background-position:center;}
+  .bg-motif.is-image.show{animation:motifHop 1.7s cubic-bezier(.34,1.56,.64,1) infinite;}
+  @keyframes motifHop{
+    0%, 100%{ transform:translate(-50%,-50%) translateY(0) scale(1,1); }
+    18%{ transform:translate(-50%,-50%) translateY(0) scale(1.08,0.9); }
+    45%{ transform:translate(-50%,-50%) translateY(-38px) scale(0.94,1.08); }
+    72%{ transform:translate(-50%,-50%) translateY(0) scale(1.05,0.93); }
+    86%{ transform:translate(-50%,-50%) translateY(-8px) scale(0.99,1.02); }
+  }
   .bg-motif.teaser-burst{animation:teaserBurst .7s cubic-bezier(.22,1.6,.4,1) both,
-    motifDrift 9s ease-in-out infinite .7s;}
+    motifHop 1.7s cubic-bezier(.34,1.56,.64,1) infinite .7s;}
   @keyframes teaserBurst{
     0%{ transform:translate(-50%,-50%) scale(.35) rotate(-14deg); opacity:0; }
     55%{ transform:translate(-50%,-50%) scale(1.14) rotate(4deg); opacity:.13; }
-    100%{ transform:translate(-50%,-50%) scale(1) rotate(-5deg); opacity:.09; }
-  }
-  @keyframes motifDrift{
-    0%, 100%{ transform:translate(-50%,-50%) rotate(-5deg) scale(1); }
-    50%{ transform:translate(-50%,-50%) rotate(5deg) scale(1.06); }
+    100%{ transform:translate(-50%,-50%) scale(1) rotate(0deg); opacity:.09; }
   }
 
   /* newspaper-style geometric flourishes that pop in alongside the motif —
@@ -648,6 +659,7 @@
       <a class="bgm-hotspot" id="bgmHotspot0" target="_blank" rel="noopener" style="left:38.4%; top:44.5%; width:25.6%; height:11.7%;"></a>
       <a class="bgm-hotspot" id="bgmHotspot1" target="_blank" rel="noopener" style="left:38.2%; top:57.0%; width:25.3%; height:8.6%;"></a>
       <a class="bgm-hotspot" id="bgmHotspot2" target="_blank" rel="noopener" style="left:71.4%; top:34.5%; width:13.2%; height:38.6%;"></a>
+      <div class="bgm-hotspot-label" id="bgmHotspotLabel"></div>
     </div>
     <div class="bgm-note" id="bgmNote"></div>
   </div>
@@ -1585,7 +1597,7 @@ function pixelAssembleTitle(){
   const canvas = document.getElementById('titleCanvas');
   const text = txtEl.textContent;
   const fontSize = 44;
-  const font = `900 ${fontSize}px 'Playfair Display', serif`;
+  const font = `900 ${fontSize}px 'Anton', 'Shippori Mincho', sans-serif`;
   const measure = document.createElement('canvas').getContext('2d');
   measure.font = font;
   const w = Math.ceil(measure.measureText(text).width) + 8;
@@ -1650,6 +1662,7 @@ const BGM_TRACKS = [
 ];
 
 function buildBgmLinks(){
+  const label = document.getElementById('bgmHotspotLabel');
   BGM_TRACKS.forEach((t, i)=>{
     const a = document.getElementById('bgmHotspot'+i);
     if(!a) return;
@@ -1657,6 +1670,15 @@ function buildBgmLinks(){
     a.title = t.label;
     a.setAttribute('aria-label', t.label);
     a.onclick = ()=> sfxClick();
+    a.addEventListener('mouseenter', ()=>{
+      label.textContent = t.label;
+      label.style.left = `calc(${a.style.left} + (${a.style.width}) / 2)`;
+      label.style.top = `calc(${a.style.top} + (${a.style.height}) / 2)`;
+      label.classList.remove('show');
+      void label.offsetWidth;
+      label.classList.add('show');
+    });
+    a.addEventListener('mouseleave', ()=> label.classList.remove('show'));
   });
 }
 
@@ -1752,26 +1774,34 @@ document.getElementById('evidenceLightbox').addEventListener('click', ()=>{
 
 // the giant background symbol cross-fades to match whichever episode
 // is currently showing in the hero
+// episodes without their own dedicated motif photo borrow one of the fun
+// character/prop cutouts already on the page, instead of a giant emoji —
+// picked deterministically per episode so the same one always shows
+const FLAIR_IMAGES = [
+  'assets/deco-tanuki.png', 'assets/deco-ghost-garden.png', 'assets/deco-bakemono-coffee.png',
+  'assets/deco-evidence-camera.png', 'assets/deco-ramen-menu.png', 'assets/wanted-board.png'
+];
+function flairFor(ep){
+  if(ep.motifImg) return ep.motifImg;
+  let h = 0;
+  for(const c of ep.id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return FLAIR_IMAGES[h % FLAIR_IMAGES.length];
+}
+
 let bgMotifCurrent = null;
 function setBgMotif(ep){
   const el = document.getElementById('bgMotif');
   const deco = document.getElementById('motifDeco');
-  const key = ep.motifImg || ep.motif;
-  if(!key || key === bgMotifCurrent){ return; }
-  bgMotifCurrent = key;
+  const src = flairFor(ep);
+  if(!src || src === bgMotifCurrent){ return; }
+  bgMotifCurrent = src;
   el.classList.remove('show');
   deco.classList.remove('show');
   clearTimeout(window.__motifSwap);
   window.__motifSwap = setTimeout(()=>{
-    if(ep.motifImg){
-      el.textContent = '';
-      el.style.backgroundImage = `url('${ep.motifImg}')`;
-      el.classList.add('is-image');
-    } else {
-      el.style.backgroundImage = '';
-      el.classList.remove('is-image');
-      el.textContent = ep.motif;
-    }
+    el.textContent = '';
+    el.style.backgroundImage = `url('${src}')`;
+    el.classList.add('is-image');
     el.classList.toggle('teaser-burst', !!ep.coming);
     el.classList.add('show');
     void deco.offsetWidth;
