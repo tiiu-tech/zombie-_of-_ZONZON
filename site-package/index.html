@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE FILE — 事件簿</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Shippori+Mincho:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+
+  /* ============================================================
+     EPISODES CONFIG — edit this to match your own videos
+     youtubeId: the 11-character id from youtu.be/XXXX or watch?v=XXXX
+     landscape: true only for widescreen uploads (most are vertical Shorts)
+     coming: true = shows a locked "coming soon" card, not playable
+     ============================================================ */
+
+  :root{
+    --paper: #e9e1cd;
+    --paper-2: #ddd3ba;
+    --ink: #1c1811;
+    --ink-soft: #4a4335;
+    --red: #8a2323;
+    --red-bright: #a92c2c;
+    --rule: rgba(28,24,17,0.55);
+    --rule-soft: rgba(28,24,17,0.18);
+    --cursor-tap: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30'%3E%3Ctext y='24' font-size='24'%3E%F0%9F%91%86%3C/text%3E%3C/svg%3E") 6 22, pointer;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--paper); color:var(--ink);
+    font-family:'Noto Sans JP',sans-serif; -webkit-font-smoothing:antialiased;}
+  ::selection{background:var(--red); color:var(--paper);}
+
+  body::before{
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:1; opacity:.5;
+    background-image:radial-gradient(rgba(28,24,17,0.05) 1px, transparent 1px),
+      radial-gradient(rgba(28,24,17,0.04) 1px, transparent 1px);
+    background-size:3px 3px, 5px 5px; background-position:0 0, 2px 2px; mix-blend-mode:multiply;
+  }
+  body::after{
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:1;
+    background:radial-gradient(ellipse at center, transparent 40%, rgba(28,24,17,0.10) 100%);
+  }
+
+  .serif{font-family:'Shippori Mincho',serif;}
+  .display{font-family:'Playfair Display',serif;}
+  .type{font-family:'Courier Prime',monospace;}
+
+  .fx-link{transition:letter-spacing .18s ease, color .18s ease; cursor:var(--cursor-tap);}
+  .fx-link:hover{letter-spacing:.07em; color:var(--red-bright);}
+
+  /* ---------- masthead ---------- */
+  header{position:relative; z-index:2; padding:16px 24px 0; max-width:1080px; margin:0 auto;}
+  .masthead-top{display:flex; justify-content:space-between; align-items:center; font-family:'Courier Prime',monospace;
+    font-size:10.5px; letter-spacing:.08em; color:var(--ink-soft); padding-bottom:8px; border-bottom:1px solid var(--rule-soft);}
+  .lang-btn{font-family:'Courier Prime',monospace; font-size:10.5px; letter-spacing:.08em; background:var(--ink); color:var(--paper);
+    border:none; padding:4px 10px; cursor:var(--cursor-tap);}
+  .lang-btn:hover{background:var(--red);}
+  .masthead{display:flex; align-items:center; justify-content:center; padding:16px 0 8px; text-align:center;}
+  .masthead h1{font-family:'Playfair Display',serif; font-weight:900; font-size:44px; margin:0; letter-spacing:.01em; line-height:1;
+    position:relative; display:inline-block;}
+  .masthead h1 .txt{opacity:0; transition:opacity .4s ease;}
+  .masthead h1 canvas{position:absolute; left:0; top:0; opacity:1; transition:opacity .4s ease;}
+  .masthead h1.assembled .txt{opacity:1;}
+  .masthead h1.assembled canvas{opacity:0; pointer-events:none;}
+  .masthead .sub{font-family:'Shippori Mincho',serif; font-size:12.5px; color:var(--ink-soft); margin-top:6px; letter-spacing:.12em;}
+  .rule-thick{height:4px; background:var(--ink); margin-top:8px;}
+  .rule-thin{height:1px; background:var(--ink); margin-top:3px; opacity:.7;}
+
+  /* ---------- ticker ---------- */
+  .ticker-wrap{display:flex; align-items:center; background:var(--ink); color:var(--paper); overflow:hidden; border-bottom:1px solid var(--ink);}
+  .ticker-flag{font-family:'Courier Prime',monospace; font-size:11px; font-weight:700; letter-spacing:.08em; background:var(--red); padding:8px 12px; flex-shrink:0; white-space:nowrap;}
+  .ticker-track{flex:1; overflow:hidden; position:relative; height:34px;}
+  .ticker-move{position:absolute; white-space:nowrap; font-family:'Courier Prime',monospace; font-size:11.5px; letter-spacing:.04em;
+    top:50%; transform:translateY(-50%); animation:ticker 22s linear infinite;}
+  @keyframes ticker{ 0%{left:100%;} 100%{left:-140%;} }
+  .ticker-btn{flex-shrink:0; background:var(--red); color:var(--paper); border:none; cursor:var(--cursor-tap);
+    font-family:'Courier Prime',monospace; font-size:11px; letter-spacing:.06em; padding:8px 14px; white-space:nowrap;}
+  .ticker-btn:hover{background:var(--red-bright);}
+
+  main{position:relative; z-index:2; max-width:1080px; margin:0 auto; padding:26px 24px 90px;
+    transition:opacity .18s ease;}
+  main.lang-transition{opacity:.2;}
+
+  /* ---------- section reveal: fade + rise on page load and on first scroll into view ---------- */
+  .reveal{opacity:0; transform:translateY(22px); transition:opacity .65s cubic-bezier(.22,1,.36,1), transform .65s cubic-bezier(.22,1,.36,1);}
+  .reveal.in{opacity:1; transform:translateY(0);}
+
+  /* ---------- case brief (plain — no drop cap) ---------- */
+  .case-box{border:1px solid var(--ink); background:var(--paper-2); padding:20px 22px; margin-bottom:10px;}
+  .case-kicker{font-family:'Courier Prime',monospace; font-size:11px; letter-spacing:.14em; color:var(--red); margin-bottom:8px;}
+  .case-kicker::before{content:'▍ ';}
+  .case-box h2{font-family:'Playfair Display',serif; font-weight:900; font-size:20px; margin:0 0 10px;}
+  .case-box p{font-family:'Shippori Mincho',serif; font-size:13.5px; line-height:1.95; color:var(--ink-soft); margin:0;}
+
+  /* ---------- cast ---------- */
+  .cast-note{font-family:'Courier Prime',monospace; font-size:10.5px; color:var(--ink-soft); margin-bottom:14px;}
+  .cast-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:16px;}
+  .cast-card{perspective:1000px; height:190px; cursor:var(--cursor-tap); transition:transform .25s cubic-bezier(.22,1,.36,1);}
+  .cast-card:hover{transform:translateY(-6px);}
+  .cast-inner{position:relative; width:100%; height:100%; transition:transform .5s; transform-style:preserve-3d;}
+  .cast-card.flipped .cast-inner{transform:rotateY(180deg);}
+  .cast-face, .cast-back{position:absolute; inset:0; backface-visibility:hidden; border:1px solid var(--ink); border-radius:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:12px;
+    transition:border-radius .4s cubic-bezier(.34,1.56,.64,1), box-shadow .35s cubic-bezier(.34,1.56,.64,1);}
+  .cast-card:hover .cast-face, .cast-card:hover .cast-back{
+    border-radius:16px; border-color:var(--red);
+    box-shadow:0 0 0 2px var(--red), 0 0 16px 3px rgba(178,58,72,0.4);}
+  .cast-face{background:var(--paper-2);}
+  .cast-face .icon{width:64px; height:64px; border-radius:50%; background:var(--paper); border:2px solid var(--ink);
+    overflow:hidden;
+    display:flex; align-items:center; justify-content:center; font-size:30px; margin-bottom:10px; filter:sepia(15%) contrast(1.05);}
+  .cast-face .icon img{width:100%; height:100%; object-fit:cover; object-position:center 15%;}
+  .cast-face .name{font-family:'Shippori Mincho',serif; font-size:11.5px; font-weight:700; line-height:1.4;}
+  .cast-face .tap{font-family:'Courier Prime',monospace; font-size:9px; color:var(--ink-soft); margin-top:6px;}
+  .cast-back{background:var(--ink); color:var(--paper); transform:rotateY(180deg);}
+  .cast-back p{font-family:'Shippori Mincho',serif; font-size:11px; line-height:1.7; margin:0;}
+
+  /* ---------- section headers ---------- */
+  .section{margin-top:38px;}
+  .section-head{display:flex; align-items:baseline; gap:12px; margin-bottom:14px;}
+  .section-head h3{font-family:'Playfair Display',serif; font-weight:900; font-size:19px; margin:0; white-space:nowrap;}
+  .section-head .rule{flex:1; height:2px; background:var(--ink);}
+  .section-note{font-family:'Courier Prime',monospace; font-size:10.5px; color:var(--ink-soft); white-space:nowrap;}
+
+  /* ---------- hero ---------- */
+  .hero{display:none; grid-template-columns:1.35fr 1fr; gap:24px; margin-top:44px; padding-bottom:26px; margin-bottom:6px; border-bottom:3px double var(--ink);}
+  @media (max-width:720px){ .hero{grid-template-columns:1fr;} }
+  .hero-photo{position:relative; background:#000; aspect-ratio:16/10; overflow:hidden; border:1px solid var(--ink);}
+  .hero-photo.pop{animation:heroPop .5s cubic-bezier(.34,1.56,.64,1);}
+  @keyframes heroPop{
+    0%{ transform:scale(1,1); }
+    30%{ transform:scale(0.93,1.05); }
+    62%{ transform:scale(1.06,0.95); }
+    100%{ transform:scale(1,1); }
+  }
+  .hero-photo.portrait{aspect-ratio:9/16; max-width:260px; margin:0 auto;}
+  .hero-photo img{width:100%; height:100%; object-fit:cover; filter:grayscale(65%) sepia(28%) contrast(1.08) brightness(.92);}
+  .hero-preview{position:absolute; inset:0; opacity:0; pointer-events:none; transition:opacity .35s ease; background:#000;}
+  .hero-preview.show{opacity:1;}
+  .hero-preview iframe{position:absolute; inset:0; width:100%; height:100%; border:0;}
+  .hero-photo .play-btn{position:absolute; inset:0; margin:auto; width:58px; height:58px; border-radius:50%;
+    background:rgba(233,225,205,0.9); border:2px solid var(--ink); display:flex; align-items:center; justify-content:center;
+    cursor:var(--cursor-tap); transition:transform .15s ease;}
+  .hero-photo .play-btn:hover{transform:scale(1.07);}
+  .hero-photo .caption-bar{position:absolute; left:0; right:0; bottom:0; background:rgba(28,24,17,0.82); color:var(--paper);
+    font-family:'Courier Prime',monospace; font-size:10px; letter-spacing:.05em; padding:5px 9px; display:flex; justify-content:space-between;}
+  .hero-body{display:flex; flex-direction:column; justify-content:center; padding:4px 0;}
+  .kicker{font-family:'Courier Prime',monospace; font-size:11px; letter-spacing:.14em; color:var(--red); margin-bottom:8px;}
+  .kicker::before{content:'▍ ';}
+  .hero-body h2{font-family:'Playfair Display',serif; font-weight:900; font-size:26px; margin:0 0 10px; line-height:1.28;}
+  .hero-body p{font-family:'Shippori Mincho',serif; font-size:13px; color:var(--ink-soft); line-height:1.9; margin:0 0 16px;}
+  .hero-progress{height:6px; background:var(--paper-2); border:1px solid var(--ink); position:relative;}
+  .hero-progress i{display:block; height:100%; background:repeating-linear-gradient(45deg, var(--red) 0 6px, var(--red-bright) 6px 12px);}
+  .hero-progress-label{font-family:'Courier Prime',monospace; font-size:10px; margin-top:6px; color:var(--ink-soft);}
+
+  /* ---------- episode fan: trading-card hand, horizontally scrollable ---------- */
+  .fan-wrap{overflow-x:auto; overflow-y:visible; -webkit-overflow-scrolling:touch; padding:60px 6px 44px;}
+  .fan-track{display:flex; align-items:flex-end; width:max-content; padding:0 26px;}
+  .card{
+    width:108px; flex:0 0 auto; margin-left:-24px; background:var(--paper-2); border:1px solid var(--ink);
+    cursor:var(--cursor-tap); position:relative; box-shadow:2px 3px 6px rgba(28,24,17,0.28);
+    border-radius:0;
+    transition:transform .3s cubic-bezier(.22,1,.36,1), box-shadow .35s cubic-bezier(.34,1.56,.64,1),
+      border-color .3s ease, border-radius .4s cubic-bezier(.34,1.56,.64,1);
+  }
+  .fan-track .card:first-child{margin-left:0;}
+  .card.sel{
+    border-radius:14px; border-color:var(--red);
+    animation:cardGlow 1.5s ease-in-out infinite alternate, cardPop .5s cubic-bezier(.34,1.56,.64,1) forwards;
+  }
+  @keyframes cardGlow{
+    0%{ box-shadow:0 0 0 2px var(--red), 0 0 10px 1px rgba(178,58,72,0.35), 0 18px 20px rgba(28,24,17,0.38); }
+    100%{ box-shadow:0 0 0 2px var(--red-bright), 0 0 20px 6px rgba(178,58,72,0.6), 0 18px 20px rgba(28,24,17,0.38); }
+  }
+  @keyframes cardPop{
+    0%{ transform:translateY(0) scale(1,1); }
+    32%{ transform:translateY(-8px) scale(0.94,1.08); }
+    58%{ transform:translateY(-48px) scale(1.18,1.06); }
+    78%{ transform:translateY(-33px) scale(1.06,1.16); }
+    100%{ transform:translateY(-38px) scale(1.12,1.12); }
+  }
+  .card.coming{cursor:default; opacity:.68;}
+  .card.coming.sel{box-shadow:2px 3px 6px rgba(28,24,17,0.28); border-color:var(--ink); border-radius:0; animation:none;}
+  .card-thumb{position:relative; aspect-ratio:9/16; background:#000; overflow:hidden; border-bottom:1px solid var(--ink);
+    border-radius:inherit; border-bottom-left-radius:0; border-bottom-right-radius:0; transition:border-radius .4s cubic-bezier(.34,1.56,.64,1);}
+  .card-thumb.landscape{aspect-ratio:16/10;}
+  .card-thumb img{width:100%; height:100%; object-fit:cover; filter:grayscale(60%) sepia(20%) contrast(1.06) brightness(.92);
+    transition:filter .35s ease;}
+  .card.sel .card-thumb img{filter:none;}
+  .card-thumb::after{
+    content:''; position:absolute; top:-50%; left:-60%; width:35%; height:220%;
+    background:linear-gradient(120deg, transparent 0%, transparent 40%, rgba(255,255,255,0.65) 50%, transparent 60%, transparent 100%);
+    transform:rotate(18deg); opacity:0; pointer-events:none;
+  }
+  .card.sel .card-thumb::after{
+    opacity:1; animation:thumbShine 2.8s ease-in-out infinite;
+  }
+  @keyframes thumbShine{
+    0%{ left:-60%; }
+    22%{ left:130%; }
+    100%{ left:130%; }
+  }
+  .card-thumb .file-tag{position:absolute; top:5px; left:5px; font-family:'Courier Prime',monospace; font-size:8.5px;
+    background:var(--ink); color:var(--paper); padding:1px 5px; letter-spacing:.04em;}
+  .card-thumb .stamp{position:absolute; top:11px; right:6px; transform:rotate(-16deg); border:1.5px solid var(--red); color:var(--red);
+    font-family:'Courier Prime',monospace; font-weight:700; font-size:8.5px; letter-spacing:.06em; padding:1px 5px; opacity:.9; background:rgba(233,225,205,0.2);}
+  .card-thumb .progress{position:absolute; left:0; right:0; bottom:0; height:3px; background:rgba(28,24,17,0.25);}
+  .card-thumb .progress i{display:block; height:100%; background:var(--red);}
+  .card-thumb .lock{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(28,24,17,0.45);
+    color:var(--paper); font-family:'Courier Prime',monospace; font-size:9px; letter-spacing:.06em; text-align:center; padding:4px;}
+  .card-body{padding:7px 8px 9px; border-radius:inherit; border-top-left-radius:0; border-top-right-radius:0;}
+  .card-body h4{font-family:'Shippori Mincho',serif; font-size:10.5px; font-weight:700; margin:0 0 2px; line-height:1.4; transition:color .2s ease;}
+  .card.sel .card-body h4{color:var(--red);}
+  .card-body .sub{font-family:'Courier Prime',monospace; font-size:8px; color:var(--ink-soft);}
+  .fan-hint{font-family:'Courier Prime',monospace; font-size:10px; color:var(--ink-soft); text-align:center; margin-top:-6px;}
+
+  /* ---------- history ---------- */
+  .history-row{display:flex; gap:14px; align-items:center; padding:12px 4px; border-bottom:1px dashed var(--rule); cursor:var(--cursor-tap);}
+  .history-row:hover .h-title{color:var(--red); letter-spacing:.02em;}
+  .history-row img{width:64px; aspect-ratio:9/16; object-fit:cover; flex-shrink:0; background:#000;
+    filter:grayscale(60%) sepia(20%) contrast(1.06) brightness(.92); border:1px solid var(--ink); transition:transform .2s ease;}
+  .history-row img.landscape{width:110px; aspect-ratio:16/10;}
+  .history-row:hover img{transform:translateY(-4px);}
+  .h-title{font-family:'Shippori Mincho',serif; font-size:13.5px; margin:0 0 4px; transition:color .18s ease, letter-spacing .18s ease;}
+  .h-sub{font-family:'Courier Prime',monospace; font-size:10px; color:var(--ink-soft);}
+  .empty{font-family:'Courier Prime',monospace; font-size:11.5px; color:var(--ink-soft); padding:16px 4px;}
+
+  /* ---------- how to use ---------- */
+  details.how{border:1px solid var(--ink); background:var(--paper-2); padding:4px 18px;}
+  details.how summary{font-family:'Playfair Display',serif; font-weight:900; font-size:14px; padding:12px 0; cursor:var(--cursor-tap); list-style:none;}
+  details.how summary::-webkit-details-marker{display:none;}
+  details.how summary::before{content:'▸ '; color:var(--red);}
+  details.how[open] summary::before{content:'▾ ';}
+  .how-list{font-family:'Shippori Mincho',serif; font-size:12.5px; line-height:2; color:var(--ink-soft); margin:0 0 16px; padding-left:18px;}
+
+  /* ---------- player overlay ---------- */
+  .overlay{position:fixed; inset:0; background:rgba(15,13,9,0.95); z-index:50; display:none; align-items:center; justify-content:center; padding:20px;}
+  .overlay.open{display:flex;}
+  .player-wrap{width:fit-content; max-width:96vw; background:var(--paper); border:1px solid var(--ink); padding:6px;}
+  .overlay.open .player-wrap{animation:popOut .5s cubic-bezier(.22,1.4,.36,1);}
+  @keyframes popOut{ 0%{transform:scale(.55); opacity:0;} 60%{transform:scale(1.03); opacity:1;} 100%{transform:scale(1);} }
+  .player-frame{position:relative; background:#000; overflow:hidden;}
+  .player-frame.portrait{aspect-ratio:9/16; width:auto; height:min(78vh,620px); max-width:92vw; margin:0 auto;}
+  .player-frame.landscape{aspect-ratio:16/9; width:min(860px,92vw); height:auto;}
+
+  /* on phones, the player takes over the whole screen like a native video app */
+  @media (max-width:700px){
+    .overlay{padding:0; background:#000;}
+    .player-wrap{width:100vw; max-width:100vw; height:100dvh; height:100svh; padding:0; border:none;
+      display:flex; flex-direction:column; justify-content:center; background:#000;}
+    .player-frame{width:100%; height:auto; max-height:82dvh; max-height:82svh;}
+    .player-frame.portrait{height:82dvh; height:82svh; width:auto; max-width:100vw;}
+    .player-frame.landscape{width:100vw; height:auto;}
+    .player-bar{padding:10px 16px; background:var(--paper);}
+  }
+  .player-frame iframe{position:absolute; inset:0; width:100%; height:100%; border:0;}
+  .player-veil{position:absolute; inset:0; z-index:2; background:var(--ink); display:flex; align-items:center; justify-content:center;
+    color:var(--paper); font-family:'Courier Prime',monospace; font-size:11px; letter-spacing:.14em; text-align:center; padding:20px;
+    transition:opacity .5s ease; opacity:1;}
+  .player-veil.hide{opacity:0; pointer-events:none;}
+  .seek-track{position:absolute; left:0; right:0; bottom:0; height:16px; z-index:3; cursor:var(--cursor-tap); display:flex; align-items:center; touch-action:none;}
+  .seek-track::before{content:''; position:absolute; left:0; right:0; bottom:6px; height:4px; background:rgba(233,225,205,0.28);}
+  .seek-fill{position:absolute; left:0; bottom:6px; height:4px; width:0%; background:var(--red-bright); pointer-events:none;}
+  .seek-knob{position:absolute; bottom:2px; width:12px; height:12px; border-radius:50%; background:var(--paper); border:2px solid var(--red-bright);
+    left:0%; transform:translateX(-50%); pointer-events:none; transition:transform .1s ease;}
+  .seek-track:hover .seek-knob, .seek-track.dragging .seek-knob{transform:translateX(-50%) scale(1.3);}
+  .ctrl-bar{position:absolute; left:8px; bottom:20px; z-index:3; display:flex; gap:6px;}
+  .ctrl-btn{background:rgba(28,24,17,0.72); color:var(--paper); border:1px solid rgba(233,225,205,0.4); border-radius:3px;
+    width:30px; height:30px; font-size:13px; cursor:var(--cursor-tap);}
+  .ctrl-btn:hover{background:var(--red);}
+  .copy-toast{position:absolute; left:8px; bottom:56px; z-index:4; background:var(--ink); color:var(--paper);
+    font-family:'Courier Prime',monospace; font-size:10.5px; letter-spacing:.05em; padding:6px 12px;
+    opacity:0; transform:translateY(6px); transition:opacity .2s ease, transform .2s ease; pointer-events:none;}
+  .copy-toast.show{opacity:1; transform:translateY(0);}
+  .player-bar{display:flex; justify-content:space-between; align-items:center; padding:12px 4px 4px;}
+  .player-bar h3{font-family:'Playfair Display',serif; font-weight:900; font-size:15px; margin:0;}
+  .close-btn{background:var(--ink); border:none; color:var(--paper); cursor:var(--cursor-tap); padding:7px 14px;
+    font-family:'Courier Prime',monospace; font-size:11px; letter-spacing:.06em;}
+  .close-btn:hover{background:var(--red);}
+
+  footer{position:relative; z-index:2; text-align:center; padding:30px; font-family:'Courier Prime',monospace;
+    font-size:10px; color:var(--ink-soft); letter-spacing:.05em; border-top:1px solid var(--rule-soft); margin-top:20px;}
+
+  /* ---------- scroll-style synopsis popup ---------- */
+  .scroll-popup{position:fixed; z-index:70; width:min(310px, 82vw); opacity:0; transform:scaleY(.05); transform-origin:top center;
+    transition:opacity .3s ease, transform .35s cubic-bezier(.22,1,.36,1); pointer-events:none;}
+  .scroll-popup.show{opacity:1; transform:scaleY(1); pointer-events:auto;}
+  .scroll-cap{height:13px; background:linear-gradient(180deg, #c9bc98, var(--paper-2) 65%); border:1px solid var(--ink); border-radius:9px;
+    box-shadow:0 2px 3px rgba(0,0,0,0.28);}
+  .scroll-inner{background:var(--paper); border-left:1px solid var(--ink); border-right:1px solid var(--ink); padding:14px 16px 10px;
+    position:relative; box-shadow:inset 0 0 22px rgba(28,24,17,0.07); border-radius:0;
+    transition:border-radius .4s cubic-bezier(.34,1.56,.64,1);}
+  .scroll-popup.show .scroll-inner{border-radius:6px;}
+  .scroll-close{position:absolute; top:5px; right:7px; background:none; border:none; font-family:'Courier Prime',monospace;
+    font-size:13px; cursor:var(--cursor-tap); color:var(--ink-soft); padding:2px 4px;}
+  .scroll-close:hover{color:var(--red);}
+  .sp-head{display:flex; justify-content:space-between; align-items:center; margin:2px 20px 8px 0; border-bottom:1px solid var(--rule-soft); padding-bottom:6px;}
+  .sp-file{font-family:'Courier Prime',monospace; font-size:9.5px; color:var(--red); letter-spacing:.07em;}
+  .sp-speak{background:none; border:1px solid var(--ink); cursor:var(--cursor-tap); font-size:11px; padding:2px 6px; line-height:1.4;}
+  .sp-speak:hover{background:var(--ink); color:var(--paper);}
+  .sp-play{display:flex; align-items:center; justify-content:center; gap:6px; width:100%; margin-top:10px;
+    background:var(--red); color:var(--paper); border:none; cursor:var(--cursor-tap); padding:9px 0;
+    font-family:'Courier Prime',monospace; font-weight:700; font-size:11.5px; letter-spacing:.08em;}
+  .sp-play:hover{background:var(--red-bright);}
+  .sp-body{font-family:'Shippori Mincho',serif; font-size:12.5px; line-height:1.85; color:var(--ink-soft); max-height:200px; overflow-y:auto;}
+  .sp-body .mc{display:inline-block;}
+  .ty-cursor{display:inline-block; color:var(--red); animation:blink 1s step-start infinite;}
+  @keyframes blink{ 50%{opacity:0;} }
+  .sp-hint{font-family:'Courier Prime',monospace; font-size:9px; color:var(--ink-soft); margin-top:8px; opacity:.75;}
+
+  /* ---------- magnifying-glass lens ---------- */
+  .lens{position:fixed; width:120px; height:120px; border-radius:50%; border:6px solid #3b2f22;
+    box-shadow:0 4px 10px rgba(0,0,0,0.4), inset 0 0 0 2px rgba(255,255,255,0.35);
+    overflow:hidden; pointer-events:none; z-index:80; display:none; background:var(--paper);}
+  .lens.show{display:block;}
+  .lens::after{content:''; position:absolute; width:14px; height:44px; background:#3b2f22; border-radius:6px;
+    right:-9px; bottom:-32px; transform:rotate(45deg); box-shadow:0 3px 4px rgba(0,0,0,0.3);}
+  .lens-inner{position:absolute; top:0; left:0; font-family:'Shippori Mincho',serif; font-size:12.5px; line-height:1.85; color:var(--ink-soft); white-space:normal;}
+
+  /* ---------- BGM panel ---------- */
+  .bgm-panel{position:fixed; right:14px; bottom:14px; z-index:60; width:230px; background:var(--paper); border:1px solid var(--ink);
+    box-shadow:4px 4px 0 rgba(28,24,17,0.22);}
+  .bgm-head{display:flex; justify-content:space-between; align-items:center; padding:7px 10px; background:var(--ink); color:var(--paper); cursor:var(--cursor-tap);}
+  .bgm-head .type{font-size:11px; letter-spacing:.08em;}
+  .bgm-toggle{background:none; border:none; color:var(--paper); cursor:var(--cursor-tap); font-size:11px;}
+  .bgm-body{padding:8px 10px 10px; max-height:220px; overflow:hidden; transition:max-height .25s ease, padding .25s ease;}
+  .bgm-panel.collapsed .bgm-body{max-height:0; padding-top:0; padding-bottom:0;}
+  .bgm-link-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 10px;
+    border:1px solid var(--ink); background:var(--paper-2); margin-bottom:7px; text-decoration:none; color:var(--ink);}
+  .bgm-link-row:hover{border-color:var(--red); color:var(--red);}
+  .bgm-link-row .label{font-family:'Shippori Mincho',serif; font-size:12px; font-weight:700;}
+  .bgm-link-row .go{font-family:'Courier Prime',monospace; font-size:10px;}
+  .bgm-note{font-family:'Courier Prime',monospace; font-size:8.5px; color:var(--ink-soft); margin-top:2px; line-height:1.5;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="masthead-top">
+    <span id="editionDate"></span>
+    <button class="lang-btn fx-link" id="langBtn">日本語</button>
+  </div>
+  <div class="masthead">
+    <div>
+      <h1 id="mastheadTitle"><span class="txt">THE FILE</span><canvas id="titleCanvas" aria-hidden="true"></canvas></h1>
+      <div class="sub" id="mastheadSub"></div>
+    </div>
+  </div>
+  <div class="rule-thick"></div>
+  <div class="rule-thin"></div>
+</header>
+
+<div class="ticker-wrap">
+  <div class="ticker-flag">EXTRA</div>
+  <div class="ticker-track"><div class="ticker-move" id="tickerText"></div></div>
+  <button class="ticker-btn fx-link" id="tickerBtn"></button>
+</div>
+
+<main>
+  <section class="case-box reveal">
+    <div class="case-kicker" id="caseKicker"></div>
+    <h2 id="caseTitle"></h2>
+    <p id="caseBrief"></p>
+  </section>
+
+  <section class="section reveal">
+    <div class="section-head"><h3 id="castTitle"></h3><div class="rule"></div></div>
+    <div class="cast-note" id="castNote"></div>
+    <div class="cast-grid" id="castGrid"></div>
+  </section>
+
+  <section class="hero" id="heroSection">
+    <div class="hero-photo">
+      <img id="heroImg" alt="">
+      <div class="hero-preview" id="heroPreview"><div id="heroPreviewPlayer"></div></div>
+      <div class="play-btn" id="heroPlay">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#1c1811"><path d="M8 5v14l11-7z"/></svg>
+      </div>
+      <div class="caption-bar"><span id="heroFileTag"></span><span id="heroCaptionR"></span></div>
+    </div>
+    <div class="hero-body">
+      <div class="kicker" id="heroKicker"></div>
+      <h2 id="heroTitle"></h2>
+      <p id="heroDesc"></p>
+      <div class="hero-progress"><i id="heroProgressBar" style="width:0%"></i></div>
+      <div class="hero-progress-label" id="heroMeta"></div>
+    </div>
+  </section>
+
+  <section class="section reveal">
+    <div class="section-head"><h3 id="filesTitle"></h3><div class="rule"></div><div class="section-note" id="epCount"></div></div>
+    <div class="fan-hint" id="fanHint"></div>
+    <div class="fan-wrap"><div class="fan-track" id="episodeGrid"></div></div>
+  </section>
+
+  <section class="section reveal">
+    <div class="section-head"><h3 id="historyTitle"></h3><div class="rule"></div></div>
+    <div id="historyList"></div>
+  </section>
+
+  <section class="section reveal">
+    <details class="how" id="howBox">
+      <summary id="howTitle"></summary>
+      <ol class="how-list" id="howList"></ol>
+    </details>
+  </section>
+</main>
+
+<footer class="reveal">THE FILE — 事件簿 · ALL EPISODES ARCHIVED · NEW YORK, N.Y.</footer>
+
+<div class="overlay" id="overlay">
+  <div class="player-wrap">
+    <div class="player-frame">
+      <div id="ytPlayer"></div>
+      <div class="player-veil" id="playerVeil">◉ DEVELOPING…</div>
+      <div class="copy-toast" id="copyToast">LINK COPIED</div>
+      <div class="seek-track" id="seekTrack"><div class="seek-fill" id="seekFill"></div><div class="seek-knob" id="seekKnob"></div></div>
+      <div class="ctrl-bar">
+        <button class="ctrl-btn" id="ctrlRewind" title="Rewind to start">⏮</button>
+        <button class="ctrl-btn" id="ctrlPlay">⏸</button>
+        <button class="ctrl-btn" id="ctrlMute">🔊</button>
+        <button class="ctrl-btn" id="ctrlShare" title="Copy share link">🔗</button>
+      </div>
+    </div>
+    <div class="player-bar">
+      <h3 id="playerTitle"></h3>
+      <button class="close-btn fx-link" id="closeBtn"></button>
+    </div>
+  </div>
+</div>
+
+<div class="scroll-popup" id="synopsisPopup">
+  <div class="scroll-cap"></div>
+  <div class="scroll-inner">
+    <button class="scroll-close" id="spClose">✕</button>
+    <div class="sp-head">
+      <span class="sp-file" id="spFile"></span>
+      <button class="sp-speak" id="spSpeak" title="Read aloud">🔊</button>
+    </div>
+    <div class="sp-body" id="spBody"></div>
+    <button class="sp-play" id="spPlay">▶ <span id="spPlayLabel">PLAY</span></button>
+    <div class="sp-hint" id="spHint"></div>
+  </div>
+  <div class="scroll-cap"></div>
+</div>
+
+<div class="lens" id="lens"><div class="lens-inner" id="lensInner"></div></div>
+
+<div class="bgm-panel" id="bgmPanel">
+  <div class="bgm-head" id="bgmHead">
+    <span class="type">♪ BGM</span>
+    <button class="bgm-toggle" id="bgmToggle">▾</button>
+  </div>
+  <div class="bgm-body" id="bgmBody">
+    <div id="bgmLinks"></div>
+    <div class="bgm-note" id="bgmNote"></div>
+  </div>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+/* ============================================================
+   EPISODES — edit to match your own videos
+   ============================================================ */
+const EPISODES = [
+  { id:'ep1',  file:'FILE No.01', youtubeId:'mmNg6tUpvl8' },
+  { id:'ep2',  file:'FILE No.02', youtubeId:'abehBqF2MDI' },
+  { id:'ep3',  file:'FILE No.03', youtubeId:'Jxdf2ShIVHs' },
+  { id:'ep4',  file:'FILE No.04', youtubeId:'T1yh4oK0NpE' },
+  { id:'ep5',  file:'FILE No.05', youtubeId:'IOipqTv6x9A' },
+  { id:'ep6',  file:'FILE No.06', youtubeId:'DmPEd5VoYGo' },
+  { id:'ep7',  file:'FILE No.07', youtubeId:'IjHa2xjz2ac' },
+  { id:'ep8',  file:'FILE No.08', youtubeId:'lG2Ct3yzTP0' },
+  { id:'ep9',  file:'FILE No.09', youtubeId:'bYoKzdgqxT8', landscape:true },
+  { id:'ep10', file:'FILE No.10', youtubeId:'lBQiqaEwZ_s' },
+  { id:'ep11', file:'FILE No.11', youtubeId:'NOmnHm29CTU' },
+  { id:'ep12', file:'FILE No.12', youtubeId:'h0PvusGBk54' },
+  { id:'ep13', file:'FILE No.13', youtubeId:'iuTsbSdC3UQ' },
+  { id:'ep14', file:'FILE No.14', youtubeId:'Zu4xZ1Dxhsk' },
+  { id:'ep15', file:'FILE No.15', youtubeId:'NwntQ6asoQc' },
+  // { id:'ep16', file:'FILE No.16', youtubeId:'', coming:true },  // ← add more like this
+];
+
+const SYNOPSIS = {
+  ep1: { ja:`ニューヨークの街に現れた『フラッフィーマスクマスター』は、物体をカラフルなモフモフに変える新能力でイエローのタクシーをカラフルなモフモフに変えてしまった！\nすると！！タクシーから緑のモフモフが逃げ出して街がパニックに！タクシーに乗ってた乗客までモフモフに変えちゃうなんて！早く捕まえないとニューヨークが混乱の渦に巻き込まれてしまうぞ！`, en:`The "Fluffy Mask Master," who appeared in the streets of New York, used a new ability to turn objects into colorful fluff, turning a yellow taxi into colorful fluff! Then!! Green fluff escaped from the taxi, causing a panic in the city! To think it even turns the passengers who were riding the taxi into fluff! If we don't catch it soon, New York will be dragged into a vortex of chaos!` },
+  ep2: { ja:`フラッフィーマスクマスターは緑のモンスターを追うが、手がかりがない。その時、通りの奥から女性の悲鳴が！緑のモンスターに違いない！一刻も早く捕まえないとぉ！`, en:`The Fluffy Mask Master chases the green monster, but has no leads. Just then, a woman's scream echoes from deep down the street! It must be the green monster! We have to catch it as soon as possible!` },
+  ep3: { ja:`ニューヨークの街は賑やかで素敵だ。フラッフィーマスクマスターは緑のモンスターを追跡するが、なかなか見つからない。そんな中、緑のモンスターが花売りの女性を驚かせて街がパニックにおちいる！すばしっこく動き回る緑のモンスターをニューヨークの人々も捕まえられない。厄介な事になってしまった！ニューヨークの街がパニックにおちいっている頃、フラッフィーマスクマスターは道に迷い、元の場所に戻ってしまう。`, en:`The streets of New York are lively and wonderful. The Fluffy Mask Master tracks the green monster, but it's hard to find. Meanwhile, the green monster startles a flower-selling woman, plunging the city into panic! Even the people of New York cannot catch the nimble green monster. This has become troublesome! While the streets of New York are in a panic, the Fluffy Mask Master gets lost and returns to the starting point.` },
+  ep4: { ja:`緑のモンスターは路地裏の掃除用具入れに潜んでフラッフィーマスクマスターの追跡から逃れようとする。しかし、ロッカーから緑の尻尾が出ている！これは緑のモンスターも捕獲されるのか！？ロッカーの前を何度も通るフラッフィーマスクマスターだが、緑のモンスターを見つけられない。マスクが邪魔で前が見えないのか？こんな近くにいるのに見つけられないなんて、フラッフィーマスクマスターは間抜けだ。`, en:`The green monster hides in a cleaning supply closet in an alley to escape the Fluffy Mask Master's tracking. However, a green tail is sticking out from the locker! Will this green monster be captured too!? The Fluffy Mask Master passes in front of the locker many times, but cannot find the green monster. Is the mask getting in the way and blocking the view? To not be able to find it even though it's so close, the Fluffy Mask Master is foolish.` },
+  ep5: { ja:`フラッフィーマスクマスターは、ニューヨークの街中で暴れ回る緑のモンスターを捕まえるため、警察署を訪れ刑事に事件を報告する。しかし、刑事はフラッフィーマスクマスターの話を真剣に聞かない。警察署にいるニューヨークの人々はストレスを抱えて周りに当たり散らし問題ばかり起こす。警察はフラッフィーマスクマスターもトラブルメーカーなのではと疑念を抱いてる様子でまともに相手をしていない。`, en:`To catch the green monster rampaging through the streets of New York, the Fluffy Mask Master visits a police station and reports the incident to a detective. However, the detective does not take the Fluffy Mask Master's story seriously. The people of New York at the police station are stressed, lash out at those around them, and just cause trouble. The police seem to suspect that the Fluffy Mask Master is also a troublemaker and are not taking them seriously.` },
+  ep6: { ja:`ニューヨークのストリートアーティスト『lil X』は、清掃用具入れのロッカーを絶好のタギングポイントとしてロックオンした。そのロッカーの中に隠れていた緑のモンスターは『lil X』にライターで尻尾を焼かれて大暴れする。`, en:`The New York street artist "lil X" locked onto the cleaning supply locker as the ultimate tagging point. The green monster hiding inside that locker had its tail burned with a lighter by "lil X" and went on a rampage.` },
+  ep7: { ja:`リル Xを名乗るグラフィティーアーティストの悪戯で尻尾に火をつけられた緑のモンスターは、ロッカーごと暴れ回り、ニューヨークの路地裏からマイアミのビーチまで飛んでいってしまう。\nマイアミビーチに着陸したロッカーから、見た事もないモンスターが出てくるんでしょ？考えただけでゾッとしちゃう。あれ？でもマイアミの人達ってそんな事を気にしない強い精神状態の人ばかりなのかな？緑のモンスターが間抜けで大した事なさそうだから気にしないのかな？緑のモンスターの名前はゴチャゴチャって言うんだって。なんでかは知らないけど、ゴチャゴチャした変なやつだから付けられた名前なのか？別に知っても得はしなさそうだね。`, en:`The green monster, whose tail was set on fire by the prank of a graffiti artist calling himself Lil X, goes on a rampage along with the locker and flies all the way from a New York alley to Miami Beach. A monster you've never seen before comes out of the locker that landed on Miami Beach, right? Just thinking about it gives me the creeps. Huh? But are the people in Miami just the type with strong mental states who don't care about such things? Do they not care because the green monster is foolish and doesn't seem like a big deal? They say the green monster's name is Gochagocha. I don't know why, but is it a name given because it's a messy, weird guy? Knowing probably won't do you any good.` },
+  ep8: { ja:`トラブルがあっても放ったらかしにしてるから、ニューヨークの清掃員のおじさんが路地裏にあった仕事道具の入ったロッカーが無くなったって警察署に被害を訴えに来てるよ。でも警察も掃除用具の入ったデカいロッカーが何処かに消えたなんて信じられない話だし相手にしないんじゃない？\n話の途中で警察官が舌を出したけど、ふざけてるのかな？\n清掃員のおじさんも警察官の対応に怒り出したけど、この街に住んでるとトラブルばかりで安心できないし、みんなこの街から引っ越すのをオススメするわ。`, en:`Since troubles are left unattended, an old New York cleaner has come to the police station to complain that the locker containing his work tools in the alley has disappeared. But the police probably won't take it seriously either, since it's an unbelievable story that a large locker with cleaning supplies vanished somewhere, right? The police officer stuck out their tongue in the middle of the conversation — are they messing around? The cleaner old man also started getting angry at the police officer's response, but living in this city is nothing but trouble and you can't feel safe, so I recommend everyone move away from this city.` },
+  ep9: { ja:`あらあらマイアミに到着した途端、緑のモンスター「ゴチャゴチャ」を警戒するわけでもなく、みんな踊り出すなんて、インドの映画とか、そういう類のやつなのか？娯楽のための動画だから別に世界観もクソも無いって事みたい。\nだとしても、これはどうするの？\n見れば見るほど呆れてしまう内容だわ。`, en:`Oh my, the moment we arrive in Miami, instead of being wary of the green monster "Gochagocha," everyone starts dancing — is this like an Indian movie or something of that sort? Since it's a video for entertainment, it seems like there's no cohesive worldview or anything like that. Even so, what do we do about this? The more you look at it, the more dumbfounded you become by the content.` },
+  ep10: { ja:`ほらほら緑のモンスターがビーチで踊ってて良いわけないでしょ。マイアミの警察が動き出しちゃったぜ。こういうピンチをどう乗りきるか見ものだね！サーフィンでもして違う国まで逃げるのかな？\nおや？そうでもなさそう。ゴチャゴチャを男の子が救ってくれるみたい。自転車に乗せられたゴチャゴチャはどこへ行くんだろう？刑事達もゴチャゴチャの足取りを掴むために捜査してるみたいだし、捕まっちゃうのかな？だとしたら捕まらないように逃げてほしい。だってあいつ緑のモフモフってだけで、悪い事してるっけ？\nそんなことを考えてる間にゴチャゴチャは男の子が夏だけ住んでるお婆ちゃんのお家に連れてかれちゃったよ。`, en:`Come on, it can't be right for the green monster to be dancing on the beach. The Miami police have started making a move. It'll be a sight to see how it overcomes a pinch like this! Will it go surfing and escape to a different country? Oh? It doesn't seem like it. It looks like a boy is going to save Gochagocha. Where is Gochagocha going, loaded onto a bicycle? The detectives also seem to be investigating to track down Gochagocha's whereabouts, so will it get caught? If so, I hope it escapes so it doesn't get caught. Because besides the fact that that guy is green fluff, has it done anything wrong? While thinking about such things, Gochagocha got taken to the grandmother's house where the boy only lives during the summer.` },
+  ep11: { ja:`ハハハ！ゴチャゴチャが男の子の家に連れて来られてるぞ！なんか猫かぶってるというか、大人しく男の子の言うことを聞いてるみたい。夕食の時間にお爺ちゃんとお婆ちゃんに紹介されてるけど、こいつ人形って紹介されちゃってる！実はしゃべるし動けるのに大丈夫か？大人しく出来るのかな？お爺ちゃんやお婆ちゃんにゴチャゴチャは生きてるって紹介したら驚いちゃうから男の子も配慮したんだろうね。行儀良くしてくれると良いんだけど。\n心配してたら机の上で大きなオナラをしちゃったみたい。お爺ちゃんに日本のキュウリの漬物みたいな臭いって言われちゃったけど、キュウリの漬物みたいに臭いのオナラはゴチャゴチャの得意技なのかな？とりあえず胃腸の様子は良さそうだね。`, en:`Haha! Gochagocha has been brought to the boy's house! It's kind of acting all innocent, or rather, it seems to be obediently listening to what the boy says. It's being introduced to the grandpa and grandma at dinner time, but this guy is being introduced as a doll! Actually, it can talk and move, so is that okay? Can it behave? The boy probably considered that grandpa and grandma would be surprised if he introduced Gochagocha as alive. I hope it behaves well. Just as I was worrying, it seems to have let out a big fart on the table. Grandpa told it that it smells like Japanese cucumber pickles, but is a fart that smells like cucumber pickles Gochagocha's specialty? Anyway, the state of its gastrointestinal tract seems good.` },
+  ep12: { ja:`なんかゴチャゴチャはこの男の子の前だとおとなしいね。やっぱり人の家にお邪魔してるからマナーを守ってるのかな？男の子がシャワーを浴びてるときも部屋でじっとしてるなんて、案外律儀なやつなのかも？とりあえず日中色々ありすぎたし今日はゆっくり寝かしてやりましょう。`, en:`Gochagocha is kind of quiet in front of this boy. As expected, is it minding its manners because it's intruding in someone else's house? Staying still in the room even while the boy is taking a shower — unexpectedly, it might be an upright fellow? Anyway, a lot has happened during the day, so let's let it sleep soundly today.` },
+  ep13: { ja:`熱帯夜のマイアミ。毛むくじゃらのゴチャゴチャと一緒に寝たら汗かいちゃうよね。もっと太陽降り注ぐ夏のマイアミに適したヘアスタイルはないのかな？\n　そう考えた青年が、うでききの美容師がいる理髪店にゴチャゴチャを連れて行く。\nゴチャゴチャも気にいる夏のヘアスタイルに変身できるのかな？`, en:`A tropical night in Miami. Sleeping next to the hairy Gochagocha sure makes you sweat! Isn't there a hairstyle better suited for a sun-soaked Miami summer?\nWith that idea in mind, a young man takes Gochagocha to a barbershop with a skilled stylist.\nWill Gochagocha get a summer makeover that they'll love?` },
+  ep14: { ja:`フラッフィーマスクマスターの物語だったはずが、気がついたら緑のモンスター「ゴチャゴチャ」が1人でどこかへいっっちゃう放浪記みたいな話になりそう。フラッフィーマスクマスターにしても別に気にもしてなさそうだし主役が交代しても良いって事なんでしょう。でも、フラッフィーマスクマスターの特殊能力「物体をカラフルなモフモフに換える」はもっと見てみたい。何をカラフルなモフモフに換えるとこが見たいか？って、そりゃミサイルとか軍事的な物体をカラフルなモフモフに換えたらどうなるか見てみたいところだけど、ミサイルがカラフルなモフモフになっても争ってる人達は素手で殴り合ったり戦いで勝敗を分けて、何かを獲得するまで争いをやめないのかな？\nよくわからないけど。`, en:`It was supposed to be the story of the Fluffy Mask Master, but before you know it, it's turning into something like a wandering chronicle where the green monster "Gochagocha" goes off somewhere alone. The Fluffy Mask Master doesn't seem to care either, so I guess it's fine if the main character changes. But I'd love to see more of the Fluffy Mask Master's special ability, "turning objects into colorful fluff." What do I want to see turned into colorful fluff? Well, I'd like to see what happens if missiles or military objects were turned into colorful fluff, but even if missiles turned into colorful fluff, would the fighting people still punch each other barehanded, fight, and refuse to stop fighting until they win something? I don't really know.` },
+};
+const SYNOPSIS_FALLBACK = { ja:'あらすじ準備中…', en:'[Synopsis coming soon]' };
+
+// GochaGocha's name is now confirmed by episode 7's synopsis — updating the "PERSONS OF INTEREST" bio too.
+
+
+const STRINGS = {
+  en: {
+    mastheadSub:'SHORT DRAMA SERIES', langBtn:'日本語',
+    tickerText:'🚨 BREAKING: TAXI TURNS FLUFFY, PASSENGER BECOMES MONSTER — FLUFFY MASK MASTER ON THE CASE 🚨',
+    tickerBtn:'▶ WATCH EPISODE 1',
+    caseKicker:'THE CASE', caseTitle:'How It Started',
+    caseBrief:'One day, Fluffy Mask Master — who holds the strange power to turn any object into colorful, fuzzy fluff — turned a taxi fluffy. The passenger inside it was transformed into the Green Monster. To turn him back into a human, Fluffy Mask Master now has to chase the Green Monster down.',
+    castTitle:'PERSONS OF INTEREST', castNote:'Tap a face to open the file.',
+    c1n:'Fluffy Mask Master (a.k.a. Zombie Zonzon)',
+    c1b:'Holds a strange power that turns any object — even a taxi — into colorful fluff. Now chasing the Green Monster to undo what his power caused.',
+    c2n:'The Green Monster (a.k.a. GochaGocha)',
+    c2b:'Once an ordinary taxi passenger. Transformed into a monster the instant the taxi went fluffy. Now on the run — last seen jumping from New York all the way to a Miami beach.',
+    heroContinueKicker:'CONTINUE READING', heroStartKicker:'START HERE',
+    heroCaptionContinue:'Tap to resume', heroCaptionStart:'Tap to begin the case',
+    filesTitle:'CASE FILES', historyTitle:'VIEWED FILES',
+    fanHint:'← Drag, or scroll the wheel, through the files — tap one to play →',
+    historyEmpty:'— NO RECORDS FOUND — Nothing viewed yet. Open a file to start your record.',
+    howTitle:'HOW TO USE THIS SITE',
+    how:[ 'Tap a case file to play it — playback starts right away.',
+          'Drag your finger (or hover) across the files to preview each synopsis.',
+          'Move over the synopsis text to bring out the magnifying glass.',
+          'Episodes auto-advance to the next file when one finishes.',
+          'Your progress saves automatically as you watch.',
+          'A red “VIEWED” stamp marks episodes you\'ve finished.',
+          'Use the button in the top corner to switch languages.' ],
+    closeFile:'CLOSE FILE ✕', unread:'UNREAD', comingSoon:'COMING SOON',
+    totalFiles:n=>`TOTAL ${n} FILES`, watchedPct:p=>`${p}% VIEWED`,
+    viewedStamp:'VIEWED', ago:{d:'d ago', h:'h ago', m:'m ago', now:'just now'},
+    spHint:'Move over the text with the lens. Tap 🔊 to hear it.',
+    nextUp:f=>`▶ NEXT UP… ${f}`
+  },
+  ja: {
+    mastheadSub:'ショートドラマ・シリーズ', langBtn:'EN',
+    tickerText:'🚨 速報：タクシーがモフモフに、乗客はモンスターに変貌 ― フラッフィーマスクマスター、追跡開始 🚨',
+    tickerBtn:'▶ 1話を再生する',
+    caseKicker:'事件概要', caseTitle:'すべての始まり',
+    caseBrief:'ある日、物体をカラフルなモフモフに変化させる力を持ったフラッフィーマスクマスターがタクシーをモフモフにしたら、乗客だった人が緑のモンスターになってしまった。人間に戻すため、フラッフィーマスクマスターは緑のモンスターを追うことになった。',
+    castTitle:'登場人物ファイル', castNote:'顔をタップしてファイルを開く',
+    c1n:'フラッフィーマスクマスター（ゾンビのゾンゾン）',
+    c1b:'あらゆる物をカラフルなモフモフに変える不思議な力を持つ。自分の力が引き起こした事態を解決するため、緑のモンスターを追いかけている。',
+    c2n:'緑のモンスター（通称：ゴチャゴチャ）',
+    c2b:'元はごく普通のタクシーの乗客。タクシーがモフモフになった瞬間、モンスターに変わってしまった。今はニューヨークからマイアミのビーチまで飛んで逃走中らしい。',
+    heroContinueKicker:'つづきから', heroStartKicker:'ここから始める',
+    heroCaptionContinue:'タップして再開', heroCaptionStart:'タップして事件を追う',
+    filesTitle:'捜査ファイル', historyTitle:'既読ファイル',
+    fanHint:'← 指でなぞる／ホイールでも1話ずつ選べます、タップで再生 →',
+    historyEmpty:'― 記録なし ― まだ視聴履歴がありません。ファイルを開くと記録されます。',
+    howTitle:'このサイトの使い方',
+    how:[ 'ファイルをタップすると、その場ですぐ再生が始まります。',
+          '指でなぞる（またはカーソルを乗せる）と、あらすじがプレビューされます。',
+          'あらすじの文字の上を動かすと、虫眼鏡で拡大されます。',
+          '1話が終わると、自動で次の話に進みます。',
+          '視聴した分は自動で保存されます。',
+          '赤い「既読」スタンプは、見終えた話につきます。',
+          '右上の言語ボタンで表示を切り替えられます。' ],
+    closeFile:'閉じる ✕', unread:'未読', comingSoon:'近日公開',
+    totalFiles:n=>`全${n}話`, watchedPct:p=>`${p}% 既読`,
+    viewedStamp:'既読', ago:{d:'日前', h:'時間前', m:'分前', now:'たった今'},
+    spHint:'虫眼鏡でテキストの上をなぞってみてください。🔊で読み上げ。',
+    nextUp:f=>`▶ 次話へ… ${f}`
+  }
+};
+
+const CAST = [
+  { icon:'assets/character-fluffy-mask-master.png', nameKey:'c1n', bioKey:'c1b' },
+  { icon:'assets/character-gochagocha.png', nameKey:'c2n', bioKey:'c2b' },
+];
+
+let currentLang = 'en';
+const thumbHi = id => `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+const thumbLo = id => `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+let progressCache = {};
+let player = null, activeEp = null, saveTimer = null;
+
+document.getElementById('editionDate').textContent =
+  new Date().toLocaleDateString('en-US', {year:'numeric',month:'short',day:'2-digit'}).toUpperCase();
+
+/* ---------- synthesized sound effects (no audio files needed) ---------- */
+let audioCtx = null;
+function ensureAudio(){
+  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+}
+function tone(freq0, freq1, t0, dur, type, gain, detune){
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  osc.type = type; if(detune) osc.detune.setValueAtTime(detune, t0);
+  osc.frequency.setValueAtTime(freq0, t0);
+  osc.frequency.exponentialRampToValueAtTime(Math.max(freq1,20), t0+dur);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(gain, t0+0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+  osc.connect(g); g.connect(audioCtx.destination);
+  osc.start(t0); osc.stop(t0+dur+0.03);
+}
+function sfxHover(){
+  try{ ensureAudio(); const t0 = audioCtx.currentTime;
+    tone(300, 760, t0, 0.2, 'sine', 0.055, 0);
+    tone(304, 768, t0+0.02, 0.2, 'sine', 0.04, 6);
+  }catch(e){}
+}
+function sfxClick(){
+  try{ ensureAudio(); const t0 = audioCtx.currentTime; tone(220, 80, t0, 0.09, 'square', 0.11); }catch(e){}
+}
+// directional "whoosh" for swipe gestures — rising for forward/next, falling for back/close
+function sfxSwipe(forward){
+  try{ ensureAudio(); const t0 = audioCtx.currentTime;
+    if(forward) tone(260, 640, t0, 0.16, 'sawtooth', 0.05);
+    else tone(640, 220, t0, 0.16, 'sawtooth', 0.05);
+  }catch(e){}
+}
+document.addEventListener('pointerdown', ()=>ensureAudio(), { once:true });
+
+// simple buttons: hover+click via delegation (works well on desktop; click works on tap too)
+const SFX_SELECTOR = '#langBtn, #tickerBtn, #closeBtn, #ctrlPlay, #ctrlRewind, #ctrlMute, #ctrlShare, #bgmHead, .bgm-link-row, details.how summary, #spClose, #spSpeak, #spPlay, .history-row, .cast-card';
+let sfxLastHover = null;
+document.addEventListener('mouseover', (e)=>{
+  const el = e.target.closest(SFX_SELECTOR);
+  if(el && el !== sfxLastHover){ sfxLastHover = el; sfxHover(); }
+  else if(!el){ sfxLastHover = null; }
+});
+document.addEventListener('mouseout', (e)=>{
+  const el = e.target.closest(SFX_SELECTOR);
+  if(el && (!e.relatedTarget || !el.contains(e.relatedTarget))) sfxLastHover = null;
+});
+document.addEventListener('click', (e)=>{ if(e.target.closest(SFX_SELECTOR)) sfxClick(); });
+
+function timeAgo(ts){
+  const S = STRINGS[currentLang].ago;
+  const diff=Date.now()-ts, m=Math.floor(diff/60000), h=Math.floor(m/60), d=Math.floor(h/24);
+  if(d>0) return `${d}${S.d}`; if(h>0) return `${h}${S.h}`; if(m>0) return `${m}${S.m}`; return S.now;
+}
+function pct(id){ const p=progressCache[id]; if(!p||!p.duration) return 0; return Math.min(100, Math.round((p.seconds/p.duration)*100)); }
+function isWatched(id){ return pct(id) >= 90; }
+function epTitle(idx){
+  return currentLang==='ja' ? `第${['一','二','三','四','五','六','七','八','九','十','十一','十二','十三','十四','十五'][idx]||(idx+1)}話` : `Episode ${idx+1}`;
+}
+
+async function loadProgress(){
+  try{
+    const list = await window.storage.list('progress:', false);
+    if(list && list.keys){
+      for(const k of list.keys){
+        try{ const r = await window.storage.get(k, false); if(r) progressCache[k.replace('progress:','')] = JSON.parse(r.value); }catch(e){}
+      }
+    }
+  }catch(e){ console.warn('progress load failed', e); }
+  buildCast();
+  applyStaticText();
+  render();
+}
+async function saveProgress(id, seconds, duration){
+  progressCache[id] = { seconds, duration, lastWatchedAt: Date.now() };
+  try{ await window.storage.set('progress:'+id, JSON.stringify(progressCache[id]), false); }
+  catch(e){ console.warn('save failed', e); }
+}
+
+function buildCast(){
+  const grid = document.getElementById('castGrid');
+  grid.innerHTML = '';
+  CAST.forEach((c)=>{
+    const card = document.createElement('div');
+    card.className = 'cast-card';
+    card.innerHTML = `
+      <div class="cast-inner">
+        <div class="cast-face">
+          <div class="icon"><img src="${c.icon}" alt=""></div>
+          <div class="name" data-key="${c.nameKey}"></div>
+          <div class="tap" data-tap></div>
+        </div>
+        <div class="cast-back"><p data-key="${c.bioKey}"></p></div>
+      </div>`;
+    card.onclick = ()=> card.classList.toggle('flipped');
+    grid.appendChild(card);
+  });
+}
+
+function applyStaticText(){
+  const S = STRINGS[currentLang];
+  document.documentElement.lang = currentLang === 'ja' ? 'ja' : 'en';
+  document.getElementById('langBtn').textContent = S.langBtn;
+  document.getElementById('mastheadSub').textContent = S.mastheadSub;
+  document.getElementById('tickerText').textContent = S.tickerText;
+  document.getElementById('tickerBtn').textContent = S.tickerBtn;
+  document.getElementById('caseKicker').textContent = S.caseKicker;
+  document.getElementById('caseTitle').textContent = S.caseTitle;
+  document.getElementById('caseBrief').textContent = S.caseBrief;
+  document.getElementById('castTitle').textContent = S.castTitle;
+  document.getElementById('castNote').textContent = S.castNote;
+  document.getElementById('filesTitle').textContent = S.filesTitle;
+  document.getElementById('fanHint').textContent = S.fanHint;
+  document.getElementById('historyTitle').textContent = S.historyTitle;
+  document.getElementById('howTitle').textContent = S.howTitle;
+  document.getElementById('closeBtn').textContent = S.closeFile;
+  document.getElementById('spHint').textContent = S.spHint;
+  document.getElementById('howList').innerHTML = S.how.map(t=>`<li>${t}</li>`).join('');
+  document.querySelectorAll('[data-key]').forEach(el=>{ el.textContent = S[el.getAttribute('data-key')]; });
+  document.querySelectorAll('[data-tap]').forEach(el=>{ el.textContent = currentLang==='ja' ? 'タップ →' : 'TAP →'; });
+}
+
+function renderHero(){
+  const S = STRINGS[currentLang];
+  const watchedIds = Object.keys(progressCache).sort((a,b)=>progressCache[b].lastWatchedAt-progressCache[a].lastWatchedAt);
+  const continueId = watchedIds.find(id => !isWatched(id) && progressCache[id].seconds > 5);
+  const heroEp = continueId ? EPISODES.find(e=>e.id===continueId && !e.coming) : EPISODES.find(e=>!e.coming);
+  const hero = document.getElementById('heroSection');
+
+  if(heroEp){
+    const n = EPISODES.findIndex(e=>e.id===heroEp.id);
+    hero.style.display = 'grid';
+    revealHeroOnce(hero);
+    bounceHero();
+    document.getElementById('heroImg').parentElement.classList.toggle('portrait', !heroEp.landscape);
+    document.getElementById('heroImg').src = thumbHi(heroEp.youtubeId);
+    document.getElementById('heroImg').onerror = function(){ this.onerror=null; this.src = thumbLo(heroEp.youtubeId); };
+    document.getElementById('heroFileTag').textContent = heroEp.file;
+    document.getElementById('heroTitle').textContent = epTitle(n);
+    const syn = SYNOPSIS[heroEp.id] && SYNOPSIS[heroEp.id][currentLang] ? SYNOPSIS[heroEp.id][currentLang] : SYNOPSIS_FALLBACK[currentLang];
+    document.getElementById('heroDesc').textContent = syn.split('\n')[0];
+    if(continueId){
+      document.getElementById('heroKicker').textContent = S.heroContinueKicker;
+      document.getElementById('heroCaptionR').textContent = S.heroCaptionContinue;
+      document.getElementById('heroProgressBar').style.width = pct(heroEp.id)+'%';
+      document.getElementById('heroMeta').textContent = `${timeAgo(progressCache[heroEp.id].lastWatchedAt)} ／ ${S.watchedPct(pct(heroEp.id))}`;
+    } else {
+      document.getElementById('heroKicker').textContent = S.heroStartKicker;
+      document.getElementById('heroCaptionR').textContent = S.heroCaptionStart;
+      document.getElementById('heroProgressBar').style.width = '0%';
+      document.getElementById('heroMeta').textContent = '';
+    }
+    document.getElementById('heroPlay').onclick = ()=>openPlayer(heroEp);
+  } else { hero.style.display = 'none'; }
+}
+
+// while a fan card is selected, the big screen's text syncs to that episode too —
+// not just the silent preview video
+function bounceHero(){
+  const photo = document.querySelector('.hero-photo');
+  if(!photo) return;
+  photo.classList.remove('pop');
+  void photo.offsetWidth; // force reflow so the animation can restart every time
+  photo.classList.add('pop');
+}
+function previewHeroText(ep, idx, title){
+  const S = STRINGS[currentLang];
+  const hero = document.getElementById('heroSection');
+  hero.style.display = 'grid';
+  bounceHero();
+  document.getElementById('heroImg').parentElement.classList.toggle('portrait', !ep.landscape);
+  document.getElementById('heroFileTag').textContent = ep.file;
+  document.getElementById('heroTitle').textContent = title;
+  const syn = SYNOPSIS[ep.id] && SYNOPSIS[ep.id][currentLang] ? SYNOPSIS[ep.id][currentLang] : SYNOPSIS_FALLBACK[currentLang];
+  document.getElementById('heroDesc').textContent = syn.split('\n')[0];
+  document.getElementById('heroKicker').textContent = currentLang==='ja' ? 'プレビュー中' : 'NOW PREVIEWING';
+  document.getElementById('heroCaptionR').textContent = currentLang==='ja' ? 'タップして再生' : 'Tap to play';
+  const p = pct(ep.id);
+  document.getElementById('heroProgressBar').style.width = p+'%';
+  document.getElementById('heroMeta').textContent = p>0 ? S.watchedPct(p) : '';
+  document.getElementById('heroPlay').onclick = ()=> openPlayer(ep);
+}
+
+function render(){
+  const S = STRINGS[currentLang];
+  renderHero();
+
+  document.getElementById('epCount').textContent = S.totalFiles(EPISODES.filter(e=>!e.coming).length);
+
+  const track = document.getElementById('episodeGrid');
+  track.innerHTML = '';
+  EPISODES.forEach((ep, idx)=>{
+    const title = epTitle(idx);
+    const p = ep.coming ? 0 : pct(ep.id);
+    const card = document.createElement('div');
+    card.className = 'card' + (ep.coming ? ' coming' : '');
+    const baseT = 'translateY(0px)';
+    card.style.transform = baseT;
+    card.style.zIndex = String(idx+1);
+    card.dataset.baseT = baseT; card.dataset.lift = 0; card.dataset.z = String(idx+1);
+    card.innerHTML = `
+      <div class="card-thumb${ep.landscape ? ' landscape' : ''}">        ${ep.coming ? `<div class="lock">${S.comingSoon}</div>` : `<img src="${thumbHi(ep.youtubeId)}" onerror="this.onerror=null;this.src='${thumbLo(ep.youtubeId)}'" alt="${title}">`}
+        <div class="file-tag type">${ep.file}</div>
+        ${(!ep.coming && isWatched(ep.id)) ? `<div class="stamp">${S.viewedStamp}</div>` : ''}
+        ${!ep.coming ? `<div class="progress"><i style="width:${p}%"></i></div>` : ''}
+      </div>
+      <div class="card-body">
+        <h4>${title}</h4>
+        <div class="sub">${ep.coming ? S.comingSoon : (p>0 ? S.watchedPct(p) : S.unread)}</div>
+      </div>`;
+    if(!ep.coming){
+      card.addEventListener('mouseenter', ()=> selectCard(card, ep, idx, title, 260));
+      card.addEventListener('mouseleave', ()=> deselectCard(card));
+      card.addEventListener('click', ()=>{
+        if(suppressClick) return;
+        sfxClick();
+        openPlayer(ep);
+      });
+    }
+    track.appendChild(card);
+  });
+
+  const histWrap = document.getElementById('historyList');
+  if(watchedIds.length===0){
+    histWrap.innerHTML = `<div class="empty">${S.historyEmpty}</div>`;
+  } else {
+    histWrap.innerHTML = '';
+    watchedIds.forEach(id=>{
+      const idx = EPISODES.findIndex(e=>e.id===id);
+      const ep = EPISODES[idx];
+      if(!ep || ep.coming) return;
+      const title = epTitle(idx);
+      const row = document.createElement('div');
+      row.className='history-row';
+      row.innerHTML = `
+        <img class="${ep.landscape ? 'landscape' : ''}" src="${thumbHi(ep.youtubeId)}" onerror="this.onerror=null;this.src='${thumbLo(ep.youtubeId)}'" alt="">
+        <div>
+          <p class="h-title">${ep.file} ／ ${title}</p>
+          <div class="h-sub">${timeAgo(progressCache[id].lastWatchedAt)} ・ ${S.watchedPct(pct(id))}${isWatched(id)?` ・ ${S.viewedStamp}`:''}</div>
+        </div>`;
+      row.onclick = ()=>openPlayer(ep);
+      histWrap.appendChild(row);
+    });
+  }
+}
+
+/* ---------- fan card select (mouse hover + touch drag) ---------- */
+let activeCard = null;
+let dwellTimer = null;
+let previewTimer = null;
+function selectCard(card, ep, idx, title, delay){
+  if(activeCard === card) return;
+  if(activeCard) deselectCard(activeCard);
+  activeCard = card;
+  card.classList.add('sel');
+  card.style.zIndex = 999;
+  sfxHover();
+  previewHeroText(ep, idx, title);
+  clearTimeout(dwellTimer);
+  dwellTimer = setTimeout(()=> showSynopsis(card, ep, idx, title), delay||150);
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(()=> showHeroPreview(ep), 200);
+}
+function deselectCard(card){
+  card.classList.remove('sel');
+  card.style.zIndex = card.dataset.z;
+  card.style.transform = card.dataset.baseT;
+  if(activeCard === card){
+    activeCard = null;
+    clearTimeout(dwellTimer);
+    clearTimeout(previewTimer);
+    // intentionally NOT calling hideHeroPreview()/renderHero() here —
+    // the big screen keeps showing/playing whatever was last selected
+    // instead of snapping back to "continue watching" / episode 1.
+  }
+}
+
+/* ---------- wheel navigation: scroll the mouse wheel over the card fan to
+   step through episodes one at a time, like a jog wheel ---------- */
+(function(){
+  const fanWrap = document.querySelector('.fan-wrap');
+  let wheelLock = false;
+  fanWrap.addEventListener('wheel', (e)=>{
+    e.preventDefault();
+    if(wheelLock) return;
+    const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+    if(Math.abs(delta) < 3) return;
+    wheelLock = true;
+    setTimeout(()=> wheelLock = false, 180);
+    const track = document.getElementById('episodeGrid');
+    const cards = Array.from(track.children);
+    if(!cards.length) return;
+    let idx = activeCard ? cards.indexOf(activeCard) : -1;
+    const dir = delta > 0 ? 1 : -1;
+    let next = idx === -1 ? 0 : idx + dir;
+    while(next >= 0 && next < cards.length && !EPISODES[next] || (EPISODES[next] && EPISODES[next].coming)){
+      next += dir;
+    }
+    if(next < 0 || next >= cards.length) { wheelLock = false; return; }
+    const card = cards[next];
+    const ep = EPISODES[next];
+    if(!ep || ep.coming) return;
+    selectCard(card, ep, next, epTitle(next), 0);
+    card.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+  }, { passive:false });
+})();
+
+/* ---------- hero preview: the big screen shows a live muted sample of whichever
+   card you're browsing, instead of sitting there doing nothing ---------- */
+let previewPlayer = null, previewReady = false;
+function showHeroPreview(ep){
+  const wrap = document.getElementById('heroPreview');
+  wrap.classList.add('show');
+  if(!ytReady){ setTimeout(()=>{ if(wrap.classList.contains('show')) showHeroPreview(ep); }, 150); return; }
+  if(!previewPlayer){
+    previewPlayer = new YT.Player('heroPreviewPlayer', {
+      videoId: ep.youtubeId,
+      playerVars: { autoplay:1, mute:1, controls:0, disablekb:1, fs:0, modestbranding:1, playsinline:1,
+        loop:1, playlist: ep.youtubeId, rel:0, iv_load_policy:3 },
+      events: { onReady:(e)=>{ previewReady=true; e.target.mute(); e.target.playVideo(); } }
+    });
+  } else if(previewReady){
+    previewPlayer.loadPlaylist ? null : null; // no-op guard
+    previewPlayer.loadVideoById({ videoId: ep.youtubeId });
+    previewPlayer.mute();
+    previewPlayer.playVideo();
+  }
+}
+function hideHeroPreview(){
+  const wrap = document.getElementById('heroPreview');
+  wrap.classList.remove('show');
+  if(previewPlayer && previewReady){ try{ previewPlayer.pauseVideo(); }catch(e){} }
+}
+
+
+/* ---------- touch: detect finger dragging across thumbnails ---------- */
+let tStartX=0, tStartY=0, tMoved=false, suppressClick=false;
+document.addEventListener('touchstart', (e)=>{
+  const t=e.touches[0]; tStartX=t.clientX; tStartY=t.clientY; tMoved=false;
+}, {passive:true});
+document.addEventListener('touchmove', (e)=>{
+  const t=e.touches[0];
+  const dx=t.clientX-tStartX, dy=t.clientY-tStartY;
+  if(!tMoved && Math.hypot(dx,dy) > 8) tMoved = true;
+  if(tMoved){
+    const el = document.elementFromPoint(t.clientX, t.clientY);
+    const card = el && el.closest('.card:not(.coming)');
+    if(card && card !== activeCard){
+      const track = document.getElementById('episodeGrid');
+      const idx = Array.from(track.children).indexOf(card);
+      if(idx>-1) selectCard(card, EPISODES[idx], idx, epTitle(idx), 0);
+    } else if(!card && activeCard){
+      deselectCard(activeCard);
+    }
+  }
+  updateLens(t.clientX, t.clientY);
+}, {passive:true});
+document.addEventListener('touchend', ()=>{
+  if(tMoved){ suppressClick = true; setTimeout(()=>suppressClick=false, 320); }
+  tMoved = false;
+  hideLens();
+}, {passive:true});
+
+/* ---------- scroll-style synopsis popup with typewriter reveal ---------- */
+const popup = document.getElementById('synopsisPopup');
+const spFile = document.getElementById('spFile');
+const spBody = document.getElementById('spBody');
+let typeTimer = null;
+
+function showSynopsis(cardEl, ep, idx, title){
+  const data = (SYNOPSIS[ep.id] && SYNOPSIS[ep.id][currentLang]) ? SYNOPSIS[ep.id][currentLang] : SYNOPSIS_FALLBACK[currentLang];
+  spFile.textContent = `${ep.file} ／ ${title}`;
+  const r = cardEl.getBoundingClientRect();
+  const popW = Math.min(310, window.innerWidth*0.82);
+  let left = r.right + 12;
+  if(left + popW > window.innerWidth - 10) left = r.left - popW - 12;
+  if(left < 10) left = 10;
+  popup.style.left = left + 'px';
+  popup.style.top = Math.max(10, Math.min(r.top - 10, window.innerHeight - 260)) + 'px';
+  popup.classList.add('show');
+  typewriterReveal(spBody, data);
+  document.getElementById('spPlayLabel').textContent = currentLang==='ja' ? 'この話を再生' : 'PLAY THIS EPISODE';
+  document.getElementById('spPlay').onclick = ()=> openPlayer(ep);
+}
+function hideSynopsis(){
+  popup.classList.remove('show');
+  clearTimeout(typeTimer);
+  hideLens();
+  try{ window.speechSynthesis && window.speechSynthesis.cancel(); }catch(e){}
+}
+document.getElementById('spClose').onclick = ()=>{
+  hideSynopsis();
+  if(activeCard) deselectCard(activeCard);
+};
+
+function typewriterReveal(container, text){
+  container.innerHTML = '';
+  clearTimeout(typeTimer);
+  const chars = [...text];
+  const total = chars.length;
+  const dur = Math.min(2000, Math.max(500, total*13));
+  const stepTime = dur/total;
+  const cursor = document.createElement('span'); cursor.className='ty-cursor'; cursor.textContent='▌';
+  container.appendChild(cursor);
+  let i = 0;
+  function tick(){
+    if(i>=total){ cursor.remove(); return; }
+    const ch = chars[i];
+    const node = ch === '\n' ? document.createElement('br') : (()=>{
+      if(ch.trim()===''){ return document.createTextNode(ch); }
+      const s = document.createElement('span'); s.className='mc'; s.textContent = ch; return s;
+    })();
+    container.insertBefore(node, cursor);
+    i++;
+    typeTimer = setTimeout(tick, stepTime);
+  }
+  tick();
+}
+
+document.getElementById('spSpeak').addEventListener('click', ()=>{
+  try{
+    if(!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(spBody.textContent);
+    u.lang = currentLang === 'ja' ? 'ja-JP' : 'en-US';
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+});
+
+/* ---------- magnifying-glass lens over the popup text ---------- */
+const lens = document.getElementById('lens');
+const lensInner = document.getElementById('lensInner');
+const ZOOM = 2.1;
+function updateLens(clientX, clientY){
+  const rect = spBody.getBoundingClientRect();
+  if(!popup.classList.contains('show') || clientX<rect.left || clientX>rect.right || clientY<rect.top || clientY>rect.bottom){
+    hideLens(); return;
+  }
+  lens.classList.add('show');
+  lens.style.left = (clientX-60)+'px';
+  lens.style.top = (clientY-60)+'px';
+  lensInner.innerHTML = spBody.innerHTML;
+  lensInner.style.width = spBody.scrollWidth+'px';
+  const relX = clientX-rect.left, relY = (clientY-rect.top) + spBody.scrollTop;
+  lensInner.style.transform = `translate(${60-relX*ZOOM}px, ${60-relY*ZOOM}px) scale(${ZOOM})`;
+  lensInner.style.transformOrigin = '0 0';
+}
+function hideLens(){ lens.classList.remove('show'); }
+spBody.addEventListener('mousemove', (e)=> updateLens(e.clientX, e.clientY));
+spBody.addEventListener('mouseleave', hideLens);
+
+document.getElementById('langBtn').onclick = ()=>{
+  const main = document.querySelector('main');
+  main.classList.add('lang-transition');
+  setTimeout(()=>{
+    currentLang = currentLang === 'en' ? 'ja' : 'en';
+    hideSynopsis();
+    applyStaticText();
+    render();
+    buildBgmLinks();
+    document.getElementById('bgmNote').textContent = currentLang==='ja'
+      ? '※ Spotifyが開きます。ログイン済みならフル再生、未ログインなら試聴のみになります。'
+      : '※ Opens in Spotify. Full playback if you\'re logged in there; preview only if not.';
+    main.classList.remove('lang-transition');
+  }, 160);
+};
+document.getElementById('tickerBtn').onclick = ()=> openPlayer(EPISODES[0]);
+
+/* ---------- player ---------- */
+let ytReady = false;
+function onYouTubeIframeAPIReady(){ ytReady = true; }
+
+function openPlayer(ep){
+  hideSynopsis();
+  hideHeroPreview();
+  if(activeCard) deselectCard(activeCard);
+  activeEp = ep;
+  const idx = EPISODES.findIndex(e=>e.id===ep.id);
+  const title = epTitle(idx);
+  document.getElementById('playerTitle').textContent = `${ep.file} ／ ${title}`;
+  try{ history.replaceState(null, '', '#ep'+(idx+1)); }catch(e){}
+  const overlayEl = document.getElementById('overlay');
+  overlayEl.classList.add('open');
+  document.querySelector('.player-frame').classList.toggle('portrait', !ep.landscape);
+  document.querySelector('.player-frame').classList.toggle('landscape', !!ep.landscape);
+  // ask the browser for true fullscreen on phones — falls back gracefully if unsupported/blocked
+  if(window.innerWidth <= 700){
+    const req = overlayEl.requestFullscreen || overlayEl.webkitRequestFullscreen;
+    try{ req && req.call(overlayEl).catch(()=>{}); }catch(err){}
+  }
+  const veil = document.getElementById('playerVeil');
+  veil.classList.remove('hide');
+  veil.textContent = currentLang==='ja' ? '◉ げんぞう中…' : '◉ DEVELOPING…';
+  const startAt = (progressCache[ep.id] && !isWatched(ep.id)) ? Math.floor(progressCache[ep.id].seconds) : 0;
+
+  const create = ()=>{
+    if(player){ player.destroy(); }
+    player = new YT.Player('ytPlayer', {
+      videoId: ep.youtubeId,
+      // controls:0 hides YouTube's own play/settings bar so it doesn't clash with the site
+      playerVars: { autoplay:1, start:startAt, rel:0, modestbranding:1, controls:0, disablekb:1, fs:0, iv_load_policy:3, playsinline:1 },
+      events: { onReady: onPlayerReady, onStateChange: onPlayerStateChange }
+    });
+  };
+  // create synchronously inside this click handler whenever possible, so the
+  // browser treats playback as directly triggered by the tap (needed for autoplay)
+  if(ytReady) create(); else {
+    const wait = setInterval(()=>{ if(ytReady){ clearInterval(wait); create(); } }, 100);
+  }
+}
+
+function onPlayerReady(e){
+  e.target.unMute();
+  e.target.setVolume(100);
+  e.target.playVideo();
+  startSeekUiTimer();
+  try{ e.target.setPlaybackQuality('hd1080'); }catch(err){}
+  updateMuteIcon();
+  // nudge playback a few times in case the first play() call was swallowed while
+  // still buffering — never mutes, just retries starting it
+  let tries = 0;
+  clearInterval(window.__playNudge);
+  window.__playNudge = setInterval(()=>{
+    tries++;
+    if(!player || typeof player.getPlayerState !== 'function'){ clearInterval(window.__playNudge); return; }
+    const st = player.getPlayerState();
+    if(st === 1 || tries > 6){ clearInterval(window.__playNudge); return; }
+    try{ player.playVideo(); }catch(err){}
+  }, 350);
+  // hide the veil the instant playback is actually confirmed (via onStateChange),
+  // with a safety-net timeout so it never gets stuck covering the video
+  clearTimeout(window.__veilSafety);
+  window.__veilSafety = setTimeout(()=> document.getElementById('playerVeil').classList.add('hide'), 3500);
+}
+function updateMuteIcon(){
+  const btn = document.getElementById('ctrlMute');
+  if(!player || typeof player.isMuted !== 'function') return;
+  btn.textContent = player.isMuted() ? '🔇' : '🔊';
+}
+
+
+function onPlayerStateChange(e){
+  const ctrlPlay = document.getElementById('ctrlPlay');
+  if(e.data === YT.PlayerState.PLAYING){
+    ctrlPlay.textContent = '⏸'; if(saveTimer) clearInterval(saveTimer); saveTimer = setInterval(tick, 4000);
+    try{ player.setPlaybackQuality('hd1080'); }catch(err){}
+    clearTimeout(window.__veilSafety);
+    document.getElementById('playerVeil').classList.add('hide');
+  }
+  if(e.data === YT.PlayerState.PAUSED){ ctrlPlay.textContent = '▶'; tick(); }
+  if(e.data === YT.PlayerState.ENDED){
+    ctrlPlay.textContent = '▶'; tick();
+    if(activeEp){
+      const dur = player.getDuration() || 1;
+      saveProgress(activeEp.id, dur, dur).then(render);
+      const idx = EPISODES.findIndex(x=>x.id===activeEp.id);
+      const next = EPISODES[idx+1];
+      if(next && !next.coming){
+        const veil = document.getElementById('playerVeil');
+        veil.textContent = STRINGS[currentLang].nextUp(next.file);
+        veil.classList.remove('hide');
+        setTimeout(()=> openPlayer(next), 1600);
+      }
+    }
+  }
+}
+function tick(){
+  if(!player || !activeEp || typeof player.getCurrentTime !== 'function') return;
+  const cur = player.getCurrentTime(); const dur = player.getDuration();
+  if(dur > 0) saveProgress(activeEp.id, cur, dur).then(render);
+}
+document.getElementById('ctrlPlay').onclick = ()=>{
+  if(!player) return;
+  if(player.getPlayerState() === 1) player.pauseVideo(); else player.playVideo();
+};
+document.getElementById('ctrlRewind').onclick = ()=>{
+  if(!player) return;
+  try{ player.seekTo(0, true); player.playVideo(); }catch(e){}
+};
+document.getElementById('ctrlShare').onclick = ()=>{
+  if(!activeEp) return;
+  const idx = EPISODES.findIndex(e=>e.id===activeEp.id);
+  const url = location.origin + location.pathname + '#ep' + (idx+1);
+  const showToast = ()=>{
+    const toast = document.getElementById('copyToast');
+    toast.textContent = currentLang==='ja' ? 'リンクをコピーしました' : 'LINK COPIED';
+    toast.classList.add('show');
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(()=> toast.classList.remove('show'), 1800);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(showToast).catch(()=>{
+      fallbackCopy(url); showToast();
+    });
+  } else {
+    fallbackCopy(url); showToast();
+  }
+};
+function fallbackCopy(text){
+  try{
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }catch(e){}
+}
+document.getElementById('ctrlMute').onclick = ()=>{
+  if(!player) return;
+  if(player.isMuted()){ player.unMute(); document.getElementById('ctrlMute').textContent='🔊'; }
+  else { player.mute(); document.getElementById('ctrlMute').textContent='🔇'; }
+};
+
+/* ---------- draggable seek bar ---------- */
+const seekTrack = document.getElementById('seekTrack');
+const seekFill = document.getElementById('seekFill');
+const seekKnob = document.getElementById('seekKnob');
+let seekDragging = false;
+let seekUiTimer = null;
+function seekRatioFromEvent(e){
+  const r = seekTrack.getBoundingClientRect();
+  const x = e.clientX - r.left;
+  return Math.max(0, Math.min(1, x / r.width));
+}
+function paintSeek(ratio){
+  const pctStr = (ratio*100)+'%';
+  seekFill.style.width = pctStr;
+  seekKnob.style.left = pctStr;
+}
+seekTrack.addEventListener('pointerdown', (e)=>{
+  if(!player) return;
+  sfxClick();
+  seekDragging = true;
+  seekTrack.classList.add('dragging');
+  try{ seekTrack.setPointerCapture(e.pointerId); }catch(err){}
+  paintSeek(seekRatioFromEvent(e));
+});
+seekTrack.addEventListener('pointermove', (e)=>{
+  if(!seekDragging) return;
+  paintSeek(seekRatioFromEvent(e));
+});
+function commitSeek(e){
+  if(!seekDragging) return;
+  seekDragging = false;
+  seekTrack.classList.remove('dragging');
+  if(player && typeof player.getDuration === 'function'){
+    const dur = player.getDuration();
+    if(dur > 0){ player.seekTo(dur * seekRatioFromEvent(e), true); }
+  }
+}
+seekTrack.addEventListener('pointerup', commitSeek);
+seekTrack.addEventListener('pointercancel', ()=>{ seekDragging=false; seekTrack.classList.remove('dragging'); });
+function startSeekUiTimer(){
+  clearInterval(seekUiTimer);
+  seekUiTimer = setInterval(()=>{
+    if(seekDragging || !player || typeof player.getCurrentTime !== 'function') return;
+    const dur = player.getDuration(), cur = player.getCurrentTime();
+    if(dur > 0) paintSeek(cur/dur);
+  }, 400);
+}
+function stopSeekUiTimer(){ clearInterval(seekUiTimer); paintSeek(0); }
+
+function closePlayer(){
+  tick();
+  document.getElementById('overlay').classList.remove('open');
+  if(document.fullscreenElement) { try{ document.exitFullscreen(); }catch(e){} }
+  if(saveTimer) clearInterval(saveTimer);
+  stopSeekUiTimer();
+  if(player){ player.destroy(); player=null; }
+  activeEp = null;
+  try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){}
+}
+document.getElementById('closeBtn').onclick = closePlayer;
+
+/* ---------- swipe gestures on the player: → next / ← previous / ↑↓ close ---------- */
+(function(){
+  const overlayEl = document.getElementById('overlay');
+  let sx=0, sy=0, tracking=false;
+  overlayEl.addEventListener('touchstart', (e)=>{
+    if(!overlayEl.classList.contains('open')) return;
+    const t = e.touches[0]; sx=t.clientX; sy=t.clientY; tracking=true;
+  }, {passive:true});
+  overlayEl.addEventListener('touchend', (e)=>{
+    if(!tracking) return; tracking=false;
+    const t = e.changedTouches[0];
+    const dx = t.clientX-sx, dy = t.clientY-sy;
+    const adx = Math.abs(dx), ady = Math.abs(dy);
+    const THRESH = 70;
+    if(Math.max(adx,ady) < THRESH) return; // too small, ignore
+    if(adx > ady){
+      const idx = activeEp ? EPISODES.findIndex(x=>x.id===activeEp.id) : -1;
+      if(dx > 0){ // swipe right → next episode
+        const next = EPISODES[idx+1];
+        if(next && !next.coming){ sfxSwipe(true); openPlayer(next); }
+      } else { // swipe left → previous episode
+        const prev = idx > 0 ? EPISODES[idx-1] : null;
+        if(prev){ sfxSwipe(false); openPlayer(prev); }
+      }
+    } else {
+      // swipe up or down → close and return to the main screen
+      sfxSwipe(dy < 0);
+      closePlayer();
+    }
+  }, {passive:true});
+})();
+
+/* ---------- pixel-assembly title reveal: small squares converge into the headline,
+   like scattered evidence being pieced together ---------- */
+function pixelAssembleTitle(){
+  const h1 = document.getElementById('mastheadTitle');
+  const txtEl = h1.querySelector('.txt');
+  const canvas = document.getElementById('titleCanvas');
+  const text = txtEl.textContent;
+  const fontSize = 44;
+  const font = `900 ${fontSize}px 'Playfair Display', serif`;
+  const measure = document.createElement('canvas').getContext('2d');
+  measure.font = font;
+  const w = Math.ceil(measure.measureText(text).width) + 8;
+  const h = Math.ceil(fontSize * 1.25);
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = w * dpr; canvas.height = h * dpr;
+  canvas.style.width = w+'px'; canvas.style.height = h+'px';
+  h1.style.width = w+'px'; h1.style.height = h+'px';
+  txtEl.style.position = 'absolute'; txtEl.style.left = '0'; txtEl.style.top = '0';
+  txtEl.style.width = w+'px'; txtEl.style.lineHeight = h+'px';
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const off = document.createElement('canvas'); off.width = w; off.height = h;
+  const octx = off.getContext('2d');
+  octx.font = font; octx.fillStyle = '#000'; octx.textBaseline = 'middle'; octx.textAlign = 'left';
+  octx.fillText(text, 4, h/2);
+  const data = octx.getImageData(0,0,w,h).data;
+  const step = 3;
+  const targets = [];
+  for(let y=0; y<h; y+=step){
+    for(let x=0; x<w; x+=step){
+      if(data[(y*w+x)*4+3] > 128) targets.push({x, y});
+    }
+  }
+  const particles = targets.map(p=>({
+    tx:p.x, ty:p.y,
+    x: p.x + (Math.random()-0.5)*260,
+    y: p.y + (Math.random()-0.5)*180 - 40,
+    delay: Math.random()*260
+  }));
+  const dur = 620, start = performance.now();
+  function frame(now){
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = '#1c1811';
+    let allDone = true;
+    particles.forEach(p=>{
+      const t = Math.max(0, Math.min(1, (now-start-p.delay)/dur));
+      if(t<1) allDone = false;
+      const ease = 1-Math.pow(1-t,3);
+      ctx.fillRect(p.x+(p.tx-p.x)*ease-1.5, p.y+(p.ty-p.y)*ease-1.5, 3, 3);
+    });
+    if(!allDone) requestAnimationFrame(frame);
+    else h1.classList.add('assembled');
+  }
+  if(targets.length) requestAnimationFrame(frame); else h1.classList.add('assembled');
+}
+if(document.fonts && document.fonts.ready){ document.fonts.ready.then(pixelAssembleTitle); }
+else { window.addEventListener('load', pixelAssembleTitle); }
+
+/* ============================================================
+   BGM — links out to the original tracks. Both Spotify's and LANDR's
+   embeds require the visitor to log in to actually hear the full song,
+   so instead of an unreliable embedded player, this just opens the
+   track in a new tab where it plays properly.
+   Edit BGM_TRACKS to swap tracks.
+   ============================================================ */
+const BGM_TRACKS = [
+  { url:'https://open.spotify.com/album/0MHXTPYS93MjBBt6S5no7d?si=LUpVJsSeSm-ATt81gB6MBQ', label:'BGM I' },
+  { url:'https://open.spotify.com/album/33FZiczuLaophwatzyrVMD?si=r9bCFxKzRXSe80fkast_qw', label:'BGM II' },
+  { url:'https://open.spotify.com/album/0xRK1E23F4aJU0MFYYCBIk?si=qWGXzMdNQcekou01dHX0wQ', label:'BGM III' },
+];
+
+function buildBgmLinks(){
+  const wrap = document.getElementById('bgmLinks');
+  wrap.innerHTML = '';
+  BGM_TRACKS.forEach((t)=>{
+    const a = document.createElement('a');
+    a.className = 'bgm-link-row';
+    a.href = t.url; a.target = '_blank'; a.rel = 'noopener';
+    a.innerHTML = `<span class="label">${t.label}</span><span class="go">▶ ${currentLang==='ja' ? '開く':'OPEN'}</span>`;
+    a.onclick = ()=> sfxClick();
+    wrap.appendChild(a);
+  });
+}
+
+document.getElementById('bgmHead').onclick = ()=>{
+  document.getElementById('bgmPanel').classList.toggle('collapsed');
+  document.getElementById('bgmToggle').textContent =
+    document.getElementById('bgmPanel').classList.contains('collapsed') ? '▸' : '▾';
+};
+buildBgmLinks();
+document.getElementById('bgmNote').textContent = currentLang==='ja'
+  ? '※ Spotifyが開きます。ログイン済みならフル再生、未ログインなら試聴のみになります。'
+  : '※ Opens in Spotify. Full playback if you\'re logged in there; preview only if not.';
+
+loadProgress();
+
+/* ---------- motion polish: staggered fade-in on load/scroll, hero fade-in, language-switch cross-fade ---------- */
+let heroRevealed = false;
+function revealHeroOnce(hero){
+  if(heroRevealed) return;
+  heroRevealed = true;
+  hero.classList.add('reveal');
+  requestAnimationFrame(()=> requestAnimationFrame(()=> hero.classList.add('in')));
+}
+
+(function setupSectionReveal(){
+  const els = Array.from(document.querySelectorAll('.reveal'));
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        entry.target.classList.add('in');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold:0.12 });
+  els.forEach((el,i)=>{
+    el.style.transitionDelay = Math.min(i*70, 300)+'ms';
+    io.observe(el);
+  });
+})();
+
+
+// deep link: opening a shared "#ep3" style URL jumps straight to that episode
+(function checkDeepLink(){
+  const m = location.hash.match(/^#ep(\d+)$/);
+  if(!m) return;
+  const idx = parseInt(m[1], 10) - 1;
+  const ep = EPISODES[idx];
+  if(!ep || ep.coming) return;
+  const tryOpen = ()=>{ if(ytReady) openPlayer(ep); else setTimeout(tryOpen, 150); };
+  setTimeout(tryOpen, 200);
+})();
+
+</script>
+</body>
+</html>
