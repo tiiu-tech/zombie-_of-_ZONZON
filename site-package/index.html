@@ -476,20 +476,18 @@
   .bg-motif.show{opacity:.09;}
   .bg-motif.is-image{width:min(46vw,340px); height:min(46vw,340px); max-width:340px; max-height:340px; font-size:0;
     background-size:contain; background-repeat:no-repeat; background-position:center;}
-  .bg-motif.is-image.show{animation:motifHop 1.7s cubic-bezier(.34,1.56,.64,1) infinite;}
-  @keyframes motifHop{
-    0%, 100%{ transform:translate(-50%,-50%) translateY(0) scale(1,1); }
-    18%{ transform:translate(-50%,-50%) translateY(0) scale(1.08,0.9); }
-    45%{ transform:translate(-50%,-50%) translateY(-38px) scale(0.94,1.08); }
-    72%{ transform:translate(-50%,-50%) translateY(0) scale(1.05,0.93); }
-    86%{ transform:translate(-50%,-50%) translateY(-8px) scale(0.99,1.02); }
+  .bg-motif.is-image.show{animation:motifToss .5s cubic-bezier(.16,.86,.4,1) both;}
+  @keyframes motifToss{
+    0%{ transform:translate(calc(-50% + 240px), calc(-50% - 180px)) rotate(30deg) scale(.68); opacity:0; }
+    58%{ transform:translate(calc(-50% - 16px), calc(-50% + 12px)) rotate(-10deg) scale(1.05); opacity:.12; }
+    78%{ transform:translate(calc(-50% + 5px), calc(-50% - 4px)) rotate(4deg) scale(0.99); opacity:.1; }
+    100%{ transform:translate(-50%,-50%) rotate(-3deg) scale(1); opacity:.09; }
   }
-  .bg-motif.teaser-burst{animation:teaserBurst .7s cubic-bezier(.22,1.6,.4,1) both,
-    motifHop 1.7s cubic-bezier(.34,1.56,.64,1) infinite .7s;}
+  .bg-motif.teaser-burst{animation:teaserBurst .7s cubic-bezier(.22,1.6,.4,1) both;}
   @keyframes teaserBurst{
     0%{ transform:translate(-50%,-50%) scale(.35) rotate(-14deg); opacity:0; }
     55%{ transform:translate(-50%,-50%) scale(1.14) rotate(4deg); opacity:.13; }
-    100%{ transform:translate(-50%,-50%) scale(1) rotate(0deg); opacity:.09; }
+    100%{ transform:translate(-50%,-50%) scale(1) rotate(-3deg); opacity:.09; }
   }
 
   /* newspaper-style geometric flourishes that pop in alongside the motif —
