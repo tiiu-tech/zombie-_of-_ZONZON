@@ -27,12 +27,12 @@
     --cursor-tap: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30'%3E%3Ctext y='24' font-size='24'%3E%F0%9F%91%86%3C/text%3E%3C/svg%3E") 6 22, pointer;
   }
   body.jscursor{ --cursor-tap: none; }
-  .custom-cursor{position:fixed; left:0; top:0; width:46px; pointer-events:none; z-index:200; opacity:0;
+  .custom-cursor{position:fixed; left:0; top:0; pointer-events:none; z-index:200; opacity:0;
     transition:opacity .15s ease;}
   .custom-cursor.show{opacity:1;}
-  .custom-cursor img{display:block; width:100%; height:auto; filter:drop-shadow(0 3px 5px rgba(0,0,0,.35));
-    transform-origin:30% 55%;}
-  .custom-cursor img.nudge{animation:cursorNudge .55s ease-in-out;}
+  .custom-cursor span{display:block; font-size:30px; line-height:1; filter:drop-shadow(0 3px 4px rgba(0,0,0,.35));
+    transform-origin:30% 20%;}
+  .custom-cursor span.nudge{animation:cursorNudge .55s ease-in-out;}
   @keyframes cursorNudge{
     0%, 100%{ transform:rotate(0deg) scale(1); }
     22%{ transform:rotate(-14deg) scale(0.9); }
@@ -510,7 +510,7 @@
   <div class="deco-piece deco-camera"><img src="assets/deco-evidence-camera.png" alt=""></div>
 </div>
 <div class="spotlight" id="spotlight"></div>
-<div class="custom-cursor" id="customCursor"><img src="assets/cursor-arrow.png" alt=""></div>
+<div class="custom-cursor" id="customCursor"><span id="customCursorImg">👆</span></div>
 
 <header>
   <div class="masthead-top">
@@ -1803,7 +1803,7 @@ function burstInk(x, y){
 document.body.classList.add('jscursor');
 const CURSOR_SELECTOR = '.fx-link, .cast-card, .card:not(.coming), .history-row, details.how summary, .seek-track, .ctrl-btn, .scroll-close, .sp-speak, .sp-play, .bgm-head, .bgm-toggle, .bgm-link-row, .bgm-hotspot, .cast-evidence';
 const customCursor = document.getElementById('customCursor');
-const customCursorImg = customCursor.querySelector('img');
+const customCursorImg = document.getElementById('customCursorImg');
 let cursorLastMoveAt = Date.now();
 document.addEventListener('mousemove', (e)=>{
   cursorLastMoveAt = Date.now();
