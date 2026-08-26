@@ -326,15 +326,62 @@
   .bgm-toggle{background:none; border:none; color:var(--paper); cursor:var(--cursor-tap); font-size:11px;}
   .bgm-body{padding:8px 10px 10px; max-height:220px; overflow:hidden; transition:max-height .25s ease, padding .25s ease;}
   .bgm-panel.collapsed .bgm-body{max-height:0; padding-top:0; padding-bottom:0;}
+  .bgm-player{display:flex; align-items:center; gap:9px; padding:9px 10px; margin-bottom:10px;
+    border:1px solid var(--ink); background:var(--ink); color:var(--paper);}
+  .bgm-play-btn{flex-shrink:0; width:28px; height:28px; border-radius:50%; border:1px solid var(--paper);
+    background:var(--red); color:var(--paper); cursor:var(--cursor-tap); font-size:11px; display:flex;
+    align-items:center; justify-content:center;}
+  .bgm-play-btn:hover{background:var(--red-bright);}
+  .bgm-track-info{flex:1; min-width:0;}
+  .bgm-track-name{font-family:'Shippori Mincho',serif; font-size:11.5px; font-weight:700; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis;}
+  .bgm-track-sub{font-family:'Courier Prime',monospace; font-size:8.5px; color:rgba(233,225,205,0.65);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .bgm-volume{width:56px; accent-color:var(--red-bright); cursor:var(--cursor-tap); flex-shrink:0;}
   .bgm-link-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 10px;
     border:1px solid var(--ink); background:var(--paper-2); margin-bottom:7px; text-decoration:none; color:var(--ink);}
   .bgm-link-row:hover{border-color:var(--red); color:var(--red);}
   .bgm-link-row .label{font-family:'Shippori Mincho',serif; font-size:12px; font-weight:700;}
   .bgm-link-row .go{font-family:'Courier Prime',monospace; font-size:10px;}
   .bgm-note{font-family:'Courier Prime',monospace; font-size:8.5px; color:var(--ink-soft); margin-top:2px; line-height:1.5;}
+
+  /* ---------- motion upgrade: hover spotlight, magnetic buttons, kinetic type, ink bursts ---------- */
+  .spotlight{position:fixed; width:360px; height:360px; border-radius:50%; pointer-events:none; z-index:1;
+    left:0; top:0; transform:translate(-50%,-50%);
+    background:radial-gradient(circle, rgba(138,35,35,0.24), rgba(138,35,35,0.09) 45%, transparent 72%);
+    opacity:0; transition:opacity .4s ease; mix-blend-mode:multiply;}
+  .spotlight.show{opacity:1;}
+
+  /* a giant, faint symbol tied to whichever episode is selected — drifts
+     slowly behind everything, like the scene itself is thinking about it */
+  .bg-motif{position:fixed; left:50%; top:38%; z-index:0; pointer-events:none;
+    font-size:38vw; line-height:1; opacity:0; filter:grayscale(1) sepia(.35) contrast(1.1);
+    transform:translate(-50%,-50%) rotate(-6deg) scale(.9);
+    transition:opacity .6s ease, transform .8s cubic-bezier(.22,1,.36,1);}
+  .bg-motif.show{opacity:.09; animation:motifDrift 9s ease-in-out infinite;}
+  @keyframes motifDrift{
+    0%, 100%{ transform:translate(-50%,-50%) rotate(-5deg) scale(1); }
+    50%{ transform:translate(-50%,-50%) rotate(5deg) scale(1.06); }
+  }
+
+  .magnetic{transition:transform .18s cubic-bezier(.34,1.56,.64,1);}
+
+  .kt-char{display:inline-block; opacity:0; transform:translateY(18px) rotate(7deg) scale(.82);
+    transition:opacity .5s cubic-bezier(.22,1,.36,1), transform .6s cubic-bezier(.34,1.56,.64,1);}
+  .kt-char.in{opacity:1; transform:translateY(0) rotate(0) scale(1);}
+
+  .ink-dot{position:fixed; border-radius:50%; pointer-events:none; z-index:75; left:0; top:0;
+    transform:translate(-50%,-50%); animation:inkFly .65s cubic-bezier(.22,1,.36,1) forwards;}
+  @keyframes inkFly{
+    0%{ transform:translate(-50%,-50%) translate(0,0) scale(1); opacity:.9; }
+    100%{ transform:translate(-50%,-50%) translate(var(--dx),var(--dy)) scale(0); opacity:0; }
+  }
 </style>
 </head>
 <body>
+
+<div class="bg-motif" id="bgMotif"></div>
+<div class="spotlight" id="spotlight"></div>
 
 <header>
   <div class="masthead-top">
@@ -453,10 +500,19 @@
     <button class="bgm-toggle" id="bgmToggle">▾</button>
   </div>
   <div class="bgm-body" id="bgmBody">
+    <div class="bgm-player" id="bgmPlayer">
+      <button class="bgm-play-btn" id="bgmPlayBtn">▶</button>
+      <div class="bgm-track-info">
+        <div class="bgm-track-name">Purun Purip Rappa</div>
+        <div class="bgm-track-sub">Glitched Electro Echo Mix</div>
+      </div>
+      <input type="range" class="bgm-volume" id="bgmVolume" min="0" max="100" value="55" aria-label="Volume">
+    </div>
     <div id="bgmLinks"></div>
     <div class="bgm-note" id="bgmNote"></div>
   </div>
 </div>
+<audio id="bgmAudio" src="assets/bgm-purun-purip-rappa.mp3" loop preload="none"></audio>
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
@@ -464,21 +520,21 @@
    EPISODES — edit to match your own videos
    ============================================================ */
 const EPISODES = [
-  { id:'ep1',  file:'FILE No.01', youtubeId:'mmNg6tUpvl8' },
-  { id:'ep2',  file:'FILE No.02', youtubeId:'abehBqF2MDI' },
-  { id:'ep3',  file:'FILE No.03', youtubeId:'Jxdf2ShIVHs' },
-  { id:'ep4',  file:'FILE No.04', youtubeId:'T1yh4oK0NpE' },
-  { id:'ep5',  file:'FILE No.05', youtubeId:'IOipqTv6x9A' },
-  { id:'ep6',  file:'FILE No.06', youtubeId:'DmPEd5VoYGo' },
-  { id:'ep7',  file:'FILE No.07', youtubeId:'IjHa2xjz2ac' },
-  { id:'ep8',  file:'FILE No.08', youtubeId:'lG2Ct3yzTP0' },
-  { id:'ep9',  file:'FILE No.09', youtubeId:'bYoKzdgqxT8', landscape:true },
-  { id:'ep10', file:'FILE No.10', youtubeId:'lBQiqaEwZ_s' },
-  { id:'ep11', file:'FILE No.11', youtubeId:'NOmnHm29CTU' },
-  { id:'ep12', file:'FILE No.12', youtubeId:'h0PvusGBk54' },
-  { id:'ep13', file:'FILE No.13', youtubeId:'iuTsbSdC3UQ' },
-  { id:'ep14', file:'FILE No.14', youtubeId:'Zu4xZ1Dxhsk' },
-  { id:'ep15', file:'FILE No.15', youtubeId:'NwntQ6asoQc' },
+  { id:'ep1',  file:'FILE No.01', youtubeId:'mmNg6tUpvl8', motif:'🚕' },
+  { id:'ep2',  file:'FILE No.02', youtubeId:'abehBqF2MDI', motif:'👣' },
+  { id:'ep3',  file:'FILE No.03', youtubeId:'Jxdf2ShIVHs', motif:'🌆' },
+  { id:'ep4',  file:'FILE No.04', youtubeId:'T1yh4oK0NpE', motif:'🧹' },
+  { id:'ep5',  file:'FILE No.05', youtubeId:'IOipqTv6x9A', motif:'👮' },
+  { id:'ep6',  file:'FILE No.06', youtubeId:'DmPEd5VoYGo', motif:'🎨' },
+  { id:'ep7',  file:'FILE No.07', youtubeId:'IjHa2xjz2ac', motif:'✈️' },
+  { id:'ep8',  file:'FILE No.08', youtubeId:'lG2Ct3yzTP0', motif:'🗄️' },
+  { id:'ep9',  file:'FILE No.09', youtubeId:'bYoKzdgqxT8', landscape:true, motif:'💃' },
+  { id:'ep10', file:'FILE No.10', youtubeId:'lBQiqaEwZ_s', motif:'🚲' },
+  { id:'ep11', file:'FILE No.11', youtubeId:'NOmnHm29CTU', motif:'🍽️' },
+  { id:'ep12', file:'FILE No.12', youtubeId:'h0PvusGBk54', motif:'🚿' },
+  { id:'ep13', file:'FILE No.13', youtubeId:'iuTsbSdC3UQ', motif:'💈' },
+  { id:'ep14', file:'FILE No.14', youtubeId:'Zu4xZ1Dxhsk', motif:'🎈' },
+  { id:'ep15', file:'FILE No.15', youtubeId:'NwntQ6asoQc', motif:'📄' },
   // { id:'ep16', file:'FILE No.16', youtubeId:'', coming:true },  // ← add more like this
 ];
 
@@ -576,6 +632,7 @@ const thumbHi = id => `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
 const thumbLo = id => `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
 let progressCache = {};
 let player = null, activeEp = null, saveTimer = null;
+let heroRevealed = false;
 
 document.getElementById('editionDate').textContent =
   new Date().toLocaleDateString('en-US', {year:'numeric',month:'short',day:'2-digit'}).toUpperCase();
@@ -641,12 +698,38 @@ function epTitle(idx){
   return currentLang==='ja' ? `第${['一','二','三','四','五','六','七','八','九','十','十一','十二','十三','十四','十五'][idx]||(idx+1)}話` : `Episode ${idx+1}`;
 }
 
+// wraps the Claude-artifact window.storage API when it's present, and falls
+// back to plain localStorage on a normal host (Netlify, this local preview, etc.)
+// — always genuinely async either way, so the rest of the page finishes
+// initializing before this resolves.
+const Store = {
+  async list(prefix){
+    if(window.storage && typeof window.storage.list === 'function'){
+      try{ return await window.storage.list(prefix, false); }catch(e){}
+    }
+    return { keys: Object.keys(localStorage).filter(k=>k.startsWith(prefix)) };
+  },
+  async get(key){
+    if(window.storage && typeof window.storage.get === 'function'){
+      try{ return await window.storage.get(key, false); }catch(e){}
+    }
+    const v = localStorage.getItem(key);
+    return v!=null ? { value:v } : null;
+  },
+  async set(key, value){
+    if(window.storage && typeof window.storage.set === 'function'){
+      try{ return await window.storage.set(key, value, false); }catch(e){}
+    }
+    try{ localStorage.setItem(key, value); }catch(e){}
+  }
+};
+
 async function loadProgress(){
   try{
-    const list = await window.storage.list('progress:', false);
+    const list = await Store.list('progress:');
     if(list && list.keys){
       for(const k of list.keys){
-        try{ const r = await window.storage.get(k, false); if(r) progressCache[k.replace('progress:','')] = JSON.parse(r.value); }catch(e){}
+        try{ const r = await Store.get(k); if(r) progressCache[k.replace('progress:','')] = JSON.parse(r.value); }catch(e){}
       }
     }
   }catch(e){ console.warn('progress load failed', e); }
@@ -656,7 +739,7 @@ async function loadProgress(){
 }
 async function saveProgress(id, seconds, duration){
   progressCache[id] = { seconds, duration, lastWatchedAt: Date.now() };
-  try{ await window.storage.set('progress:'+id, JSON.stringify(progressCache[id]), false); }
+  try{ await Store.set('progress:'+id, JSON.stringify(progressCache[id])); }
   catch(e){ console.warn('save failed', e); }
 }
 
@@ -675,7 +758,11 @@ function buildCast(){
         </div>
         <div class="cast-back"><p data-key="${c.bioKey}"></p></div>
       </div>`;
-    card.onclick = ()=> card.classList.toggle('flipped');
+    card.onclick = ()=>{
+      card.classList.toggle('flipped');
+      const r = card.getBoundingClientRect();
+      burstInk(r.left+r.width/2, r.top+r.height/2);
+    };
     grid.appendChild(card);
   });
 }
@@ -719,7 +806,8 @@ function renderHero(){
     document.getElementById('heroImg').src = thumbHi(heroEp.youtubeId);
     document.getElementById('heroImg').onerror = function(){ this.onerror=null; this.src = thumbLo(heroEp.youtubeId); };
     document.getElementById('heroFileTag').textContent = heroEp.file;
-    document.getElementById('heroTitle').textContent = epTitle(n);
+    kineticText(document.getElementById('heroTitle'), epTitle(n));
+    setBgMotif(heroEp.motif);
     const syn = SYNOPSIS[heroEp.id] && SYNOPSIS[heroEp.id][currentLang] ? SYNOPSIS[heroEp.id][currentLang] : SYNOPSIS_FALLBACK[currentLang];
     document.getElementById('heroDesc').textContent = syn.split('\n')[0];
     if(continueId){
@@ -753,7 +841,8 @@ function previewHeroText(ep, idx, title){
   bounceHero();
   document.getElementById('heroImg').parentElement.classList.toggle('portrait', !ep.landscape);
   document.getElementById('heroFileTag').textContent = ep.file;
-  document.getElementById('heroTitle').textContent = title;
+  kineticText(document.getElementById('heroTitle'), title);
+  setBgMotif(ep.motif);
   const syn = SYNOPSIS[ep.id] && SYNOPSIS[ep.id][currentLang] ? SYNOPSIS[ep.id][currentLang] : SYNOPSIS_FALLBACK[currentLang];
   document.getElementById('heroDesc').textContent = syn.split('\n')[0];
   document.getElementById('heroKicker').textContent = currentLang==='ja' ? 'プレビュー中' : 'NOW PREVIEWING';
@@ -803,6 +892,7 @@ function render(){
     track.appendChild(card);
   });
 
+  const watchedIds = Object.keys(progressCache).sort((a,b)=>progressCache[b].lastWatchedAt-progressCache[a].lastWatchedAt);
   const histWrap = document.getElementById('historyList');
   if(watchedIds.length===0){
     histWrap.innerHTML = `<div class="empty">${S.historyEmpty}</div>`;
@@ -1056,6 +1146,8 @@ function onYouTubeIframeAPIReady(){ ytReady = true; }
 function openPlayer(ep){
   hideSynopsis();
   hideHeroPreview();
+  bgmWasPlaying = !bgmAudio.paused;
+  if(bgmWasPlaying){ bgmAudio.pause(); bgmPlayBtn.textContent = '▶'; }
   if(activeCard) deselectCard(activeCard);
   activeEp = ep;
   const idx = EPISODES.findIndex(e=>e.id===ep.id);
@@ -1251,6 +1343,7 @@ function closePlayer(){
   stopSeekUiTimer();
   if(player){ player.destroy(); player=null; }
   activeEp = null;
+  if(bgmWasPlaying){ bgmAudio.play().catch(()=>{}); bgmPlayBtn.textContent = '⏸'; }
   try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){}
 }
 document.getElementById('closeBtn').onclick = closePlayer;
@@ -1377,15 +1470,113 @@ document.getElementById('bgmHead').onclick = ()=>{
   document.getElementById('bgmToggle').textContent =
     document.getElementById('bgmPanel').classList.contains('collapsed') ? '▸' : '▾';
 };
+// in-page BGM track — plays/pauses independently, ducks out while an
+// episode is open so it never fights with the video's own audio
+const bgmAudio = document.getElementById('bgmAudio');
+const bgmPlayBtn = document.getElementById('bgmPlayBtn');
+const bgmVolume = document.getElementById('bgmVolume');
+let bgmWasPlaying = false;
+bgmAudio.volume = bgmVolume.value / 100;
+bgmPlayBtn.onclick = ()=>{
+  if(bgmAudio.paused){ bgmAudio.play().catch(()=>{}); bgmPlayBtn.textContent = '⏸'; }
+  else { bgmAudio.pause(); bgmPlayBtn.textContent = '▶'; }
+};
+bgmVolume.addEventListener('input', ()=>{ bgmAudio.volume = bgmVolume.value / 100; });
+
 buildBgmLinks();
 document.getElementById('bgmNote').textContent = currentLang==='ja'
   ? '※ Spotifyが開きます。ログイン済みならフル再生、未ログインなら試聴のみになります。'
   : '※ Opens in Spotify. Full playback if you\'re logged in there; preview only if not.';
 
+/* ============================================================
+   MOTION UPGRADE — hover spotlight, magnetic buttons,
+   kinetic typography, ink-splatter bursts
+   ============================================================ */
+
+// the background glows a soft red wherever the cursor hovers a
+// card/photo, like the scene is reacting to what you're looking at
+const spotlightEl = document.getElementById('spotlight');
+const SPOTLIGHT_TARGETS = '.cast-card, .card:not(.coming), .hero-photo, .history-row';
+document.addEventListener('mousemove', (e)=>{
+  if(e.target.closest(SPOTLIGHT_TARGETS)){
+    spotlightEl.classList.add('show');
+    spotlightEl.style.left = e.clientX+'px';
+    spotlightEl.style.top = e.clientY+'px';
+  } else {
+    spotlightEl.classList.remove('show');
+  }
+});
+
+// primary buttons gently pull toward the cursor, then spring back on leave
+function initMagnetic(selector, strength){
+  document.querySelectorAll(selector).forEach(btn=>{
+    btn.classList.add('magnetic');
+    btn.addEventListener('mousemove', (e)=>{
+      const r = btn.getBoundingClientRect();
+      const dx = e.clientX - (r.left + r.width/2);
+      const dy = e.clientY - (r.top + r.height/2);
+      btn.style.transform = `translate(${dx*strength}px, ${dy*strength}px)`;
+    });
+    btn.addEventListener('mouseleave', ()=>{ btn.style.transform = ''; });
+  });
+}
+initMagnetic('#tickerBtn, #langBtn, #spPlay, #closeBtn', 0.28);
+initMagnetic('#heroPlay', 0.35);
+
+// headline text drops in character-by-character with a springy overshoot,
+// instead of just swapping instantly when you hover a different file
+function kineticText(el, text){
+  el.innerHTML = '';
+  [...text].forEach((ch, i)=>{
+    const span = document.createElement('span');
+    span.className = 'kt-char';
+    span.textContent = ch === ' ' ? ' ' : ch;
+    span.style.transitionDelay = (i*16)+'ms';
+    el.appendChild(span);
+  });
+  void el.offsetWidth;
+  requestAnimationFrame(()=>{
+    el.querySelectorAll('.kt-char').forEach(s=> s.classList.add('in'));
+  });
+}
+
+// the giant background symbol cross-fades to match whichever episode
+// is currently showing in the hero
+let bgMotifCurrent = null;
+function setBgMotif(emoji){
+  const el = document.getElementById('bgMotif');
+  if(!emoji || emoji === bgMotifCurrent){ return; }
+  bgMotifCurrent = emoji;
+  el.classList.remove('show');
+  clearTimeout(window.__motifSwap);
+  window.__motifSwap = setTimeout(()=>{
+    el.textContent = emoji;
+    el.classList.add('show');
+  }, 220);
+}
+
+// a little burst of ink flecks radiating from a point — used when a
+// case file is opened, like a stamp hitting the page
+function burstInk(x, y){
+  for(let i=0; i<14; i++){
+    const dot = document.createElement('div');
+    dot.className = 'ink-dot';
+    const ang = Math.random()*Math.PI*2;
+    const dist = 40 + Math.random()*70;
+    dot.style.setProperty('--dx', Math.cos(ang)*dist+'px');
+    dot.style.setProperty('--dy', Math.sin(ang)*dist+'px');
+    dot.style.left = x+'px'; dot.style.top = y+'px';
+    const size = 3 + Math.random()*5;
+    dot.style.width = size+'px'; dot.style.height = size+'px';
+    dot.style.background = Math.random() > 0.5 ? 'var(--red)' : 'var(--ink)';
+    document.body.appendChild(dot);
+    dot.addEventListener('animationend', ()=> dot.remove());
+  }
+}
+
 loadProgress();
 
 /* ---------- motion polish: staggered fade-in on load/scroll, hero fade-in, language-switch cross-fade ---------- */
-let heroRevealed = false;
 function revealHeroOnce(hero){
   if(heroRevealed) return;
   heroRevealed = true;
