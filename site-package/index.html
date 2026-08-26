@@ -468,50 +468,31 @@
     opacity:0; transition:opacity .4s ease; mix-blend-mode:multiply;}
   .spotlight.show{opacity:1;}
 
-  /* a giant, faint symbol tied to whichever episode is selected — drifts
-     slowly behind everything, like the scene itself is thinking about it */
-  .bg-motif{position:fixed; left:50%; top:38%; z-index:0; pointer-events:none;
-    font-size:38vw; line-height:1; opacity:0; filter:grayscale(1) sepia(.35) contrast(1.1);
-    transform:translate(-50%,-50%) rotate(-6deg) scale(.9);
-    transition:opacity .6s ease, transform .8s cubic-bezier(.22,1,.36,1);}
-  .bg-motif.show{opacity:.09;}
-  .bg-motif.is-image{width:min(46vw,340px); height:min(46vw,340px); max-width:340px; max-height:340px; font-size:0;
-    background-size:contain; background-repeat:no-repeat; background-position:center;}
-  .bg-motif.is-image.show{animation:motifToss .5s cubic-bezier(.16,.86,.4,1) both;}
+  /* a bold action-shot image tied to whichever episode is hovered — punches
+     in next to the video at near-full strength, like a poster insert,
+     instead of fading faintly in the background */
+  .bg-motif{position:absolute; right:18px; bottom:18px; z-index:2; pointer-events:none;
+    font-size:0; line-height:1; opacity:0; filter:sepia(.2) contrast(1.08);
+    transform-origin:bottom right;
+    border:3px solid var(--paper); box-shadow:0 14px 32px rgba(0,0,0,0.5);
+    transition:opacity .3s ease;}
+  .bg-motif.show{opacity:.97;}
+  .bg-motif.is-image{width:min(40%,260px); height:auto; aspect-ratio:1/1;
+    background-size:cover; background-repeat:no-repeat; background-position:center;}
+  .bg-motif.is-image.show{animation:motifToss .55s cubic-bezier(.16,.86,.4,1) both;}
   @keyframes motifToss{
-    0%{ transform:translate(calc(-50% + 240px), calc(-50% - 180px)) rotate(30deg) scale(.68); opacity:0; }
-    58%{ transform:translate(calc(-50% - 16px), calc(-50% + 12px)) rotate(-10deg) scale(1.05); opacity:.12; }
-    78%{ transform:translate(calc(-50% + 5px), calc(-50% - 4px)) rotate(4deg) scale(0.99); opacity:.1; }
-    100%{ transform:translate(-50%,-50%) rotate(-3deg) scale(1); opacity:.09; }
+    0%{ transform:translate(160px,140px) rotate(26deg) scale(.55); opacity:0; }
+    58%{ transform:translate(-10px,-8px) rotate(-8deg) scale(1.06); opacity:1; }
+    78%{ transform:translate(3px,3px) rotate(3deg) scale(0.99); opacity:1; }
+    100%{ transform:translate(0,0) rotate(-2deg) scale(1); opacity:1; }
   }
   .bg-motif.teaser-burst{animation:teaserBurst .7s cubic-bezier(.22,1.6,.4,1) both;}
   @keyframes teaserBurst{
-    0%{ transform:translate(-50%,-50%) scale(.35) rotate(-14deg); opacity:0; }
-    55%{ transform:translate(-50%,-50%) scale(1.14) rotate(4deg); opacity:.13; }
-    100%{ transform:translate(-50%,-50%) scale(1) rotate(-3deg); opacity:.09; }
+    0%{ transform:scale(.35) rotate(-14deg); opacity:0; }
+    55%{ transform:scale(1.1) rotate(4deg); opacity:1; }
+    100%{ transform:scale(1) rotate(-2deg); opacity:1; }
   }
 
-  /* fun character/prop cutouts that pop in around the motif */
-  .motif-deco{position:fixed; left:50%; top:38%; z-index:0; pointer-events:none;
-    width:1px; height:1px;}
-  .deco-piece{position:absolute; opacity:0; color:var(--ink); transform-origin:center; --deco-rot:0deg;}
-  .motif-deco.show .deco-piece{animation:decoPop .6s cubic-bezier(.22,1.6,.4,1) both;}
-  .deco-tanuki{width:76px; height:auto; left:-248px; top:126px; filter:sepia(20%) contrast(1.05); --deco-rot:7deg;}
-  .deco-tanuki img{display:block; width:100%; height:auto;}
-  .motif-deco.show .deco-tanuki{animation-delay:.42s;}
-  .deco-ghost{width:84px; height:auto; left:232px; top:163px; filter:sepia(15%) contrast(1.05); --deco-rot:-9deg;}
-  .deco-ghost img{display:block; width:100%; height:auto;}
-  .motif-deco.show .deco-ghost{animation-delay:.54s;}
-  .deco-menu{width:78px; height:auto; left:-172px; top:-197px; filter:sepia(12%) contrast(1.03); --deco-rot:13deg;
-    box-shadow:0 6px 14px rgba(0,0,0,0.35);}
-  .deco-menu img{display:block; width:100%; height:auto;}
-  .motif-deco.show .deco-menu{animation-delay:.66s;}
-  .deco-bakemono{width:120px; height:auto; left:74px; top:-237px; filter:sepia(10%) contrast(1.03); --deco-rot:-4deg;}
-  .deco-bakemono img{display:block; width:100%; height:auto;}
-  .motif-deco.show .deco-bakemono{animation-delay:.78s;}
-  .deco-camera{width:96px; height:auto; left:-102px; top:-88px; filter:sepia(8%) contrast(1.03); --deco-rot:-11deg;}
-  .deco-camera img{display:block; width:100%; height:auto;}
-  .motif-deco.show .deco-camera{animation-delay:.15s;}
   @keyframes decoPop{
     0%{ opacity:0; transform:scale(.3) rotate(calc(var(--deco-rot) - 25deg)); }
     65%{ opacity:.16; transform:scale(1.08) rotate(calc(var(--deco-rot) + 4deg)); }
@@ -544,14 +525,6 @@
 </head>
 <body>
 
-<div class="bg-motif" id="bgMotif"></div>
-<div class="motif-deco" id="motifDeco">
-  <div class="deco-piece deco-tanuki"><img src="assets/deco-tanuki.png" alt=""></div>
-  <div class="deco-piece deco-ghost"><img src="assets/deco-ghost-garden.png" alt=""></div>
-  <div class="deco-piece deco-menu"><img src="assets/deco-ramen-menu.png" alt=""></div>
-  <div class="deco-piece deco-bakemono"><img src="assets/deco-bakemono-coffee.png" alt=""></div>
-  <div class="deco-piece deco-camera"><img src="assets/deco-evidence-camera.png" alt=""></div>
-</div>
 <div class="spotlight" id="spotlight"></div>
 <div class="custom-cursor" id="customCursor"><span id="customCursorImg">👆</span></div>
 
@@ -595,6 +568,7 @@
         <img id="heroImg" alt="">
         <div class="hero-preview" id="heroPreview"><div id="heroPreviewPlayer"></div></div>
         <div class="stage-scrim"></div>
+        <div class="bg-motif" id="bgMotif"></div>
         <div class="play-btn" id="heroPlay">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="#1c1811"><path d="M8 5v14l11-7z"/></svg>
         </div>
@@ -1926,12 +1900,10 @@ function flairFor(ep){
 let bgMotifCurrent = null;
 function setBgMotif(ep){
   const el = document.getElementById('bgMotif');
-  const deco = document.getElementById('motifDeco');
   const src = flairFor(ep);
   if(!src || src === bgMotifCurrent){ return; }
   bgMotifCurrent = src;
   el.classList.remove('show');
-  deco.classList.remove('show');
   clearTimeout(window.__motifSwap);
   window.__motifSwap = setTimeout(()=>{
     el.textContent = '';
@@ -1939,16 +1911,13 @@ function setBgMotif(ep){
     el.classList.add('is-image');
     el.classList.toggle('teaser-burst', !!ep.coming);
     el.classList.add('show');
-    void deco.offsetWidth;
-    deco.classList.add('show');
-  }, 220);
+  }, 180);
 }
-// stops the hop/drift loop and hides the motif the moment the cursor
-// leaves the episode card — it should only move while you're pointing at it
+// hides the moment the cursor leaves the episode card — the action shot
+// only appears while you're actually pointing at that file
 function hideBgMotif(){
   clearTimeout(window.__motifSwap);
   document.getElementById('bgMotif').classList.remove('show');
-  document.getElementById('motifDeco').classList.remove('show');
   bgMotifCurrent = null;
 }
 
