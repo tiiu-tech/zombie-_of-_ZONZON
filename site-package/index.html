@@ -186,7 +186,7 @@
   .stage{display:none; position:relative; margin-top:28px; padding:30px 0 8px;
     background-color:var(--stage-tint, transparent); transition:background-color .6s ease;}
   .stage-inner{max-width:1080px; margin:0 auto; padding:0 24px;}
-  .stage-main{display:flex; align-items:stretch; gap:22px;}
+  .stage-main{display:flex; align-items:stretch; gap:22px; max-width:920px; margin:0 auto;}
   @media (max-width:820px){ .stage-main{flex-direction:column;} }
   .stage-photo{position:relative; background:#000; flex:1 1 auto; min-width:0; height:clamp(300px,58vh,600px);
     overflow:hidden; border:1px solid var(--ink); box-shadow:0 20px 44px rgba(28,24,17,0.28);}
@@ -273,6 +273,22 @@
     transition:transform .5s cubic-bezier(.34,1.56,.64,1);}
   .card.sel .card-thumb-inner{transform:rotateY(180deg);}
   .card-thumb-face, .card-thumb-back{position:absolute; inset:0; backface-visibility:hidden;}
+  /* the "face-down" side isn't any single picture — several of the site's
+     images are zoomed in tight and blended together into one unrecognizable
+     jumble, finished with a lattice pattern, like a real playing-card back */
+  .card-thumb-face{background-color:var(--ink);
+    background-image:
+      repeating-linear-gradient(45deg, rgba(233,225,205,0.07) 0 5px, transparent 5px 13px),
+      repeating-linear-gradient(-45deg, rgba(178,58,72,0.12) 0 5px, transparent 5px 13px),
+      url('assets/deco-tanuki.png'), url('assets/deco-ghost-garden.png'),
+      url('assets/wanted-board.png'), url('assets/deco-bakemono-coffee.png'),
+      url('assets/deco-evidence-camera.png'), url('assets/deco-ramen-menu.png');
+    background-size:auto, auto, 260% auto, 300% auto, 340% auto, 280% auto, 320% auto, 260% auto;
+    background-position:0 0, 0 0, 20% 15%, 75% 65%, 45% 90%, 5% 75%, 85% 10%, 55% 40%;
+    background-repeat:repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+    background-blend-mode:normal, normal, luminosity, luminosity, luminosity, luminosity, luminosity, luminosity;
+    filter:sepia(35%) contrast(1.15) brightness(.7);
+    border:2px solid rgba(233,225,205,0.5); box-sizing:border-box;}
   .card-thumb-back{transform:rotateY(180deg);}
   .card-thumb::after{
     content:''; position:absolute; top:-50%; left:-60%; width:35%; height:220%;
@@ -1144,7 +1160,7 @@ function render(){
     card.innerHTML = `
       <div class="card-thumb${ep.landscape ? ' landscape' : ''}">        ${ep.coming ? `${ep.motifImg ? `<img src="${ep.motifImg}" alt="${title}" style="filter:grayscale(70%) contrast(1.1) brightness(.6);">` : ''}<div class="lock">${S.comingSoon}</div>` : `
         <div class="card-thumb-inner">
-          <div class="card-thumb-face"><img src="${flairFor(ep)}" alt=""></div>
+          <div class="card-thumb-face"></div>
           <div class="card-thumb-back"><img src="${thumbHi(ep.youtubeId)}" onerror="this.onerror=null;this.src='${thumbLo(ep.youtubeId)}'" alt="${title}"></div>
         </div>`}
         <div class="file-tag type">${ep.file}</div>
