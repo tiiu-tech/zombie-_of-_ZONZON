@@ -119,34 +119,25 @@
   .cast-card:hover .cast-face, .cast-card:hover .cast-back{
     border-radius:16px; border-color:var(--red);
     box-shadow:0 0 0 2px var(--red), 0 0 16px 3px rgba(178,58,72,0.4);}
-  .cast-face{background:var(--paper-2); position:relative; overflow:hidden;}
-  .cast-face .icon{position:relative; width:auto; height:98px; margin-bottom:8px;
-    display:flex; align-items:flex-end; justify-content:center;}
-  .cast-face .icon::before{
-    content:''; position:absolute; inset:-6px -30px; z-index:0; pointer-events:none;
-    background:repeating-linear-gradient(100deg, rgba(28,24,17,0.16) 0 3px, transparent 3px 11px);
-    -webkit-mask-image:linear-gradient(to left, #000, transparent 75%);
-            mask-image:linear-gradient(to left, #000, transparent 75%);
-    opacity:0; animation:speedLines 1.1s ease-in-out infinite;}
-  .cast-card:nth-child(2) .cast-face .icon::before{
-    -webkit-mask-image:linear-gradient(to right, #000, transparent 75%);
-            mask-image:linear-gradient(to right, #000, transparent 75%);}
-  @keyframes speedLines{ 0%, 100%{opacity:0;} 45%{opacity:1;} 65%{opacity:.5;} }
-  .cast-face .icon img{position:relative; z-index:1; height:100%; width:auto; object-fit:contain;
-    filter:sepia(12%) contrast(1.05) drop-shadow(4px 8px 6px rgba(28,24,17,0.5));
-    animation:runCycle .62s ease-in-out infinite;}
-  .cast-card:nth-child(1) .cast-face .icon img{ transform-origin:70% 100%; }
-  .cast-card:nth-child(2) .cast-face .icon img{ transform-origin:30% 100%; animation-name:runCycleFlee; animation-delay:.08s;}
-  @keyframes runCycle{
-    0%, 100%{ transform:rotate(-4deg) translateY(0); }
-    50%{ transform:rotate(4deg) translateY(-7px); }
+  .cast-face{background:var(--paper-2); position:relative; overflow:hidden; padding:0;
+    justify-content:flex-end; align-items:stretch;}
+  .cast-face .icon{position:absolute; inset:0; overflow:hidden;}
+  .cast-face .icon img{position:absolute; inset:-8%; width:116%; height:116%; object-fit:cover;
+    object-position:center 20%; filter:sepia(15%) contrast(1.06) brightness(.94);
+    transform:scale(1) translate(0,0) rotate(0deg); transition:transform .5s ease;}
+  /* the character stands still until you hover — then it starts pacing
+     around inside the frame like it's alive, and freezes again on leave */
+  .cast-card:hover .cast-face .icon img{animation:castDrift 2.6s ease-in-out infinite alternate;}
+  @keyframes castDrift{
+    0%{ transform:scale(1.05) translate(-2.5%,-1%) rotate(-1.2deg); }
+    50%{ transform:scale(1.09) translate(2.5%,1.5%) rotate(1.2deg); }
+    100%{ transform:scale(1.05) translate(-1.5%,2%) rotate(-.8deg); }
   }
-  @keyframes runCycleFlee{
-    0%, 100%{ transform:rotate(4deg) translateY(0); }
-    50%{ transform:rotate(-4deg) translateY(-7px); }
-  }
-  .cast-face .name{font-family:'Shippori Mincho',serif; font-size:11.5px; font-weight:700; line-height:1.4;}
-  .cast-face .tap{font-family:'Courier Prime',monospace; font-size:9px; color:var(--ink-soft); margin-top:6px;}
+  .cast-face-scrim{position:relative; z-index:1; margin-top:auto; width:100%; padding:34px 12px 12px;
+    background:linear-gradient(to top, rgba(28,24,17,0.88), rgba(28,24,17,0.35) 65%, transparent);
+    text-align:center;}
+  .cast-face .name{font-family:'Shippori Mincho',serif; font-size:11.5px; font-weight:700; line-height:1.4; color:var(--paper);}
+  .cast-face .tap{font-family:'Courier Prime',monospace; font-size:9px; color:rgba(233,225,205,.8); margin-top:6px;}
   .cast-back{background:var(--ink); color:var(--paper); transform:rotateY(180deg); gap:8px;}
   .cast-back p{font-family:'Shippori Mincho',serif; font-size:10.5px; line-height:1.65; margin:0;}
   .cast-badge{display:inline-block; background:var(--red); color:var(--paper); border:2px solid var(--paper);
@@ -209,12 +200,15 @@
   .kicker{font-family:'Courier Prime',monospace; font-size:11px; letter-spacing:.16em; color:var(--red-bright); margin-bottom:8px;}
   .kicker::before{content:'▍ ';}
   .stage-title{font-family:'Playfair Display',serif; font-weight:900; color:var(--paper);
-    font-size:clamp(32px,6.4vw,68px); line-height:1; margin:0 0 10px; text-shadow:0 4px 20px rgba(0,0,0,.65);}
-  .stage-desc{font-family:'Shippori Mincho',serif; font-size:13.5px; color:rgba(233,225,205,0.9); line-height:1.85;
-    max-width:640px; margin:0 0 12px; text-shadow:0 2px 10px rgba(0,0,0,.75);}
-  .hero-progress{height:6px; background:rgba(233,225,205,0.25); border:1px solid rgba(233,225,205,0.45); position:relative; max-width:320px;}
+    font-size:clamp(32px,6.4vw,68px); line-height:1; margin:0; text-shadow:0 4px 20px rgba(0,0,0,.65);}
+  /* sits below the photo, on the mood-tinted stage background — light text
+     with a soft dark shadow so it stays readable no matter which mood color is active */
+  .stage-below{padding:14px 2px 4px;}
+  .stage-desc{font-family:'Shippori Mincho',serif; font-size:13.5px; color:var(--paper); line-height:1.85;
+    max-width:640px; margin:0 0 12px; text-shadow:0 1px 6px rgba(0,0,0,.4);}
+  .hero-progress{height:6px; background:rgba(28,24,17,0.25); border:1px solid rgba(28,24,17,0.35); position:relative; max-width:320px;}
   .hero-progress i{display:block; height:100%; background:repeating-linear-gradient(45deg, var(--red) 0 6px, var(--red-bright) 6px 12px);}
-  .hero-progress-label{font-family:'Courier Prime',monospace; font-size:10px; margin-top:6px; color:rgba(233,225,205,0.8);}
+  .hero-progress-label{font-family:'Courier Prime',monospace; font-size:10px; margin-top:6px; color:var(--paper); opacity:.85;}
 
   /* ---------- episode fan: trading-card hand, horizontally scrollable ---------- */
   .stage-selector{position:relative; margin-top:6px;}
@@ -608,10 +602,12 @@
         <div class="stage-title-wrap">
           <div class="kicker" id="heroKicker"></div>
           <h2 class="stage-title" id="heroTitle"></h2>
-          <p class="stage-desc" id="heroDesc"></p>
-          <div class="hero-progress"><i id="heroProgressBar" style="width:0%"></i></div>
-          <div class="hero-progress-label" id="heroMeta"></div>
         </div>
+      </div>
+      <div class="stage-below">
+        <p class="stage-desc" id="heroDesc"></p>
+        <div class="hero-progress"><i id="heroProgressBar" style="width:0%"></i></div>
+        <div class="hero-progress-label" id="heroMeta"></div>
       </div>
       <div class="stage-selector">
         <div class="section-head"><h3 id="filesTitle"></h3><div class="rule"></div><div class="section-note" id="epCount"></div></div>
@@ -957,8 +953,10 @@ function buildCast(){
       <div class="cast-inner">
         <div class="cast-face">
           <div class="icon"><img src="${c.icon}" alt=""></div>
-          <div class="name" data-key="${c.nameKey}"></div>
-          <div class="tap" data-tap></div>
+          <div class="cast-face-scrim">
+            <div class="name" data-key="${c.nameKey}"></div>
+            <div class="tap" data-tap></div>
+          </div>
         </div>
         <div class="cast-back">
           <div class="cast-file">${c.file}</div>
@@ -1721,56 +1719,109 @@ function buildBgmLinks(){
   const zoom = document.getElementById('bgmZoomPreview');
   const zoomHighlight = document.getElementById('bgmZoomHighlight');
   const zoomCaption = document.getElementById('bgmZoomCaption');
-  BGM_TRACKS.forEach((t, i)=>{
+  const station = document.getElementById('bgmStation');
+
+  const speak = (text)=>{
+    try{
+      if('speechSynthesis' in window){
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = currentLang === 'ja' ? 'ja-JP' : 'en-US';
+        u.rate = 1.05;
+        window.speechSynthesis.speak(u);
+      }
+    }catch(e){}
+  };
+
+  const hotspots = BGM_TRACKS.map((t, i)=>{
     const a = document.getElementById('bgmHotspot'+i);
-    if(!a) return;
+    if(!a) return null;
     a.href = t.url;
     a.title = t.label;
     a.setAttribute('aria-label', t.label);
-    a.onclick = ()=>{
-      sfxClick();
-      try{
-        if('speechSynthesis' in window){
-          window.speechSynthesis.cancel();
-          const u = new SpeechSynthesisUtterance(t.label);
-          u.lang = currentLang === 'ja' ? 'ja-JP' : 'en-US';
-          u.rate = 1.05;
-          window.speechSynthesis.speak(u);
-        }
-      }catch(e){}
+    a.onclick = ()=>{ sfxClick(); speak(t.label); };
+    return {
+      el: a, track: t,
+      left: parseFloat(a.style.left), top: parseFloat(a.style.top),
+      width: parseFloat(a.style.width), height: parseFloat(a.style.height)
     };
-    a.addEventListener('mouseenter', ()=>{
-      label.textContent = t.label;
-      label.style.left = `calc(${a.style.left} + (${a.style.width}) / 2)`;
-      label.style.top = `calc(${a.style.top} + (${a.style.height}) / 2)`;
-      label.classList.remove('show');
-      void label.offsetWidth;
-      label.classList.add('show');
+  }).filter(Boolean);
 
-      // pop a bigger version of the whole sign board up above the panel,
-      // with the hovered sign ringed and named, so it's obvious what you're about to open
+  // the zoom popup now follows the cursor anywhere over the whole sign board,
+  // not just when precisely over one of the tiny hotspot rectangles —
+  // whichever sign the cursor happens to be nearest gets ringed and named
+  station.addEventListener('mousemove', (e)=>{
+    const r = station.getBoundingClientRect();
+    const px = ((e.clientX - r.left) / r.width) * 100;
+    const py = ((e.clientY - r.top) / r.height) * 100;
+    let nearest = null, bestDist = Infinity;
+    hotspots.forEach(h=>{
+      const cx = h.left + h.width/2, cy = h.top + h.height/2;
+      const d = Math.hypot(px-cx, py-cy);
+      if(d < bestDist){ bestDist = d; nearest = h; }
+    });
+    if(!nearest) return;
+    label.textContent = nearest.track.label;
+    label.style.left = `${nearest.left + nearest.width/2}%`;
+    label.style.top = `${nearest.top + nearest.height/2}%`;
+    if(!label.classList.contains('show')){
+      label.classList.remove('show'); void label.offsetWidth; label.classList.add('show');
+    }
+    zoomHighlight.style.left = nearest.left+'%';
+    zoomHighlight.style.top = nearest.top+'%';
+    zoomHighlight.style.width = nearest.width+'%';
+    zoomHighlight.style.height = nearest.height+'%';
+    zoomCaption.textContent = nearest.track.label;
+    if(!zoom.classList.contains('show')){
       const panelRect = document.getElementById('bgmPanel').getBoundingClientRect();
       zoom.style.right = (window.innerWidth - panelRect.right) + 'px';
       zoom.style.bottom = (window.innerHeight - panelRect.top + 12) + 'px';
-      zoomHighlight.style.left = a.style.left;
-      zoomHighlight.style.top = a.style.top;
-      zoomHighlight.style.width = a.style.width;
-      zoomHighlight.style.height = a.style.height;
-      zoomCaption.textContent = t.label;
       zoom.classList.add('show');
-    });
-    a.addEventListener('mouseleave', ()=>{
-      label.classList.remove('show');
-      zoom.classList.remove('show');
-    });
+    }
+  });
+  station.addEventListener('mouseleave', ()=>{
+    label.classList.remove('show');
+    zoom.classList.remove('show');
   });
 }
 
-document.getElementById('bgmHead').onclick = ()=>{
+document.getElementById('bgmHead').addEventListener('click', ()=>{
+  if(bgmDragged) return;
   document.getElementById('bgmPanel').classList.toggle('collapsed');
   document.getElementById('bgmToggle').textContent =
     document.getElementById('bgmPanel').classList.contains('collapsed') ? '▸' : '▾';
-};
+});
+
+// the BGM panel is a "window" you can drag by its title bar, like a real popup
+let bgmDragged = false;
+(function initBgmDrag(){
+  const panel = document.getElementById('bgmPanel');
+  const head = document.getElementById('bgmHead');
+  let dragging = false, startX, startY, startLeft, startTop;
+  head.style.cursor = 'move';
+  head.addEventListener('pointerdown', (e)=>{
+    dragging = true; bgmDragged = false;
+    const r = panel.getBoundingClientRect();
+    startX = e.clientX; startY = e.clientY; startLeft = r.left; startTop = r.top;
+    panel.style.left = r.left + 'px';
+    panel.style.top = r.top + 'px';
+    panel.style.right = 'auto';
+    panel.style.bottom = 'auto';
+    head.setPointerCapture(e.pointerId);
+  });
+  head.addEventListener('pointermove', (e)=>{
+    if(!dragging) return;
+    const dx = e.clientX - startX, dy = e.clientY - startY;
+    if(Math.abs(dx) > 4 || Math.abs(dy) > 4) bgmDragged = true;
+    const maxLeft = window.innerWidth - panel.offsetWidth - 4;
+    const maxTop = window.innerHeight - 40;
+    panel.style.left = Math.max(4, Math.min(maxLeft, startLeft + dx)) + 'px';
+    panel.style.top = Math.max(4, Math.min(maxTop, startTop + dy)) + 'px';
+  });
+  const endDrag = ()=>{ dragging = false; setTimeout(()=>{ bgmDragged = false; }, 50); };
+  head.addEventListener('pointerup', endDrag);
+  head.addEventListener('pointercancel', endDrag);
+})();
 // in-page BGM track — plays/pauses independently, ducks out while an
 // episode is open so it never fights with the video's own audio
 const bgmAudio = document.getElementById('bgmAudio');
