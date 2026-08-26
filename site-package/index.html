@@ -183,11 +183,19 @@
 
   /* ---------- stage: the big hero + selector, built to actually dominate the
      screen instead of sitting as a small photo+text pair ---------- */
-  .stage{display:none; position:relative; margin-top:28px; padding:30px 0 8px;
+  .stage{display:none; position:relative; z-index:1; margin-top:28px; padding:30px 0 8px;
     background-color:var(--stage-tint, transparent); transition:background-color .6s ease;}
+  /* a flipped cast card can visually overflow its own 190px box — this keeps
+     the whole section above the stage section that follows it, instead of
+     the flip content getting buried underneath it */
+  .cast-section{position:relative; z-index:2;}
   .stage-inner{max-width:1080px; margin:0 auto; padding:0 24px;}
-  .stage-main{display:flex; align-items:stretch; gap:22px; max-width:920px; margin:0 auto;}
-  @media (max-width:820px){ .stage-main{flex-direction:column;} }
+  .stage-main{display:flex; align-items:stretch; gap:22px;}
+  /* an invisible counterweight matching the side column's width, so the
+     photo itself lands dead-center on the page instead of the whole
+     photo+text pair being centered as one lopsided block */
+  .stage-spacer{flex:0 0 260px;}
+  @media (max-width:820px){ .stage-main{flex-direction:column;} .stage-spacer{display:none;} }
   .stage-photo{position:relative; background:#000; flex:1 1 auto; min-width:0; height:clamp(300px,58vh,600px);
     overflow:hidden; border:1px solid var(--ink); box-shadow:0 20px 44px rgba(28,24,17,0.28);}
   .stage-photo.pop{animation:heroPop .5s cubic-bezier(.34,1.56,.64,1);}
@@ -417,6 +425,9 @@
     overflow:hidden; text-overflow:ellipsis;}
   .bgm-track-sub{font-family:'Courier Prime',monospace; font-size:8.5px; color:rgba(233,225,205,0.65);
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .bgm-track-select{font-family:'Courier Prime',monospace; font-size:8px; color:rgba(233,225,205,0.85);
+    background:rgba(255,255,255,0.08); border:1px solid rgba(233,225,205,0.3); border-radius:2px;
+    padding:1px 2px; max-width:100%; cursor:var(--cursor-tap);}
   .bgm-volume{width:56px; accent-color:var(--red-bright); cursor:var(--cursor-tap); flex-shrink:0;}
   .bgm-link-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 10px;
     border:1px solid var(--ink); background:var(--paper-2); margin-bottom:7px; text-decoration:none; color:var(--ink);}
@@ -485,36 +496,6 @@
     opacity:0; transition:opacity .4s ease; mix-blend-mode:multiply;}
   .spotlight.show{opacity:1;}
 
-  /* a bold action-shot image tied to whichever episode is hovered — punches
-     in next to the video at near-full strength, like a poster insert,
-     instead of fading faintly in the background */
-  .bg-motif{width:100%; max-height:0; margin-bottom:0; overflow:hidden; pointer-events:none;
-    font-size:0; line-height:1; opacity:0; filter:sepia(.2) contrast(1.08);
-    border:3px solid var(--ink); box-shadow:0 10px 24px rgba(28,24,17,0.3);
-    transition:max-height .35s ease, margin-bottom .35s ease, opacity .25s ease;}
-  .bg-motif.show{max-height:400px; margin-bottom:14px; opacity:1;}
-  .bg-motif.is-image{aspect-ratio:1/1;
-    background-size:cover; background-repeat:no-repeat; background-position:center;}
-  .bg-motif.is-image.show{animation:motifToss .5s cubic-bezier(.16,.86,.4,1) both;}
-  @keyframes motifToss{
-    0%{ transform:translateY(-24px) rotate(10deg) scale(.7); opacity:0; }
-    58%{ transform:translateY(4px) rotate(-4deg) scale(1.04); opacity:1; }
-    78%{ transform:translateY(-2px) rotate(2deg) scale(0.99); opacity:1; }
-    100%{ transform:translateY(0) rotate(-1deg) scale(1); opacity:1; }
-  }
-  .bg-motif.teaser-burst{animation:teaserBurst .7s cubic-bezier(.22,1.6,.4,1) both;}
-  @keyframes teaserBurst{
-    0%{ transform:scale(.35) rotate(-14deg); opacity:0; }
-    55%{ transform:scale(1.1) rotate(4deg); opacity:1; }
-    100%{ transform:scale(1) rotate(-2deg); opacity:1; }
-  }
-
-  @keyframes decoPop{
-    0%{ opacity:0; transform:scale(.3) rotate(calc(var(--deco-rot) - 25deg)); }
-    65%{ opacity:.16; transform:scale(1.08) rotate(calc(var(--deco-rot) + 4deg)); }
-    100%{ opacity:.13; transform:scale(1) rotate(var(--deco-rot)); }
-  }
-
   .magnetic{transition:transform .18s cubic-bezier(.34,1.56,.64,1);}
 
   .kt-char{display:inline-block; opacity:0; transform:translateY(18px) rotate(7deg) scale(.82);
@@ -572,7 +553,7 @@
     <p id="caseBrief"></p>
   </section>
 
-  <section class="section reveal">
+  <section class="section reveal cast-section">
     <div class="section-head"><h3 id="castTitle"></h3><div class="rule"></div></div>
     <div class="cast-note" id="castNote"></div>
     <div class="cast-grid" id="castGrid"></div>
@@ -581,6 +562,7 @@
   <section class="stage" id="heroSection">
     <div class="stage-inner">
       <div class="stage-main">
+        <div class="stage-spacer" aria-hidden="true"></div>
         <div class="stage-photo">
           <img id="heroImg" alt="">
           <div class="hero-preview" id="heroPreview"><div id="heroPreviewPlayer"></div></div>
@@ -595,7 +577,6 @@
           </div>
         </div>
         <div class="stage-side">
-          <div class="bg-motif" id="bgMotif"></div>
           <p class="stage-desc" id="heroDesc"></p>
           <div class="hero-progress"><i id="heroProgressBar" style="width:0%"></i></div>
           <div class="hero-progress-label" id="heroMeta"></div>
@@ -678,7 +659,13 @@
       <button class="bgm-play-btn" id="bgmPlayBtn">▶</button>
       <div class="bgm-track-info">
         <div class="bgm-track-name">Purun Purip Rappa</div>
-        <div class="bgm-track-sub">Glitched Electro Echo Mix</div>
+        <select class="bgm-track-select" id="bgmTrackSelect">
+          <option value="assets/bgm-glitched-electro.mp3">Glitched Electro Echo Mix</option>
+          <option value="assets/bgm-glitched-electro-2.mp3">Glitched Electro Echo Mix (Alt)</option>
+          <option value="assets/bgm-retro-anime.mp3">Retro Cute Anime OP Mix</option>
+          <option value="assets/bgm-retro-anime-2.mp3">Retro Cute Anime OP Mix (Alt)</option>
+          <option value="assets/bgm-hype-harmony.mp3">2nd Performance Hype Harmony Ver.</option>
+        </select>
       </div>
       <input type="range" class="bgm-volume" id="bgmVolume" min="0" max="100" value="55" aria-label="Volume">
     </div>
@@ -698,7 +685,7 @@
     <div class="bgm-note" id="bgmNote"></div>
   </div>
 </div>
-<audio id="bgmAudio" src="assets/bgm-purun-purip-rappa.mp3" loop preload="none"></audio>
+<audio id="bgmAudio" src="assets/bgm-glitched-electro.mp3" loop preload="none"></audio>
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
@@ -1083,7 +1070,6 @@ function previewHeroText(ep, idx, title){
   document.getElementById('heroImg').parentElement.classList.toggle('portrait', !ep.landscape);
   document.getElementById('heroFileTag').textContent = ep.file;
   kineticText(document.getElementById('heroTitle'), title);
-  setBgMotif(ep);
   setStageMood(ep);
   const syn = SYNOPSIS[ep.id] && SYNOPSIS[ep.id][currentLang] ? SYNOPSIS[ep.id][currentLang] : SYNOPSIS_FALLBACK[currentLang];
   document.getElementById('heroDesc').textContent = syn.split('\n')[0];
@@ -1112,7 +1098,6 @@ function previewComingSoon(ep, title){
   document.getElementById('heroProgressBar').style.width = '0%';
   document.getElementById('heroMeta').textContent = '';
   document.getElementById('heroPlay').onclick = null;
-  setBgMotif(ep);
   setStageMood(ep);
 }
 
@@ -1157,7 +1142,6 @@ function render(){
         const r = card.getBoundingClientRect();
         burstInk(r.left+r.width/2, r.top+8);
       });
-      card.addEventListener('mouseleave', hideBgMotif);
     }
     track.appendChild(card);
   });
@@ -1212,7 +1196,6 @@ function deselectCard(card){
     activeCard = null;
     clearTimeout(dwellTimer);
     clearTimeout(previewTimer);
-    hideBgMotif();
     // intentionally NOT calling hideHeroPreview()/renderHero() here —
     // the big screen keeps showing/playing whatever was last selected
     // instead of snapping back to "continue watching" / episode 1.
@@ -1860,6 +1843,11 @@ bgmPlayBtn.onclick = ()=>{
   else { bgmAudio.pause(); bgmPlayBtn.textContent = '▶'; }
 };
 bgmVolume.addEventListener('input', ()=>{ bgmAudio.volume = bgmVolume.value / 100; });
+document.getElementById('bgmTrackSelect').addEventListener('change', (e)=>{
+  const wasPlaying = !bgmAudio.paused;
+  bgmAudio.src = e.target.value;
+  if(wasPlaying){ bgmAudio.play().catch(()=>{}); }
+});
 
 buildBgmLinks();
 document.getElementById('bgmNote').textContent = currentLang==='ja'
@@ -1935,44 +1923,6 @@ document.getElementById('evidenceLightbox').addEventListener('click', ()=>{
 
 // the giant background symbol cross-fades to match whichever episode
 // is currently showing in the hero
-// episodes without their own dedicated motif photo borrow one of the fun
-// character/prop cutouts already on the page, instead of a giant emoji —
-// picked deterministically per episode so the same one always shows
-const FLAIR_IMAGES = [
-  'assets/deco-tanuki.png', 'assets/deco-ghost-garden.png', 'assets/deco-bakemono-coffee.png',
-  'assets/deco-evidence-camera.png', 'assets/deco-ramen-menu.png', 'assets/wanted-board.png'
-];
-function flairFor(ep){
-  if(ep.motifImg) return ep.motifImg;
-  let h = 0;
-  for(const c of ep.id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return FLAIR_IMAGES[h % FLAIR_IMAGES.length];
-}
-
-let bgMotifCurrent = null;
-function setBgMotif(ep){
-  const el = document.getElementById('bgMotif');
-  const src = flairFor(ep);
-  if(!src || src === bgMotifCurrent){ return; }
-  bgMotifCurrent = src;
-  el.classList.remove('show');
-  clearTimeout(window.__motifSwap);
-  window.__motifSwap = setTimeout(()=>{
-    el.textContent = '';
-    el.style.backgroundImage = `url('${src}')`;
-    el.classList.add('is-image');
-    el.classList.toggle('teaser-burst', !!ep.coming);
-    el.classList.add('show');
-  }, 180);
-}
-// hides the moment the cursor leaves the episode card — the action shot
-// only appears while you're actually pointing at that file
-function hideBgMotif(){
-  clearTimeout(window.__motifSwap);
-  document.getElementById('bgMotif').classList.remove('show');
-  bgMotifCurrent = null;
-}
-
 // a little burst of ink flecks radiating from a point — used when a
 // case file is opened, like a stamp hitting the page
 function burstInk(x, y){
