@@ -261,35 +261,11 @@
   .card.coming{cursor:default; opacity:.68;}
   .card.coming.sel{box-shadow:2px 3px 6px rgba(28,24,17,0.28); border-color:var(--ink); border-radius:0; animation:none;}
   .card-thumb{position:relative; aspect-ratio:9/16; background:#000; overflow:hidden; border-bottom:1px solid var(--ink);
-    border-radius:inherit; border-bottom-left-radius:0; border-bottom-right-radius:0; transition:border-radius .4s cubic-bezier(.34,1.56,.64,1);
-    perspective:500px;}
+    border-radius:inherit; border-bottom-left-radius:0; border-bottom-right-radius:0; transition:border-radius .4s cubic-bezier(.34,1.56,.64,1);}
   .card-thumb.landscape{aspect-ratio:16/10;}
   .card-thumb img{width:100%; height:100%; object-fit:cover; filter:grayscale(60%) sepia(20%) contrast(1.06) brightness(.92);
     transition:filter .35s ease;}
   .card.sel .card-thumb img{filter:none;}
-  /* face-down like a trading card — shows the flair image until hovered,
-     then flips over to reveal the real episode thumbnail */
-  .card-thumb-inner{position:absolute; inset:0; transform-style:preserve-3d;
-    transition:transform .5s cubic-bezier(.34,1.56,.64,1);}
-  .card.sel .card-thumb-inner{transform:rotateY(180deg);}
-  .card-thumb-face, .card-thumb-back{position:absolute; inset:0; backface-visibility:hidden;}
-  /* the "face-down" side isn't any single picture — several of the site's
-     images are zoomed in tight and blended together into one unrecognizable
-     jumble, finished with a lattice pattern, like a real playing-card back */
-  .card-thumb-face{background-color:var(--ink);
-    background-image:
-      repeating-linear-gradient(45deg, rgba(233,225,205,0.07) 0 5px, transparent 5px 13px),
-      repeating-linear-gradient(-45deg, rgba(178,58,72,0.12) 0 5px, transparent 5px 13px),
-      url('assets/deco-tanuki.png'), url('assets/deco-ghost-garden.png'),
-      url('assets/wanted-board.png'), url('assets/deco-bakemono-coffee.png'),
-      url('assets/deco-evidence-camera.png'), url('assets/deco-ramen-menu.png');
-    background-size:auto, auto, 260% auto, 300% auto, 340% auto, 280% auto, 320% auto, 260% auto;
-    background-position:0 0, 0 0, 20% 15%, 75% 65%, 45% 90%, 5% 75%, 85% 10%, 55% 40%;
-    background-repeat:repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
-    background-blend-mode:normal, normal, luminosity, luminosity, luminosity, luminosity, luminosity, luminosity;
-    filter:sepia(35%) contrast(1.15) brightness(.7);
-    border:2px solid rgba(233,225,205,0.5); box-sizing:border-box;}
-  .card-thumb-back{transform:rotateY(180deg);}
   .card-thumb::after{
     content:''; position:absolute; top:-50%; left:-60%; width:35%; height:220%;
     background:linear-gradient(120deg, transparent 0%, transparent 40%, rgba(255,255,255,0.65) 50%, transparent 60%, transparent 100%);
@@ -1158,11 +1134,7 @@ function render(){
     card.style.zIndex = String(idx+1);
     card.dataset.baseT = baseT; card.dataset.lift = 0; card.dataset.z = String(idx+1);
     card.innerHTML = `
-      <div class="card-thumb${ep.landscape ? ' landscape' : ''}">        ${ep.coming ? `${ep.motifImg ? `<img src="${ep.motifImg}" alt="${title}" style="filter:grayscale(70%) contrast(1.1) brightness(.6);">` : ''}<div class="lock">${S.comingSoon}</div>` : `
-        <div class="card-thumb-inner">
-          <div class="card-thumb-face"></div>
-          <div class="card-thumb-back"><img src="${thumbHi(ep.youtubeId)}" onerror="this.onerror=null;this.src='${thumbLo(ep.youtubeId)}'" alt="${title}"></div>
-        </div>`}
+      <div class="card-thumb${ep.landscape ? ' landscape' : ''}">        ${ep.coming ? `${ep.motifImg ? `<img src="${ep.motifImg}" alt="${title}" style="filter:grayscale(70%) contrast(1.1) brightness(.6);">` : ''}<div class="lock">${S.comingSoon}</div>` : `<img src="${thumbHi(ep.youtubeId)}" onerror="this.onerror=null;this.src='${thumbLo(ep.youtubeId)}'" alt="${title}">`}
         <div class="file-tag type">${ep.file}</div>
         ${(!ep.coming && isWatched(ep.id)) ? `<div class="stamp">${S.viewedStamp}</div>` : ''}
         ${!ep.coming ? `<div class="progress"><i style="width:${p}%"></i></div>` : ''}
