@@ -109,7 +109,9 @@
   /* ---------- cast ---------- */
   .cast-note{font-family:'Courier Prime',monospace; font-size:10.5px; color:var(--ink-soft); margin-bottom:14px;}
   .cast-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:16px;}
-  .cast-card{perspective:1000px; height:190px; cursor:var(--cursor-tap); transition:transform .25s cubic-bezier(.22,1,.36,1);}
+  .cast-card{perspective:1000px; height:190px; cursor:var(--cursor-tap); transition:transform .25s cubic-bezier(.22,1,.36,1);
+    position:relative; z-index:1;}
+  .cast-card.flipped{z-index:5;}
   .cast-card:hover{transform:translateY(-6px);}
   .cast-inner{position:relative; width:100%; height:100%; transition:transform .5s; transform-style:preserve-3d;}
   .cast-card.flipped .cast-inner{transform:rotateY(180deg);}
@@ -870,10 +872,29 @@ function sfxSwipe(forward){
     else tone(640, 220, t0, 0.16, 'sawtooth', 0.05);
   }catch(e){}
 }
+// a quick paper-flip snap for the trading-card episode selector
+function sfxCardFlip(){
+  try{ ensureAudio(); const t0 = audioCtx.currentTime;
+    tone(180, 900, t0, 0.11, 'triangle', 0.07, 0);
+    tone(900, 500, t0+0.05, 0.09, 'triangle', 0.045, 0);
+  }catch(e){}
+}
+// a softer, lower footstep-like tone for the cast cards
+function sfxCastHover(){
+  try{ ensureAudio(); const t0 = audioCtx.currentTime;
+    tone(150, 95, t0, 0.16, 'sine', 0.07, 0);
+  }catch(e){}
+}
+// a tiny electronic blip for the neon BGM signs
+function sfxBgmBlip(){
+  try{ ensureAudio(); const t0 = audioCtx.currentTime;
+    tone(1200, 1800, t0, 0.05, 'square', 0.035, 0);
+  }catch(e){}
+}
 document.addEventListener('pointerdown', ()=>ensureAudio(), { once:true });
 
 // simple buttons: hover+click via delegation (works well on desktop; click works on tap too)
-const SFX_SELECTOR = '#langBtn, #tickerBtn, #closeBtn, #ctrlPlay, #ctrlRewind, #ctrlMute, #ctrlShare, #bgmHead, .bgm-link-row, .bgm-hotspot, details.how summary, #spClose, #spSpeak, #spPlay, .history-row, .cast-card';
+const SFX_SELECTOR = '#langBtn, #tickerBtn, #closeBtn, #ctrlPlay, #ctrlRewind, #ctrlMute, #ctrlShare, #bgmHead, .bgm-link-row, details.how summary, #spClose, #spSpeak, #spPlay, .history-row';
 let sfxLastHover = null;
 document.addEventListener('mouseover', (e)=>{
   const el = e.target.closest(SFX_SELECTOR);
@@ -965,6 +986,7 @@ function buildCast(){
           </div>
         </div>
       </div>`;
+    card.addEventListener('mouseenter', ()=> sfxCastHover());
     card.onclick = ()=>{
       const flipping = !card.classList.contains('flipped');
       card.classList.toggle('flipped');
@@ -1187,7 +1209,7 @@ function selectCard(card, ep, idx, title, delay){
   activeCard = card;
   card.classList.add('sel');
   card.style.zIndex = 999;
-  sfxHover();
+  sfxCardFlip();
   previewHeroText(ep, idx, title);
   clearTimeout(dwellTimer);
   dwellTimer = setTimeout(()=> showSynopsis(card, ep, idx, title), delay||150);
@@ -1514,6 +1536,12 @@ document.getElementById('ctrlPlay').onclick = ()=>{
   if(!player) return;
   if(player.getPlayerState() === 1) player.pauseVideo(); else player.playVideo();
 };
+// tapping the video itself toggles play/pause too — a real click landing on
+// the iframe is what makes YouTube's own paused-state icon clear itself
+document.getElementById('ytPlayer').addEventListener('click', ()=>{
+  if(!player) return;
+  if(player.getPlayerState() === 1) player.pauseVideo(); else player.playVideo();
+});
 document.getElementById('ctrlRewind').onclick = ()=>{
   if(!player) return;
   try{ player.seekTo(0, true); player.playVideo(); }catch(e){}
@@ -1755,6 +1783,7 @@ function buildBgmLinks(){
   // the zoom popup now follows the cursor anywhere over the whole sign board,
   // not just when precisely over one of the tiny hotspot rectangles —
   // whichever sign the cursor happens to be nearest gets ringed and named
+  let bgmLastNearest = null;
   station.addEventListener('mousemove', (e)=>{
     const r = station.getBoundingClientRect();
     const px = ((e.clientX - r.left) / r.width) * 100;
@@ -1765,6 +1794,7 @@ function buildBgmLinks(){
       const d = Math.hypot(px-cx, py-cy);
       if(d < bestDist){ bestDist = d; nearest = h; }
     });
+    if(nearest && nearest.track.label !== bgmLastNearest){ bgmLastNearest = nearest.track.label; sfxBgmBlip(); }
     if(!nearest) return;
     zoomCursor.style.left = px+'%';
     zoomCursor.style.top = py+'%';
@@ -1789,6 +1819,7 @@ function buildBgmLinks(){
   station.addEventListener('mouseleave', ()=>{
     label.classList.remove('show');
     zoom.classList.remove('show');
+    bgmLastNearest = null;
   });
 }
 
