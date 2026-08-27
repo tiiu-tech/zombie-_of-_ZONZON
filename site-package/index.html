@@ -134,7 +134,8 @@
   .cast-card:hover .cast-face, .cast-card:hover .cast-back{
     border-radius:16px; border-color:var(--red);
     box-shadow:0 0 0 2px var(--red), 0 0 16px 3px rgba(178,58,72,0.4);}
-  .cast-face{background:var(--paper-2); position:relative; overflow:hidden;}
+  .cast-face{background:var(--paper-2); overflow:hidden;}
+  .cast-card.flipped .cast-face{visibility:hidden;}
   .cast-face .icon{position:relative; width:auto; height:98px; margin-bottom:8px;
     display:flex; align-items:flex-end; justify-content:center;
     transform-origin:center bottom; touch-action:none;}
@@ -161,7 +162,7 @@
   }
   .cast-face .name{font-family:'Shippori Mincho',serif; font-size:11.5px; font-weight:700; line-height:1.4;}
   .cast-face .tap{font-family:'Courier Prime',monospace; font-size:9px; color:var(--ink-soft); margin-top:6px;}
-  .cast-back{background:var(--ink); color:var(--paper); transform:rotateY(180deg); gap:8px; position:relative; overflow:hidden;}
+  .cast-back{background:var(--ink); color:var(--paper); transform:rotateY(180deg); gap:8px; overflow:hidden;}
   .cast-back-bg{position:absolute; inset:-12%; z-index:0; pointer-events:none;}
   .cast-back-bg img{width:124%; height:124%; object-fit:cover; object-position:center 15%;
     opacity:.5; filter:sepia(20%) contrast(1.05) brightness(.65);
@@ -216,18 +217,37 @@
      plus a handful of asymmetric floating shapes, kept faint so it reads as
      texture rather than clutter competing with the video/cards on top */
   .stage-fx{position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none; mix-blend-mode:overlay;}
+  .stage-grid-wrap{position:absolute; inset:0; animation:stageGridWobble 42s ease-in-out infinite;}
   .stage-grid{position:absolute; inset:-10% -10%; opacity:.35;
     background-image:
       repeating-linear-gradient(0deg, rgba(255,255,255,0.5) 0 1px, transparent 1px 46px),
       repeating-linear-gradient(90deg, rgba(255,255,255,0.5) 0 1px, transparent 1px 46px);
     animation:stageGridDrift 26s linear infinite;}
   @keyframes stageGridDrift{ from{ transform:translate(0,0); } to{ transform:translate(46px,46px); } }
+  /* a barely-there wander on top of the seamless diagonal tile-drift above,
+     so the whole grid also creeps up/down/left/right, not just diagonally */
+  @keyframes stageGridWobble{
+    0%,100%{ transform:translate(0,0); } 22%{ transform:translate(9px,-6px); }
+    48%{ transform:translate(-7px,8px); } 74%{ transform:translate(6px,5px); }
+  }
   .stage-shape{position:absolute; opacity:.4; background:rgba(255,255,255,0.7);
     animation:stageShapeDrift var(--dur,9s) ease-in-out infinite; animation-delay:var(--delay,0s);}
   .stage-shape.dot{border-radius:50%;}
   @keyframes stageShapeDrift{
-    0%,100%{ transform:translate(0,0) rotate(var(--r,0deg)); }
-    50%{ transform:translate(var(--dx,12px), var(--dy,-16px)) rotate(calc(var(--r,0deg) + 10deg)); }
+    0%{ transform:translate(0,0) scale(1) rotate(var(--r,0deg)); }
+    22%{ transform:translate(var(--dx1,10px), var(--dy1,-8px)) scale(var(--s1,1.2)) rotate(calc(var(--r,0deg) + 6deg)); }
+    47%{ transform:translate(var(--dx2,-9px), var(--dy2,10px)) scale(var(--s2,.8)) rotate(calc(var(--r,0deg) - 5deg)); }
+    73%{ transform:translate(var(--dx3,6px), var(--dy3,7px)) scale(var(--s3,1.1)) rotate(var(--r,0deg)); }
+    100%{ transform:translate(0,0) scale(1) rotate(var(--r,0deg)); }
+  }
+  .stage-shape.burst{ animation:stageShapeBurst .9s ease-out; }
+  @keyframes stageShapeBurst{
+    0%{ transform:scale(1); opacity:.4; } 35%{ transform:scale(2.8); opacity:.75; } 100%{ transform:scale(1); opacity:.4; }
+  }
+  .stage-shape.surge{ animation:stageShapeSurge 2.6s ease-in-out forwards; }
+  @keyframes stageShapeSurge{
+    0%{ opacity:0; transform:scale(.4); } 20%{ opacity:.5; transform:scale(1); }
+    80%{ opacity:.5; transform:scale(1); } 100%{ opacity:0; transform:scale(.6); }
   }
   .stage-main{display:flex; align-items:stretch; justify-content:center; gap:22px;}
   /* an invisible counterweight matching the side column's width, so the
@@ -255,8 +275,8 @@
   @keyframes reelFlow{ from{ transform:translateY(-1972px); } to{ transform:translateY(-1740px); } }
   .slot-payline{position:absolute; left:5px; right:5px; top:50%; height:2px; margin-top:-1px;
     background:rgba(178,58,72,.6); pointer-events:none; z-index:2; box-shadow:0 0 4px rgba(178,58,72,.8);}
-  .slot-controls{display:flex; gap:8px;}
-  .slot-stop{width:34px; height:26px; font-family:'Anton',sans-serif; font-size:11px; color:var(--paper);
+  .slot-controls{display:flex; gap:6px; padding:0 7px;}
+  .slot-stop{width:66px; height:26px; font-family:'Anton',sans-serif; font-size:11px; color:var(--paper);
     background:#3a352c; border:1px solid rgba(233,225,205,.35); border-radius:3px; cursor:var(--cursor-tap);
     transition:background .15s ease, transform .1s ease;}
   .slot-stop:hover:not(:disabled){background:var(--red);}
@@ -702,7 +722,7 @@
 
   <section class="stage" id="heroSection">
     <div class="stage-fx" id="stageFx" aria-hidden="true">
-      <div class="stage-grid"></div>
+      <div class="stage-grid-wrap"><div class="stage-grid"></div></div>
     </div>
     <div class="stage-inner">
       <div class="stage-main">
@@ -2538,26 +2558,64 @@ initMagnetic('#tickerBtn, #langBtn, #spPlay, #closeBtn', 0.28);
 initMagnetic('#heroPlay', 0.35);
 
 // a handful of faint dots/squares scattered (not gridded) over the stage's
-// mood-tinted backdrop, each drifting at its own size/speed/angle
+// mood-tinted backdrop, each drifting an irregular path at its own size/speed;
+// plus occasional bursts and a temporary surge in shape count, so the
+// backdrop reads as a living screen rather than a static loop
 (function buildStageFx(){
   const layer = document.getElementById('stageFx');
-  const count = 9;
-  for(let i=0; i<count; i++){
-    const shape = document.createElement('div');
-    const isDot = Math.random() > 0.45;
-    shape.className = 'stage-shape' + (isDot ? ' dot' : '');
-    const size = 5 + Math.random()*16;
+
+  function styleShape(shape, size){
     shape.style.width = size + 'px';
     shape.style.height = size + 'px';
     shape.style.left = (Math.random()*94) + '%';
     shape.style.top = (Math.random()*88) + '%';
     shape.style.setProperty('--r', (Math.random()*40 - 20) + 'deg');
-    shape.style.setProperty('--dx', (Math.random()*30 - 15) + 'px');
-    shape.style.setProperty('--dy', (Math.random()*34 - 17) + 'px');
-    shape.style.setProperty('--dur', (7 + Math.random()*7).toFixed(1) + 's');
-    shape.style.setProperty('--delay', (-Math.random()*8).toFixed(1) + 's');
-    layer.appendChild(shape);
+    shape.style.setProperty('--dx1', (Math.random()*24 - 12) + 'px');
+    shape.style.setProperty('--dy1', (Math.random()*20 - 18) + 'px');
+    shape.style.setProperty('--s1', (1 + Math.random()*0.5).toFixed(2));
+    shape.style.setProperty('--dx2', (Math.random()*24 - 12) + 'px');
+    shape.style.setProperty('--dy2', (Math.random()*22 - 8) + 'px');
+    shape.style.setProperty('--s2', (0.6 + Math.random()*0.35).toFixed(2));
+    shape.style.setProperty('--dx3', (Math.random()*18 - 9) + 'px');
+    shape.style.setProperty('--dy3', (Math.random()*16 - 6) + 'px');
+    shape.style.setProperty('--s3', (0.9 + Math.random()*0.35).toFixed(2));
+    shape.style.setProperty('--dur', (8 + Math.random()*8).toFixed(1) + 's');
+    shape.style.setProperty('--delay', (-Math.random()*10).toFixed(1) + 's');
   }
+
+  const baseShapes = [];
+  const count = 9;
+  for(let i=0; i<count; i++){
+    const shape = document.createElement('div');
+    const isDot = Math.random() > 0.45;
+    shape.className = 'stage-shape' + (isDot ? ' dot' : '');
+    styleShape(shape, 5 + Math.random()*16);
+    layer.appendChild(shape);
+    baseShapes.push(shape);
+  }
+
+  // every few seconds, one existing dot suddenly balloons then settles back
+  setInterval(()=>{
+    const dots = baseShapes.filter(s => s.classList.contains('dot'));
+    if(!dots.length) return;
+    const d = dots[Math.floor(Math.random()*dots.length)];
+    d.classList.remove('burst');
+    void d.offsetWidth;
+    d.classList.add('burst');
+    setTimeout(()=> d.classList.remove('burst'), 900);
+  }, 3000 + Math.random()*2500);
+
+  // every so often, a temporary surge of extra squares fades in and out
+  setInterval(()=>{
+    const extra = 3 + Math.floor(Math.random()*4);
+    for(let i=0; i<extra; i++){
+      const sq = document.createElement('div');
+      sq.className = 'stage-shape surge';
+      styleShape(sq, 4 + Math.random()*12);
+      layer.appendChild(sq);
+      sq.addEventListener('animationend', ()=> sq.remove());
+    }
+  }, 5500 + Math.random()*4500);
 })();
 
 // headline text drops in character-by-character with a springy overshoot,
