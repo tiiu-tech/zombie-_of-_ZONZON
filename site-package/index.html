@@ -387,17 +387,9 @@
   }
   .fan-track .card:first-child{margin-left:0;}
   .card.sel{
-    border-radius:7px; border-color:var(--red); isolation:isolate;
+    border-radius:7px; border-color:var(--red);
     animation:cardGlow 1.5s ease-in-out infinite alternate, cardPop .5s cubic-bezier(.34,1.56,.64,1) forwards;
   }
-  /* a "liquid metal" ring of light flowing around the selected card's edge */
-  .card.sel::before{
-    content:''; position:absolute; inset:-3px; z-index:-1; border-radius:inherit; pointer-events:none;
-    background:conic-gradient(from 0deg, transparent 0deg, #fff 14deg, var(--red-bright) 38deg,
-      transparent 88deg, transparent 272deg, var(--red) 318deg, #fff 344deg, transparent 360deg);
-    animation:liquidMetalSpin 2.3s linear infinite;
-  }
-  @keyframes liquidMetalSpin{ to{ transform:rotate(360deg); } }
   @keyframes cardGlow{
     0%{ box-shadow:0 0 0 2px var(--red), 0 0 10px 1px rgba(178,58,72,0.35), 0 18px 20px rgba(28,24,17,0.38); }
     100%{ box-shadow:0 0 0 2px var(--red-bright), 0 0 20px 6px rgba(178,58,72,0.6), 0 18px 20px rgba(28,24,17,0.38); }
