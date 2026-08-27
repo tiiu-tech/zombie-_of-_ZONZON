@@ -60,6 +60,19 @@
   .type{font-family:'Courier Prime',monospace;}
 
   .fx-link{transition:letter-spacing .18s ease, color .18s ease; cursor:var(--cursor-tap);}
+
+  /* a quick tactile shrink the instant any button is actually pressed,
+     not just hovered — magnetic buttons get their own JS version of this
+     so the two don't fight over the transform property */
+  .ctrl-btn, .bgm-play-btn, .bgm-toggle, .scroll-close, .sp-speak, .play-btn,
+  .lang-btn, .bgm-head, details.how summary{
+    transition:transform .12s cubic-bezier(.4,0,.6,1), background .18s ease, color .18s ease;
+  }
+  .ctrl-btn:active, .bgm-play-btn:active, .bgm-toggle:active, .scroll-close:active,
+  .sp-speak:active, .play-btn:active, .lang-btn:active, .bgm-head:active,
+  details.how summary:active{
+    transform:scale(.92);
+  }
   .fx-link:hover{letter-spacing:.07em; color:var(--red-bright);}
 
   /* ---------- masthead ---------- */
@@ -94,6 +107,7 @@
   main{position:relative; z-index:2; max-width:1080px; margin:0 auto; padding:26px 24px 90px;
     transition:opacity .18s ease;}
   main.lang-transition{opacity:.2;}
+  ::view-transition-old(root), ::view-transition-new(root){ animation-duration:.32s; }
 
   /* ---------- section reveal: fade + rise on page load and on first scroll into view ---------- */
   .reveal{opacity:0; transform:translateY(22px); transition:opacity .65s cubic-bezier(.22,1,.36,1), transform .65s cubic-bezier(.22,1,.36,1);}
@@ -317,7 +331,12 @@
   details.how summary{font-family:'Playfair Display',serif; font-weight:900; font-size:14px; padding:12px 0; cursor:var(--cursor-tap); list-style:none;}
   details.how summary::-webkit-details-marker{display:none;}
   details.how summary::before{content:'▸ '; color:var(--red);}
-  details.how[open] summary::before{content:'▾ ';}
+  details.how.expanded summary::before{content:'▾ ';}
+  /* real height is unknown up front, so JS measures it via scrollHeight and
+     animates max-height (the grid-template-rows 0fr/1fr trick collapses to 0
+     here because overflow:hidden + min-height:0 on the child zeroes out its
+     max-content contribution to the fr track, a real Chromium quirk) */
+  .how-collapse{overflow:hidden; max-height:0; transition:max-height .4s cubic-bezier(.4,0,.2,1);}
   .how-list{font-family:'Shippori Mincho',serif; font-size:12.5px; line-height:2; color:var(--ink-soft); margin:0 0 16px; padding-left:18px;}
 
   /* ---------- player overlay ---------- */
@@ -326,6 +345,9 @@
   .player-wrap{width:fit-content; max-width:96vw; background:var(--paper); border:1px solid var(--ink); padding:6px;}
   .overlay.open .player-wrap{animation:popOut .5s cubic-bezier(.22,1.4,.36,1);}
   @keyframes popOut{ 0%{transform:scale(.55); opacity:0;} 60%{transform:scale(1.03); opacity:1;} 100%{transform:scale(1);} }
+  .overlay.closing{background:rgba(15,13,9,0); transition:background .35s ease;}
+  .overlay.closing .player-wrap{animation:popIn .35s cubic-bezier(.4,0,.7,1) forwards;}
+  @keyframes popIn{ 0%{transform:scale(1); opacity:1;} 100%{transform:scale(.55); opacity:0;} }
   .player-frame{position:relative; background:#000; overflow:hidden;}
   .player-frame.portrait{aspect-ratio:9/16; width:auto; height:min(78vh,620px); max-width:92vw; margin:0 auto;}
   .player-frame.landscape{aspect-ratio:16/9; width:min(860px,92vw); height:auto;}
@@ -596,9 +618,9 @@
   </section>
 
   <section class="section reveal">
-    <details class="how" id="howBox">
+    <details class="how" id="howBox" open>
       <summary id="howTitle"></summary>
-      <ol class="how-list" id="howList"></ol>
+      <div class="how-collapse"><ol class="how-list" id="howList"></ol></div>
     </details>
   </section>
 </main>
@@ -1382,9 +1404,7 @@ spBody.addEventListener('mousemove', (e)=> updateLens(e.clientX, e.clientY));
 spBody.addEventListener('mouseleave', hideLens);
 
 document.getElementById('langBtn').onclick = ()=>{
-  const main = document.querySelector('main');
-  main.classList.add('lang-transition');
-  setTimeout(()=>{
+  const doSwitch = ()=>{
     currentLang = currentLang === 'en' ? 'ja' : 'en';
     hideSynopsis();
     applyStaticText();
@@ -1393,8 +1413,16 @@ document.getElementById('langBtn').onclick = ()=>{
     document.getElementById('bgmNote').textContent = currentLang==='ja'
       ? '※ Spotifyが開きます。ログイン済みならフル再生、未ログインなら試聴のみになります。'
       : '※ Opens in Spotify. Full playback if you\'re logged in there; preview only if not.';
-    main.classList.remove('lang-transition');
-  }, 160);
+  };
+  // View Transitions API gives a native cross-fade between the two
+  // language states; older browsers fall back to the manual opacity fade
+  if(document.startViewTransition){
+    document.startViewTransition(doSwitch);
+  } else {
+    const main = document.querySelector('main');
+    main.classList.add('lang-transition');
+    setTimeout(()=>{ doSwitch(); main.classList.remove('lang-transition'); }, 160);
+  }
 };
 document.getElementById('tickerBtn').onclick = ()=> openPlayer(EPISODES[0]);
 
@@ -1602,16 +1630,41 @@ function stopSeekUiTimer(){ clearInterval(seekUiTimer); paintSeek(0); }
 
 function closePlayer(){
   tick();
-  document.getElementById('overlay').classList.remove('open');
-  if(document.fullscreenElement) { try{ document.exitFullscreen(); }catch(e){} }
-  if(saveTimer) clearInterval(saveTimer);
-  stopSeekUiTimer();
-  if(player){ player.destroy(); player=null; }
-  activeEp = null;
-  if(bgmWasPlaying){ bgmAudio.play().catch(()=>{}); bgmPlayBtn.textContent = '⏸'; }
-  try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){}
+  const overlayEl = document.getElementById('overlay');
+  const wrap = overlayEl.querySelector('.player-wrap');
+  let finished = false;
+  const finish = ()=>{
+    if(finished) return;
+    finished = true;
+    clearTimeout(safety);
+    overlayEl.classList.remove('open', 'closing');
+    if(document.fullscreenElement) { try{ document.exitFullscreen(); }catch(e){} }
+    if(saveTimer) clearInterval(saveTimer);
+    stopSeekUiTimer();
+    if(player){ player.destroy(); player=null; }
+    activeEp = null;
+    if(bgmWasPlaying){ bgmAudio.play().catch(()=>{}); bgmPlayBtn.textContent = '⏸'; }
+    try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){}
+  };
+  // play the shrink-away in reverse before actually tearing anything down,
+  // instead of the overlay just vanishing instantly
+  overlayEl.classList.add('closing');
+  wrap.addEventListener('animationend', finish, { once:true });
+  const safety = setTimeout(finish, 420); // in case animationend never fires
 }
 document.getElementById('closeBtn').onclick = closePlayer;
+
+// the "how to use" accordion stays permanently [open] at the DOM level so
+// its content never actually unmounts — the grid-rows collapse is what
+// actually shows/hides it, which is what lets the height animate smoothly
+document.querySelector('#howBox summary').addEventListener('click', (e)=>{
+  e.preventDefault();
+  const howBox = document.getElementById('howBox');
+  const collapse = howBox.querySelector('.how-collapse');
+  const expanding = !howBox.classList.contains('expanded');
+  howBox.classList.toggle('expanded', expanding);
+  collapse.style.maxHeight = expanding ? collapse.scrollHeight + 'px' : '0px';
+});
 
 /* ---------- swipe gestures on the player: → next / ← previous / ↑↓ close ---------- */
 (function(){
@@ -1877,13 +1930,19 @@ document.addEventListener('mousemove', (e)=>{
 function initMagnetic(selector, strength){
   document.querySelectorAll(selector).forEach(btn=>{
     btn.classList.add('magnetic');
+    let dx = 0, dy = 0, pressed = false;
+    const apply = ()=>{ btn.style.transform = `translate(${dx}px, ${dy}px) scale(${pressed ? 0.92 : 1})`; };
     btn.addEventListener('mousemove', (e)=>{
       const r = btn.getBoundingClientRect();
-      const dx = e.clientX - (r.left + r.width/2);
-      const dy = e.clientY - (r.top + r.height/2);
-      btn.style.transform = `translate(${dx*strength}px, ${dy*strength}px)`;
+      dx = (e.clientX - (r.left + r.width/2)) * strength;
+      dy = (e.clientY - (r.top + r.height/2)) * strength;
+      apply();
     });
-    btn.addEventListener('mouseleave', ()=>{ btn.style.transform = ''; });
+    btn.addEventListener('mouseleave', ()=>{ dx = 0; dy = 0; pressed = false; btn.style.transform = ''; });
+    // the same "shrink a little" press feedback other buttons get, layered
+    // on top of the magnetic follow instead of fighting it
+    btn.addEventListener('mousedown', ()=>{ pressed = true; apply(); });
+    btn.addEventListener('mouseup', ()=>{ pressed = false; apply(); });
   });
 }
 initMagnetic('#tickerBtn, #langBtn, #spPlay, #closeBtn', 0.28);
