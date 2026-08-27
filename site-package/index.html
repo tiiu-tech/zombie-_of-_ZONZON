@@ -213,18 +213,35 @@
   /* a little arcade fixture living in the counterweight column — reuses
      motif art that used to sit in the now-removed "coming soon" cards */
   .slot-machine{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:12px; background:linear-gradient(180deg, #23201b, #100e0b); border:1px solid var(--ink);
-    box-shadow:inset 0 0 0 1px rgba(233,225,205,0.08), 0 20px 44px rgba(28,24,17,0.28); padding:16px 12px;}
+    gap:11px; background:linear-gradient(180deg, #23201b, #100e0b); border:1px solid var(--ink);
+    box-shadow:inset 0 0 0 1px rgba(233,225,205,0.08), 0 20px 44px rgba(28,24,17,0.28); padding:14px 12px;}
   .slot-marquee{font-family:'Anton',sans-serif; letter-spacing:.1em; font-size:13px; color:var(--red-bright);
     text-shadow:0 0 6px rgba(178,58,72,.7); text-align:center;}
-  .slot-window{position:relative; display:flex; gap:8px; background:#000; border:2px solid #3a352c;
-    border-radius:4px; padding:8px; box-shadow:inset 0 3px 10px rgba(0,0,0,.8);}
-  .slot-reel{position:relative; width:66px; height:66px; background:#0c0a08; border:1px solid #2a251d;
-    border-radius:3px; overflow:hidden; display:flex; align-items:center; justify-content:center;}
-  .slot-reel img{width:88%; height:88%; object-fit:contain; filter:sepia(15%) contrast(1.05);}
-  .slot-reel.spinning img{filter:sepia(15%) contrast(1.05) blur(2.5px);}
-  .slot-payline{position:absolute; left:6px; right:6px; top:50%; height:2px; margin-top:-1px;
-    background:rgba(178,58,72,.55); pointer-events:none; z-index:2;}
+  .slot-window{position:relative; display:flex; gap:6px; background:#000; border:2px solid #3a352c;
+    border-radius:4px; padding:7px; box-shadow:inset 0 3px 10px rgba(0,0,0,.8);}
+  .slot-reel-col{position:relative; width:66px; height:174px; background:#0c0a08; border:1px solid #2a251d;
+    border-radius:3px; overflow:hidden;}
+  .slot-strip{position:absolute; left:0; top:0; width:100%; display:flex; flex-direction:column;
+    transform:translateY(-1740px);}
+  .slot-cell{flex:0 0 58px; height:58px; display:flex; align-items:center; justify-content:center;}
+  .slot-cell img{width:82%; height:82%; object-fit:contain; filter:sepia(15%) contrast(1.05);}
+  .slot-strip.spinning{animation:reelFlow .32s linear infinite;}
+  @keyframes reelFlow{ from{ transform:translateY(-1972px); } to{ transform:translateY(-1740px); } }
+  .slot-payline{position:absolute; left:5px; right:5px; top:50%; height:2px; margin-top:-1px;
+    background:rgba(178,58,72,.6); pointer-events:none; z-index:2; box-shadow:0 0 4px rgba(178,58,72,.8);}
+  .slot-shutter{position:absolute; inset:0; z-index:5; background:linear-gradient(180deg, var(--red), var(--red-bright));
+    transform:translateY(-100%); pointer-events:none;}
+  .slot-shutter.flick{animation:shutterFlick .55s cubic-bezier(.7,0,.3,1);}
+  @keyframes shutterFlick{
+    0%{ transform:translateY(-100%); } 45%{ transform:translateY(0%); } 100%{ transform:translateY(100%); }
+  }
+  .slot-controls{display:flex; gap:8px;}
+  .slot-stop{width:34px; height:26px; font-family:'Anton',sans-serif; font-size:11px; color:var(--paper);
+    background:#3a352c; border:1px solid rgba(233,225,205,.35); border-radius:3px; cursor:var(--cursor-tap);
+    transition:background .15s ease, transform .1s ease;}
+  .slot-stop:hover:not(:disabled){background:var(--red);}
+  .slot-stop:active:not(:disabled){transform:scale(.9);}
+  .slot-stop:disabled{opacity:.35; cursor:default;}
   .slot-lever{font-family:'Anton',sans-serif; letter-spacing:.08em; font-size:13px; color:var(--paper);
     background:var(--red); border:1px solid var(--paper); border-radius:20px; padding:8px 22px;
     cursor:var(--cursor-tap); box-shadow:0 3px 0 #6e1f26; transition:transform .08s ease, box-shadow .08s ease, background .18s ease;}
@@ -233,11 +250,23 @@
   .slot-lever:disabled{opacity:.5; cursor:default;}
   .slot-jackpot{font-family:'Anton',sans-serif; letter-spacing:.06em; font-size:18px; text-align:center;
     color:#fff2b8; text-shadow:0 0 6px #ffce4a, 0 0 16px #ff9a2e; opacity:0; height:1.3em; margin:0;}
-  .slot-jackpot.show{opacity:1; animation:jackpotFlash .35s steps(2) infinite;}
-  @keyframes jackpotFlash{ 0%,100%{ opacity:1; } 50%{ opacity:.25; } }
-  .slot-window.win{animation:winShake .4s ease-in-out 2;}
+  .slot-jackpot.show{opacity:1; animation:jackpotFlash .3s steps(2) infinite;}
+  @keyframes jackpotFlash{ 0%,100%{ opacity:1; } 50%{ opacity:.2; } }
+  .slot-window.win{animation:winShake .4s ease-in-out 3;}
   @keyframes winShake{
-    0%,100%{ transform:translateX(0); } 25%{ transform:translateX(-4px); } 75%{ transform:translateX(4px); }
+    0%,100%{ transform:translateX(0); } 25%{ transform:translateX(-5px); } 75%{ transform:translateX(5px); }
+  }
+  /* coin rain fills the whole viewport on a jackpot, not just the machine */
+  .coin-rain-layer{position:fixed; inset:0; z-index:200; pointer-events:none; overflow:hidden;}
+  .coin-rain-flash{position:fixed; inset:0; z-index:199; pointer-events:none;
+    background:radial-gradient(circle at 50% 30%, rgba(255,206,74,.55), transparent 65%);
+    opacity:0; animation:coinFlash 1.1s ease-out;}
+  @keyframes coinFlash{ 0%{opacity:1;} 100%{opacity:0;} }
+  .coin{position:absolute; top:-40px; font-size:26px; will-change:transform;
+    animation:coinFall linear forwards; filter:drop-shadow(0 2px 3px rgba(0,0,0,.5));}
+  @keyframes coinFall{
+    0%{ transform:translateY(0) rotate(0deg); }
+    100%{ transform:translateY(var(--fall-dist)) rotate(var(--spin)); }
   }
   .stage-photo{position:relative; background:#000; flex:1 1 auto; min-width:0; height:clamp(300px,58vh,600px);
     overflow:hidden; border:1px solid var(--ink); box-shadow:0 20px 44px rgba(28,24,17,0.28);}
@@ -458,34 +487,34 @@
   .lens-inner{position:absolute; top:0; left:0; font-family:'Shippori Mincho',serif; font-size:12.5px; line-height:1.85; color:var(--ink-soft); white-space:normal;}
 
   /* ---------- BGM panel ---------- */
-  .bgm-panel{position:fixed; right:14px; bottom:14px; z-index:60; width:230px; background:var(--paper); border:1px solid var(--ink);
+  .bgm-panel{position:fixed; right:14px; bottom:14px; z-index:60; width:300px; background:var(--paper); border:1px solid var(--ink);
     box-shadow:4px 4px 0 rgba(28,24,17,0.22);}
-  .bgm-head{display:flex; justify-content:space-between; align-items:center; padding:7px 10px; background:var(--ink); color:var(--paper); cursor:var(--cursor-tap);}
-  .bgm-head .type{font-size:11px; letter-spacing:.08em;}
-  .bgm-toggle{background:none; border:none; color:var(--paper); cursor:var(--cursor-tap); font-size:11px;}
-  .bgm-body{padding:8px 10px 10px; max-height:220px; overflow:hidden; transition:max-height .25s ease, padding .25s ease;}
+  .bgm-head{display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:var(--ink); color:var(--paper); cursor:var(--cursor-tap);}
+  .bgm-head .type{font-size:14px; letter-spacing:.08em;}
+  .bgm-toggle{background:none; border:none; color:var(--paper); cursor:var(--cursor-tap); font-size:14px;}
+  .bgm-body{padding:11px 13px 13px; max-height:300px; overflow:hidden; transition:max-height .25s ease, padding .25s ease;}
   .bgm-panel.collapsed .bgm-body{max-height:0; padding-top:0; padding-bottom:0;}
-  .bgm-player{display:flex; align-items:center; gap:9px; padding:9px 10px; margin-bottom:10px;
+  .bgm-player{display:flex; align-items:center; gap:11px; padding:12px 13px; margin-bottom:12px;
     border:1px solid var(--ink); background:var(--ink); color:var(--paper);}
-  .bgm-play-btn{flex-shrink:0; width:28px; height:28px; border-radius:50%; border:1px solid var(--paper);
-    background:var(--red); color:var(--paper); cursor:var(--cursor-tap); font-size:11px; display:flex;
+  .bgm-play-btn{flex-shrink:0; width:36px; height:36px; border-radius:50%; border:1px solid var(--paper);
+    background:var(--red); color:var(--paper); cursor:var(--cursor-tap); font-size:14px; display:flex;
     align-items:center; justify-content:center;}
   .bgm-play-btn:hover{background:var(--red-bright);}
   .bgm-track-info{flex:1; min-width:0;}
-  .bgm-track-name{font-family:'Shippori Mincho',serif; font-size:11.5px; font-weight:700; white-space:nowrap;
+  .bgm-track-name{font-family:'Shippori Mincho',serif; font-size:14.5px; font-weight:700; white-space:nowrap;
     overflow:hidden; text-overflow:ellipsis;}
-  .bgm-track-sub{font-family:'Courier Prime',monospace; font-size:8.5px; color:rgba(233,225,205,0.65);
+  .bgm-track-sub{font-family:'Courier Prime',monospace; font-size:10px; color:rgba(233,225,205,0.65);
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .bgm-track-open{font-family:'Courier Prime',monospace; font-size:9px; letter-spacing:.04em; color:rgba(233,225,205,0.9);
+  .bgm-track-open{font-family:'Courier Prime',monospace; font-size:11px; letter-spacing:.04em; color:rgba(233,225,205,0.9);
     background:rgba(255,255,255,0.08); border:1px solid rgba(233,225,205,0.3); border-radius:2px;
-    padding:2px 6px; max-width:100%; cursor:var(--cursor-tap); transition:background .18s ease, border-color .18s ease;}
+    padding:3px 8px; max-width:100%; cursor:var(--cursor-tap); transition:background .18s ease, border-color .18s ease;}
   .bgm-track-open:hover{background:rgba(255,255,255,0.16); border-color:var(--red-bright); color:#fff;}
-  .bgm-volume{width:56px; accent-color:var(--red-bright); cursor:var(--cursor-tap); flex-shrink:0;}
-  .bgm-link-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 10px;
-    border:1px solid var(--ink); background:var(--paper-2); margin-bottom:7px; text-decoration:none; color:var(--ink);}
+  .bgm-volume{width:68px; accent-color:var(--red-bright); cursor:var(--cursor-tap); flex-shrink:0;}
+  .bgm-link-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:11px 13px;
+    border:1px solid var(--ink); background:var(--paper-2); margin-bottom:8px; text-decoration:none; color:var(--ink);}
   .bgm-link-row:hover{border-color:var(--red); color:var(--red);}
-  .bgm-link-row .label{font-family:'Shippori Mincho',serif; font-size:12px; font-weight:700;}
-  .bgm-link-row .go{font-family:'Courier Prime',monospace; font-size:10px;}
+  .bgm-link-row .label{font-family:'Shippori Mincho',serif; font-size:14.5px; font-weight:700;}
+  .bgm-link-row .go{font-family:'Courier Prime',monospace; font-size:12px;}
 
   .bgm-station{position:relative; width:100%; margin-bottom:8px; background:#0c0c10; border-radius:4px; overflow:hidden;}
   .bgm-station img{display:block; width:100%; height:auto;}
@@ -566,8 +595,11 @@
     background:linear-gradient(#d8cfba,#8a8072); border-radius:2px; box-shadow:0 2px 3px rgba(0,0,0,.4); z-index:3;}
   .bgm-dial-cap{position:absolute; left:50%; top:50%; width:76px; height:76px; margin:-38px 0 0 -38px;
     border-radius:50%; background:radial-gradient(circle at 38% 32%, #514c42, #1c1913 75%);
-    box-shadow:inset 0 0 0 3px #0b0906, 0 4px 10px rgba(0,0,0,.5); z-index:2;
-    display:flex; align-items:center; justify-content:center; font-size:22px;}
+    box-shadow:inset 0 0 0 3px #0b0906, 0 4px 10px rgba(0,0,0,.5); z-index:2; border:none; padding:0;
+    display:flex; align-items:center; justify-content:center; font-size:22px; cursor:var(--cursor-tap);
+    transition:transform .12s ease, box-shadow .18s ease;}
+  .bgm-dial-cap:hover{box-shadow:inset 0 0 0 3px #0b0906, 0 4px 10px rgba(0,0,0,.5), 0 0 0 3px var(--red-bright);}
+  .bgm-dial-cap:active{transform:scale(.92);}
   .bgm-dial-cap::after{content:'☎'; color:rgba(233,225,205,.8);}
   .bgm-dial-readout{font-family:'Shippori Mincho',serif; font-weight:700; font-size:16px; color:var(--ink);
     min-height:1.6em; line-height:1.4;}
@@ -649,12 +681,18 @@
           <div class="slot-machine" id="slotMachine">
             <div class="slot-marquee">LUCKY FILE</div>
             <div class="slot-window" id="slotWindow">
-              <div class="slot-reel" id="slotReel0"><img id="slotImg0" alt=""></div>
-              <div class="slot-reel" id="slotReel1"><img id="slotImg1" alt=""></div>
-              <div class="slot-reel" id="slotReel2"><img id="slotImg2" alt=""></div>
+              <div class="slot-reel-col" id="slotCol0"><div class="slot-strip" id="slotStrip0"></div></div>
+              <div class="slot-reel-col" id="slotCol1"><div class="slot-strip" id="slotStrip1"></div></div>
+              <div class="slot-reel-col" id="slotCol2"><div class="slot-strip" id="slotStrip2"></div></div>
               <div class="slot-payline"></div>
+              <div class="slot-shutter" id="slotShutter"></div>
             </div>
             <p class="slot-jackpot" id="slotJackpot">GOGO!!</p>
+            <div class="slot-controls">
+              <button class="slot-stop" id="slotStop0" type="button" disabled>■</button>
+              <button class="slot-stop" id="slotStop1" type="button" disabled>■</button>
+              <button class="slot-stop" id="slotStop2" type="button" disabled>■</button>
+            </div>
             <button class="slot-lever" id="slotLever" type="button">PULL</button>
           </div>
         </div>
@@ -784,7 +822,7 @@
       <div class="bgm-dial-base"></div>
       <div class="bgm-dial-face" id="bgmDialFace"></div>
       <div class="bgm-dial-stop"></div>
-      <div class="bgm-dial-cap"></div>
+      <button class="bgm-dial-cap" id="bgmDialCap" type="button" aria-label="Play"></button>
     </div>
     <div class="bgm-dial-readout" id="bgmDialReadout"></div>
   </div>
@@ -973,6 +1011,43 @@ function sfxBgmBlip(){
 function sfxTypeTick(){
   try{ ensureAudio(); const t0 = audioCtx.currentTime;
     tone(1350 + Math.random()*450, 900, t0, 0.026, 'square', 0.02, 0);
+  }catch(e){}
+}
+// a single "jiriri" ratchet click — old rotary-phone dial mechanism / slot reel clatter.
+// call it repeatedly (via an interval) to build the rolling "jiriririri" texture
+function sfxRatchetClick(){
+  try{ ensureAudio(); const t0 = audioCtx.currentTime;
+    tone(220 + Math.random()*60, 140, t0, 0.032, 'square', 0.045, 0);
+  }catch(e){}
+}
+// starts a repeating ratchet clatter, returns a stop() function
+function startRatchet(intervalMs){
+  const iv = setInterval(sfxRatchetClick, intervalMs);
+  sfxRatchetClick();
+  return ()=> clearInterval(iv);
+}
+// heavier mechanical clunk for a slot reel locking into place
+function sfxReelStop(){
+  try{ ensureAudio(); const t0 = audioCtx.currentTime;
+    tone(160, 60, t0, 0.09, 'square', 0.09, 0);
+  }catch(e){}
+}
+// punchy thunk for the slot lever
+function sfxLeverPull(){
+  try{ ensureAudio(); const t0 = audioCtx.currentTime;
+    tone(140, 70, t0, 0.14, 'sawtooth', 0.1, 0);
+  }catch(e){}
+}
+// a little triumphant fanfare for the slot jackpot
+function sfxJackpotFanfare(){
+  try{
+    ensureAudio(); const t0 = audioCtx.currentTime;
+    const notes = [523.25, 659.25, 783.99, 1046.5]; // C5 E5 G5 C6
+    notes.forEach((f, i)=>{
+      tone(f, f, t0 + i*0.11, 0.22, 'square', 0.065, 0);
+      tone(f*2, f*2, t0 + i*0.11, 0.16, 'triangle', 0.03, 0);
+    });
+    tone(1046.5, 1568, t0 + notes.length*0.11, 0.5, 'sawtooth', 0.05, 0);
   }catch(e){}
 }
 document.addEventListener('pointerdown', ()=>ensureAudio(), { once:true });
@@ -2041,7 +2116,7 @@ const LOCAL_BGM_TRACKS = [
   function dial(i){
     if(rotating) return;
     rotating = true;
-    if(typeof sfxClick === 'function') sfxClick();
+    const stopRatchet = (typeof startRatchet === 'function') ? startRatchet(55) : null;
     face.style.transition = 'transform .5s cubic-bezier(.55,0,.85,.35)';
     face.style.transform = `rotate(${pullAmount[i]}deg)`;
     const onPull = ()=>{
@@ -2049,7 +2124,10 @@ const LOCAL_BGM_TRACKS = [
       selectTrack(i);
       face.style.transition = 'transform .6s cubic-bezier(.25,1.4,.4,1)';
       face.style.transform = 'rotate(0deg)';
-      face.addEventListener('transitionend', ()=>{ rotating = false; }, { once:true });
+      face.addEventListener('transitionend', ()=>{
+        rotating = false;
+        if(stopRatchet) stopRatchet();
+      }, { once:true });
     };
     face.addEventListener('transitionend', onPull, { once:true });
   }
@@ -2061,6 +2139,12 @@ const LOCAL_BGM_TRACKS = [
   });
   closeBtn.addEventListener('click', ()=> overlay.classList.remove('open'));
   overlay.addEventListener('click', (e)=>{ if(e.target === overlay) overlay.classList.remove('open'); });
+  // the center earpiece "dials out" — starts playback and hangs up the overlay
+  document.getElementById('bgmDialCap').addEventListener('click', ()=>{
+    if(bgmAudio.paused){ bgmAudio.play().catch(()=>{}); bgmPlayBtn.textContent = '⏸'; }
+    if(typeof sfxClick === 'function') sfxClick();
+    overlay.classList.remove('open');
+  });
 })();
 
 buildBgmLinks();
@@ -2068,8 +2152,10 @@ document.getElementById('bgmNote').textContent = currentLang==='ja'
   ? '※ Spotifyが開きます。ログイン済みならフル再生、未ログインなら試聴のみになります。'
   : '※ Opens in Spotify. Full playback if you\'re logged in there; preview only if not.';
 
-/* ---------- lucky-file slot machine — three reels of leftover motif art,
-   pull the lever, three-in-a-row is a jackpot (Juggler-style GOGO flash) ---------- */
+/* ---------- lucky-file slot machine — nine visible faces across three reels
+   of leftover motif art. Pull the lever to start all three spinning, stop
+   each one yourself with its own button; three-in-a-row on the payline is
+   a jackpot (Juggler-style GOGO flash + coin rain) ---------- */
 (function setupSlotMachine(){
   const SYMBOLS = [
     'assets/motif-hq-raid.png',
@@ -2077,51 +2163,146 @@ document.getElementById('bgmNote').textContent = currentLang==='ja'
     'assets/motif-rusty-raider.png',
     'assets/motif-graffiti-pole.png',
   ];
-  const reelImgs = [document.getElementById('slotImg0'), document.getElementById('slotImg1'), document.getElementById('slotImg2')];
-  const reelEls = [document.getElementById('slotReel0'), document.getElementById('slotReel1'), document.getElementById('slotReel2')];
+  const CELL = 58, UNIT = CELL*4, REPEATS = 16, BASE = -1740;
+  const rand = ()=> Math.floor(Math.random()*SYMBOLS.length);
+
   const lever = document.getElementById('slotLever');
   const windowEl = document.getElementById('slotWindow');
   const jackpotEl = document.getElementById('slotJackpot');
-  const rand = ()=> Math.floor(Math.random()*SYMBOLS.length);
-  reelImgs.forEach(img => img.src = SYMBOLS[rand()]);
+  const shutter = document.getElementById('slotShutter');
 
-  function spinReel(i, duration, finalIdx){
-    return new Promise(resolve=>{
-      reelEls[i].classList.add('spinning');
-      const iv = setInterval(()=>{ reelImgs[i].src = SYMBOLS[rand()]; }, 65);
-      setTimeout(()=>{
-        clearInterval(iv);
-        reelImgs[i].src = SYMBOLS[finalIdx];
-        reelEls[i].classList.remove('spinning');
-        resolve();
-      }, duration);
-    });
+  const reels = [0,1,2].map(i=>{
+    const strip = document.getElementById('slotStrip'+i);
+    for(let c=0; c<REPEATS*4; c++){
+      const cell = document.createElement('div');
+      cell.className = 'slot-cell';
+      const img = document.createElement('img');
+      img.src = SYMBOLS[c % SYMBOLS.length];
+      img.alt = '';
+      cell.appendChild(img);
+      strip.appendChild(cell);
+    }
+    strip.style.transform = `translateY(${BASE}px)`;
+    return {
+      strip,
+      stopBtn: document.getElementById('slotStop'+i),
+      y: BASE,
+      spinning: false,
+      landed: null,
+    };
+  });
+
+  // where the target symbol T must land on the payline, expressed as
+  // strip-Y mod UNIT (see the reel-flow direction/derivation notes above the CSS)
+  function residueFor(T){ return CELL * (((1 - T) % 4 + 4) % 4); }
+
+  function readCurrentY(strip){
+    const m = new DOMMatrixReadOnly(getComputedStyle(strip).transform);
+    return m.m42;
   }
 
-  let spinning = false;
-  lever.addEventListener('click', async ()=>{
-    if(spinning) return;
-    spinning = true;
+  let stopRatchet = null;
+  let roundActive = false;
+
+  function startSpin(){
+    if(roundActive) return;
+    roundActive = true;
     lever.disabled = true;
     jackpotEl.classList.remove('show');
     windowEl.classList.remove('win');
-    if(typeof sfxClick === 'function') sfxClick();
-    const results = [rand(), rand(), rand()];
-    await Promise.all([
-      spinReel(0, 650, results[0]),
-      spinReel(1, 1000, results[1]),
-      spinReel(2, 1450, results[2]),
-    ]);
-    if(results[0] === results[1] && results[1] === results[2]){
+    sfxLeverPull();
+    shutter.classList.remove('flick');
+    void shutter.offsetWidth;
+    shutter.classList.add('flick');
+    stopRatchet = startRatchet(70);
+    reels.forEach((r, i)=>{
+      r.spinning = true;
+      r.landed = null;
+      r.strip.style.transition = 'none';
+      r.strip.style.animationDuration = (0.3 + i*0.045) + 's';
+      r.strip.classList.add('spinning');
+      r.stopBtn.disabled = false;
+    });
+  }
+
+  function stopReel(i){
+    const r = reels[i];
+    if(!r.spinning) return;
+    r.spinning = false;
+    r.stopBtn.disabled = true;
+    const target = rand();
+    const currentY = readCurrentY(r.strip);
+    r.strip.classList.remove('spinning');
+    r.strip.style.transition = 'none';
+    r.strip.style.transform = `translateY(${currentY}px)`;
+    void r.strip.offsetWidth;
+    const currentResidue = ((currentY % UNIT) + UNIT) % UNIT;
+    const desiredResidue = residueFor(target);
+    const deltaForward = ((desiredResidue - currentResidue) + UNIT) % UNIT;
+    const finalY = currentY + deltaForward + UNIT*2;
+    r.strip.style.transition = 'transform .7s cubic-bezier(.15,.85,.3,1)';
+    r.strip.style.transform = `translateY(${finalY}px)`;
+    const onDone = ()=>{
+      r.strip.removeEventListener('transitionend', onDone);
+      r.y = finalY;
+      r.landed = target;
+      sfxReelStop();
+      if(reels.every(rr => rr.landed !== null)) finishRound();
+    };
+    r.strip.addEventListener('transitionend', onDone, { once:true });
+  }
+
+  function finishRound(){
+    if(stopRatchet){ stopRatchet(); stopRatchet = null; }
+    const [a,b,c] = reels.map(r => r.landed);
+    if(a === b && b === c){
       jackpotEl.classList.add('show');
       windowEl.classList.add('win');
+      sfxJackpotFanfare();
       const r = windowEl.getBoundingClientRect();
       burstInk(r.left + r.width/2, r.top + r.height/2);
+      coinRain();
     }
-    spinning = false;
+    roundActive = false;
     lever.disabled = false;
-  });
+  }
+
+  lever.addEventListener('click', startSpin);
+  reels.forEach((r, i)=> r.stopBtn.addEventListener('click', ()=> stopReel(i)));
 })();
+
+// coins raining down across the whole viewport for a slot jackpot
+function coinRain(){
+  const flash = document.createElement('div');
+  flash.className = 'coin-rain-flash';
+  document.body.appendChild(flash);
+  flash.addEventListener('animationend', ()=> flash.remove());
+
+  const layer = document.createElement('div');
+  layer.className = 'coin-rain-layer';
+  document.body.appendChild(layer);
+  const faces = ['🪙','💰'];
+  const count = 90;
+  for(let i=0; i<count; i++){
+    const coin = document.createElement('div');
+    coin.className = 'coin';
+    coin.textContent = faces[Math.random() > 0.75 ? 1 : 0];
+    const left = Math.random()*100;
+    const delay = Math.random()*0.9;
+    const dur = 1.6 + Math.random()*1.3;
+    const fallDist = window.innerHeight + 80;
+    const spin = (Math.random()>0.5?1:-1) * (240 + Math.random()*360);
+    coin.style.left = left + 'vw';
+    coin.style.animationDelay = delay + 's';
+    coin.style.animationDuration = dur + 's';
+    coin.style.setProperty('--fall-dist', fallDist + 'px');
+    coin.style.setProperty('--spin', spin + 'deg');
+    coin.style.fontSize = (18 + Math.random()*16) + 'px';
+    layer.appendChild(coin);
+    coin.addEventListener('animationend', ()=> coin.remove());
+  }
+  setTimeout(()=> layer.remove(), 3600);
+}
 
 /* ============================================================
    MOTION UPGRADE — hover spotlight, magnetic buttons,
@@ -2220,7 +2401,7 @@ function burstInk(x, y){
 // custom neon-arrow cursor over tappable elements — idly wiggles like it's
 // nudging you to click if you hover and stay still for a moment
 document.body.classList.add('jscursor');
-const CURSOR_SELECTOR = '.fx-link, .cast-card, .card:not(.coming), .history-row, details.how summary, .seek-track, .ctrl-btn, .scroll-close, .sp-speak, .sp-play, .bgm-head, .bgm-toggle, .bgm-link-row, .bgm-hotspot, .cast-evidence, .bgm-track-open, .bgm-dial-hole, .bgm-dial-close, .slot-lever';
+const CURSOR_SELECTOR = '.fx-link, .cast-card, .card:not(.coming), .history-row, details.how summary, .seek-track, .ctrl-btn, .scroll-close, .sp-speak, .sp-play, .bgm-head, .bgm-toggle, .bgm-link-row, .bgm-hotspot, .cast-evidence, .bgm-track-open, .bgm-dial-hole, .bgm-dial-close, .bgm-dial-cap, .slot-lever, .slot-stop';
 const customCursor = document.getElementById('customCursor');
 const customCursorImg = document.getElementById('customCursorImg');
 let cursorLastMoveAt = Date.now();
