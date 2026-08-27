@@ -153,6 +153,18 @@
     box-shadow:0 0 0 2px var(--red), 0 0 16px 3px rgba(178,58,72,0.4);}
   .cast-face{background:var(--paper-2); overflow:hidden;}
   .cast-card.flipped .cast-face{visibility:hidden;}
+  /* small icons that pop out and burst around the character while its
+     icon is hovered */
+  .icon-pop{position:absolute; z-index:5; font-size:19px; pointer-events:none;
+    left:50%; top:50%; margin:-11px 0 0 -11px;
+    filter:drop-shadow(2px 3px 3px rgba(28,24,17,.5));
+    animation:iconPopBurst 1.05s cubic-bezier(.34,1.56,.64,1) forwards;}
+  @keyframes iconPopBurst{
+    0%{ transform:translate(0,0) scale(0) rotate(0deg); opacity:0; }
+    22%{ transform:translate(var(--px,0), var(--py,0)) scale(1.2) rotate(var(--rot,0deg)); opacity:1; }
+    65%{ transform:translate(var(--px,0), var(--py,0)) scale(1) rotate(var(--rot,0deg)); opacity:1; }
+    100%{ transform:translate(var(--px,0), var(--py,0)) scale(1.9) rotate(var(--rot,0deg)); opacity:0; }
+  }
   .cast-face .icon{position:relative; width:auto; height:98px; margin-bottom:8px;
     display:flex; align-items:flex-end; justify-content:center;
     transform-origin:center bottom; touch-action:none;}
@@ -511,6 +523,8 @@
     box-shadow:inset 0 1px 1px rgba(255,255,255,.35), inset 0 -2px 3px rgba(0,0,0,.5), 0 2px 3px rgba(0,0,0,.4);}
   .ctrl-btn:hover{background:radial-gradient(circle at 35% 30%, var(--red-bright), var(--red) 78%);}
   .ctrl-btn:active{box-shadow:inset 0 2px 4px rgba(0,0,0,.6), inset 0 -1px 1px rgba(255,255,255,.15);}
+  .ctrl-btn:disabled{opacity:.35; cursor:default;}
+  .ctrl-btn:disabled:hover{background:radial-gradient(circle at 35% 30%, rgba(80,72,58,.85), rgba(20,17,12,.85) 78%);}
   .copy-toast{position:absolute; left:8px; bottom:56px; z-index:4; background:var(--ink); color:var(--paper);
     font-family:'Courier Prime',monospace; font-size:10.5px; letter-spacing:.05em; padding:6px 12px;
     opacity:0; transform:translateY(6px); transition:opacity .2s ease, transform .2s ease; pointer-events:none;}
@@ -836,6 +850,7 @@
         <button class="ctrl-btn" id="ctrlRewind" title="Rewind to start">⏮</button>
         <button class="ctrl-btn" id="ctrlPlay">⏸</button>
         <button class="ctrl-btn" id="ctrlMute">🔊</button>
+        <button class="ctrl-btn" id="ctrlNext" title="Next episode">⏭</button>
         <button class="ctrl-btn" id="ctrlShare" title="Copy share link">🔗</button>
       </div>
     </div>
@@ -1195,7 +1210,7 @@ function speakWord(text){
 document.addEventListener('pointerdown', ()=>ensureAudio(), { once:true });
 
 // simple buttons: hover+click via delegation (works well on desktop; click works on tap too)
-const SFX_SELECTOR = '#langBtn, #tickerBtn, #closeBtn, #ctrlPlay, #ctrlRewind, #ctrlMute, #ctrlShare, #bgmHead, .bgm-link-row, details.how summary, #spClose, #spSpeak, #spPlay, .history-row';
+const SFX_SELECTOR = '#langBtn, #tickerBtn, #closeBtn, #ctrlPlay, #ctrlRewind, #ctrlMute, #ctrlShare, #ctrlNext, #bgmHead, .bgm-link-row, details.how summary, #spClose, #spSpeak, #spPlay, .history-row';
 let sfxLastHover = null;
 document.addEventListener('mouseover', (e)=>{
   const el = e.target.closest(SFX_SELECTOR);
@@ -1317,8 +1332,30 @@ function buildCast(){
       ? (currentLang==='ja' ? ['ワオ!','おう!'] : ['Wow!','Yeah!'])
       : (currentLang==='ja' ? ['やめて!','こわい!'] : ['Not you again!','Ah!']);
     const icon = card.querySelector('.cast-face .icon');
+    const face = card.querySelector('.cast-face');
+    const popEmoji = idx === 0 ? ['🎭','🔍','👣','📸','🕵️'] : ['💨','👟','😱','🌀','❗'];
+    let popTimer = null;
+    function spawnIconPop(){
+      const pop = document.createElement('div');
+      pop.className = 'icon-pop';
+      pop.textContent = popEmoji[Math.floor(Math.random()*popEmoji.length)];
+      const angle = Math.random()*Math.PI*2;
+      const dist = 34 + Math.random()*26;
+      pop.style.setProperty('--px', (Math.cos(angle)*dist) + 'px');
+      pop.style.setProperty('--py', (Math.sin(angle)*dist - 12) + 'px');
+      pop.style.setProperty('--rot', (Math.random()*50 - 25) + 'deg');
+      face.appendChild(pop);
+      pop.addEventListener('animationend', ()=> pop.remove());
+    }
     icon.addEventListener('mouseenter', ()=>{
       speakWord(greetings[Math.floor(Math.random()*greetings.length)]);
+      if(popTimer) return;
+      spawnIconPop();
+      popTimer = setInterval(spawnIconPop, 550);
+    });
+    icon.addEventListener('mouseleave', ()=>{
+      clearInterval(popTimer);
+      popTimer = null;
     });
     icon.addEventListener('click', ()=>{
       speakWord(reactions[Math.floor(Math.random()*reactions.length)]);
@@ -1842,6 +1879,8 @@ function openPlayer(ep){
   const idx = EPISODES.findIndex(e=>e.id===ep.id);
   const title = epTitle(idx);
   document.getElementById('playerTitle').textContent = `${ep.file} ／ ${title}`;
+  const nextEp = EPISODES[idx+1];
+  document.getElementById('ctrlNext').disabled = !(nextEp && !nextEp.coming);
   try{ history.replaceState(null, '', '#ep'+(idx+1)); }catch(e){}
   const overlayEl = document.getElementById('overlay');
   overlayEl.classList.add('open');
@@ -1946,6 +1985,12 @@ document.getElementById('ytPlayer').addEventListener('click', ()=>{
 document.getElementById('ctrlRewind').onclick = ()=>{
   if(!player) return;
   try{ player.seekTo(0, true); player.playVideo(); }catch(e){}
+};
+document.getElementById('ctrlNext').onclick = ()=>{
+  if(!activeEp) return;
+  const idx = EPISODES.findIndex(e=>e.id===activeEp.id);
+  const next = EPISODES[idx+1];
+  if(next && !next.coming){ sfxSwipe(true); openPlayer(next); }
 };
 document.getElementById('ctrlShare').onclick = ()=>{
   if(!activeEp) return;
