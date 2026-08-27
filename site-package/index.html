@@ -136,7 +136,16 @@
     box-shadow:0 0 0 2px var(--red), 0 0 16px 3px rgba(178,58,72,0.4);}
   .cast-face{background:var(--paper-2); position:relative; overflow:hidden;}
   .cast-face .icon{position:relative; width:auto; height:98px; margin-bottom:8px;
-    display:flex; align-items:flex-end; justify-content:center;}
+    display:flex; align-items:flex-end; justify-content:center;
+    transform-origin:center bottom; touch-action:none;}
+  .cast-face .icon.stretching{transition:none;}
+  .cast-face .icon.springback{transition:transform .4s cubic-bezier(.34,1.56,.64,1);}
+  .cast-face .icon.popping{animation:balloonPop .45s ease-out forwards;}
+  @keyframes balloonPop{
+    0%{ transform:scale(var(--pop-scale,2.2)); opacity:1; }
+    35%{ transform:scale(calc(var(--pop-scale,2.2) * 1.18)); opacity:1; }
+    100%{ transform:scale(.15); opacity:0; }
+  }
   .cast-face .icon img{height:100%; width:auto; object-fit:contain;
     filter:sepia(12%) contrast(1.05) drop-shadow(4px 8px 6px rgba(28,24,17,0.5));}
   /* the character stands still until you hover this card — then it runs in place */
@@ -196,13 +205,30 @@
 
   /* ---------- stage: the big hero + selector, built to actually dominate the
      screen instead of sitting as a small photo+text pair ---------- */
-  .stage{display:none; position:relative; z-index:1; margin-top:28px; padding:30px 0 8px;
+  .stage{display:none; position:relative; z-index:1; margin-top:28px; padding:30px 0 8px; overflow:hidden;
     background-color:var(--stage-tint, transparent); transition:background-color .6s ease;}
   /* a flipped cast card can visually overflow its own 190px box — this keeps
      the whole section above the stage section that follows it, instead of
      the flip content getting buried underneath it */
   .cast-section{position:relative; z-index:2;}
-  .stage-inner{max-width:1080px; margin:0 auto; padding:0 24px;}
+  .stage-inner{position:relative; z-index:1; max-width:1080px; margin:0 auto; padding:0 24px;}
+  /* ambient movement over the mood-tinted backdrop — a slowly drifting grid
+     plus a handful of asymmetric floating shapes, kept faint so it reads as
+     texture rather than clutter competing with the video/cards on top */
+  .stage-fx{position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none; mix-blend-mode:overlay;}
+  .stage-grid{position:absolute; inset:-10% -10%; opacity:.35;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.5) 0 1px, transparent 1px 46px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.5) 0 1px, transparent 1px 46px);
+    animation:stageGridDrift 26s linear infinite;}
+  @keyframes stageGridDrift{ from{ transform:translate(0,0); } to{ transform:translate(46px,46px); } }
+  .stage-shape{position:absolute; opacity:.4; background:rgba(255,255,255,0.7);
+    animation:stageShapeDrift var(--dur,9s) ease-in-out infinite; animation-delay:var(--delay,0s);}
+  .stage-shape.dot{border-radius:50%;}
+  @keyframes stageShapeDrift{
+    0%,100%{ transform:translate(0,0) rotate(var(--r,0deg)); }
+    50%{ transform:translate(var(--dx,12px), var(--dy,-16px)) rotate(calc(var(--r,0deg) + 10deg)); }
+  }
   .stage-main{display:flex; align-items:stretch; justify-content:center; gap:22px;}
   /* an invisible counterweight matching the side column's width, so the
      photo itself lands dead-center on the page instead of the whole
@@ -229,12 +255,6 @@
   @keyframes reelFlow{ from{ transform:translateY(-1972px); } to{ transform:translateY(-1740px); } }
   .slot-payline{position:absolute; left:5px; right:5px; top:50%; height:2px; margin-top:-1px;
     background:rgba(178,58,72,.6); pointer-events:none; z-index:2; box-shadow:0 0 4px rgba(178,58,72,.8);}
-  .slot-shutter{position:absolute; inset:0; z-index:5; background:linear-gradient(180deg, var(--red), var(--red-bright));
-    transform:translateY(-100%); pointer-events:none;}
-  .slot-shutter.flick{animation:shutterFlick .55s cubic-bezier(.7,0,.3,1);}
-  @keyframes shutterFlick{
-    0%{ transform:translateY(-100%); } 45%{ transform:translateY(0%); } 100%{ transform:translateY(100%); }
-  }
   .slot-controls{display:flex; gap:8px;}
   .slot-stop{width:34px; height:26px; font-family:'Anton',sans-serif; font-size:11px; color:var(--paper);
     background:#3a352c; border:1px solid rgba(233,225,205,.35); border-radius:3px; cursor:var(--cursor-tap);
@@ -242,11 +262,17 @@
   .slot-stop:hover:not(:disabled){background:var(--red);}
   .slot-stop:active:not(:disabled){transform:scale(.9);}
   .slot-stop:disabled{opacity:.35; cursor:default;}
-  .slot-lever{font-family:'Anton',sans-serif; letter-spacing:.08em; font-size:13px; color:var(--paper);
-    background:var(--red); border:1px solid var(--paper); border-radius:20px; padding:8px 22px;
-    cursor:var(--cursor-tap); box-shadow:0 3px 0 #6e1f26; transition:transform .08s ease, box-shadow .08s ease, background .18s ease;}
-  .slot-lever:hover{background:var(--red-bright);}
-  .slot-lever:active, .slot-lever.pulling{transform:translateY(3px); box-shadow:0 0 0 #6e1f26;}
+  .slot-lever{width:64px; height:64px; border-radius:50%; border:none; padding:0;
+    background:url('assets/slot-pull-knob.png') center/cover, radial-gradient(circle, #444,#111);
+    cursor:var(--cursor-tap); box-shadow:0 4px 0 #1a1a1a, 0 6px 10px rgba(0,0,0,.5);
+    transition:transform .08s ease, box-shadow .08s ease, filter .15s ease;}
+  .slot-lever:hover{filter:brightness(1.15);}
+  .slot-lever.pressed{transform:translateY(4px); box-shadow:0 0 0 #1a1a1a, 0 2px 4px rgba(0,0,0,.5);
+    transition:transform .05s ease, box-shadow .05s ease;}
+  .slot-lever.bounce{animation:leverBounce .4s cubic-bezier(.34,1.56,.64,1);}
+  @keyframes leverBounce{
+    0%{ transform:translateY(4px); } 55%{ transform:translateY(-3px); } 100%{ transform:translateY(0); }
+  }
   .slot-lever:disabled{opacity:.5; cursor:default;}
   .slot-jackpot{font-family:'Anton',sans-serif; letter-spacing:.06em; font-size:18px; text-align:center;
     color:#fff2b8; text-shadow:0 0 6px #ffce4a, 0 0 16px #ff9a2e; opacity:0; height:1.3em; margin:0;}
@@ -540,7 +566,7 @@
   .bgm-zoom-preview{position:fixed; z-index:70; width:560px; max-width:92vw; pointer-events:none;
     opacity:0; transform:scale(.82); transform-origin:bottom right;
     transition:opacity .1s ease, transform .22s cubic-bezier(.22,1.5,.36,1);
-    border-radius:6px; overflow:hidden; background:#0c0c10;
+    border-radius:6px; overflow:hidden; background:#0c0c10; padding:12px;
     box-shadow:0 18px 44px rgba(0,0,0,0.55), 0 0 0 2px var(--red-bright);}
   .bgm-zoom-preview.show{opacity:1; transform:scale(1); animation:tubeFlicker .9s linear;}
   @keyframes tubeFlicker{
@@ -559,13 +585,13 @@
     88%{ filter:brightness(0.85); }
     100%{ filter:brightness(1) saturate(1); }
   }
-  .bgm-zoom-preview img{display:block; width:100%; height:auto;}
+  .bgm-zoom-photo{position:relative; overflow:hidden; border-radius:3px;}
+  .bgm-zoom-photo img{display:block; width:100%; height:auto;}
   .bgm-zoom-highlight{position:absolute; border:2px solid var(--red-bright); border-radius:4px;
     box-shadow:0 0 0 3px rgba(178,58,72,.35), 0 0 18px 5px rgba(178,58,72,.55);}
   .bgm-zoom-cursor{position:absolute; z-index:4; font-size:44px; transform:translate(-18%,-12%);
     filter:drop-shadow(0 3px 6px rgba(0,0,0,.55)); pointer-events:none;}
-  .bgm-zoom-caption{position:absolute; left:0; right:0; bottom:0; padding:12px 14px;
-    background:linear-gradient(to top, rgba(0,0,0,.88), transparent);
+  .bgm-zoom-caption{padding-top:12px;
     font-family:'Anton',sans-serif; letter-spacing:.05em; font-size:22px; color:#eafcff;
     text-shadow:0 0 8px #4fd6ff; text-align:center;}
   .bgm-note{font-family:'Courier Prime',monospace; font-size:8.5px; color:var(--ink-soft); margin-top:2px; line-height:1.5;}
@@ -605,9 +631,9 @@
     min-height:1.6em; line-height:1.4;}
 
   /* ---------- motion upgrade: hover spotlight, magnetic buttons, kinetic type, ink bursts ---------- */
-  .spotlight{position:fixed; width:360px; height:360px; border-radius:50%; pointer-events:none; z-index:1;
+  .spotlight{position:fixed; width:200px; height:200px; border-radius:50%; pointer-events:none; z-index:1;
     left:0; top:0; transform:translate(-50%,-50%);
-    background:radial-gradient(circle, rgba(138,35,35,0.24), rgba(138,35,35,0.09) 45%, transparent 72%);
+    background:radial-gradient(circle, rgba(138,35,35,0.26), rgba(138,35,35,0.08) 38%, transparent 55%);
     opacity:0; transition:opacity .4s ease; mix-blend-mode:multiply;}
   .spotlight.show{opacity:1;}
 
@@ -675,6 +701,9 @@
   </section>
 
   <section class="stage" id="heroSection">
+    <div class="stage-fx" id="stageFx" aria-hidden="true">
+      <div class="stage-grid"></div>
+    </div>
     <div class="stage-inner">
       <div class="stage-main">
         <div class="stage-spacer">
@@ -685,7 +714,6 @@
               <div class="slot-reel-col" id="slotCol1"><div class="slot-strip" id="slotStrip1"></div></div>
               <div class="slot-reel-col" id="slotCol2"><div class="slot-strip" id="slotStrip2"></div></div>
               <div class="slot-payline"></div>
-              <div class="slot-shutter" id="slotShutter"></div>
             </div>
             <p class="slot-jackpot" id="slotJackpot">GOGO!!</p>
             <div class="slot-controls">
@@ -693,7 +721,7 @@
               <button class="slot-stop" id="slotStop1" type="button" disabled>■</button>
               <button class="slot-stop" id="slotStop2" type="button" disabled>■</button>
             </div>
-            <button class="slot-lever" id="slotLever" type="button">PULL</button>
+            <button class="slot-lever" id="slotLever" type="button" aria-label="Pull"></button>
           </div>
         </div>
         <div class="stage-photo">
@@ -804,9 +832,11 @@
       <div class="bgm-hotspot-label" id="bgmHotspotLabel"></div>
     </div>
     <div class="bgm-zoom-preview" id="bgmZoomPreview">
-      <img src="assets/bgm-station.png" alt="">
-      <div class="bgm-zoom-highlight" id="bgmZoomHighlight"></div>
-      <div class="bgm-zoom-cursor" id="bgmZoomCursor">👆</div>
+      <div class="bgm-zoom-photo">
+        <img src="assets/bgm-station.png" alt="">
+        <div class="bgm-zoom-highlight" id="bgmZoomHighlight"></div>
+        <div class="bgm-zoom-cursor" id="bgmZoomCursor">👆</div>
+      </div>
       <div class="bgm-zoom-caption" id="bgmZoomCaption"></div>
     </div>
     <div class="bgm-note" id="bgmNote"></div>
@@ -1042,12 +1072,38 @@ function sfxLeverPull(){
 function sfxJackpotFanfare(){
   try{
     ensureAudio(); const t0 = audioCtx.currentTime;
-    const notes = [523.25, 659.25, 783.99, 1046.5]; // C5 E5 G5 C6
-    notes.forEach((f, i)=>{
-      tone(f, f, t0 + i*0.11, 0.22, 'square', 0.065, 0);
-      tone(f*2, f*2, t0 + i*0.11, 0.16, 'triangle', 0.03, 0);
+    // a two-bar bouncy little victory jingle, not just a single 4-note run
+    const melody = [523.25,523.25,659.25,783.99, 1046.5,783.99,659.25,1046.5, 1318.5];
+    const durs   = [0.1,0.1,0.1,0.14, 0.2,0.12,0.12,0.16, 0.5];
+    let t = t0;
+    melody.forEach((f, i)=>{
+      tone(f, f, t, durs[i], 'square', 0.065, 0);
+      tone(f*2, f*2, t, durs[i]*0.8, 'triangle', 0.03, 0);
+      t += durs[i];
     });
-    tone(1046.5, 1568, t0 + notes.length*0.11, 0.5, 'sawtooth', 0.05, 0);
+  }catch(e){}
+}
+// a bright metallic twinkle for coins landing/jingling during the rain
+function sfxCoinJingle(){
+  try{ ensureAudio(); const t0 = audioCtx.currentTime;
+    const f = 1600 + Math.random()*1600;
+    tone(f, f*1.6, t0, 0.11, 'triangle', 0.035, 0);
+    tone(f*1.5, f*2.1, t0+0.01, 0.08, 'sine', 0.02, 0);
+  }catch(e){}
+}
+// a sour, deflating buzzer for the "10 dry spins" garbage-rain gag
+function sfxHazureBuzzer(){
+  try{ ensureAudio(); const t0 = audioCtx.currentTime;
+    tone(180, 55, t0, 0.5, 'sawtooth', 0.09, 0);
+    tone(130, 40, t0+0.16, 0.45, 'square', 0.08, 0);
+    tone(90, 35, t0+0.34, 0.4, 'sawtooth', 0.07, 0);
+  }catch(e){}
+}
+// a sharp balloon-pop for over-stretching a cast icon
+function sfxBalloonPop(){
+  try{ ensureAudio(); const t0 = audioCtx.currentTime;
+    tone(900, 60, t0, 0.09, 'square', 0.09, 0);
+    tone(1400, 200, t0+0.005, 0.05, 'triangle', 0.05, 0);
   }catch(e){}
 }
 document.addEventListener('pointerdown', ()=>ensureAudio(), { once:true });
@@ -1165,8 +1221,90 @@ function buildCast(){
         openEvidence(c.evidence);
       });
     }
+    initBalloonStretch(card.querySelector('.cast-face .icon'));
     grid.appendChild(card);
   });
+}
+
+// drag (mouse) or pinch (two-finger touch) to stretch a cast icon like a
+// balloon — overshoot past the threshold and it pops instead of just growing
+function initBalloonStretch(icon){
+  const POP_SCALE = 2.2, MAX_SCALE = 2.6;
+  let scale = 1, dragging = false, startX = 0, startY = 0, baseScale = 1, pinchStartDist = 0;
+
+  function apply(){ icon.style.transform = `scale(${scale})`; }
+  function popIfNeeded(){
+    if(scale < POP_SCALE) return false;
+    icon.style.setProperty('--pop-scale', scale.toFixed(2));
+    icon.classList.remove('stretching','springback');
+    icon.classList.add('popping');
+    sfxBalloonPop();
+    const r = icon.getBoundingClientRect();
+    burstInk(r.left + r.width/2, r.top + r.height/2);
+    icon.addEventListener('animationend', ()=>{
+      icon.classList.remove('popping');
+      icon.style.transform = '';
+      scale = 1;
+    }, { once:true });
+    return true;
+  }
+  function springBack(){
+    icon.classList.remove('stretching');
+    icon.classList.add('springback');
+    scale = 1;
+    apply();
+    icon.addEventListener('transitionend', ()=> icon.classList.remove('springback'), { once:true });
+  }
+
+  icon.addEventListener('pointerdown', (e)=>{
+    if(icon.classList.contains('popping')) return;
+    dragging = true;
+    baseScale = scale;
+    startX = e.clientX; startY = e.clientY;
+    icon.classList.remove('springback');
+    icon.classList.add('stretching');
+    icon.setPointerCapture(e.pointerId);
+  });
+  icon.addEventListener('pointermove', (e)=>{
+    if(!dragging) return;
+    const dist = Math.hypot(e.clientX - startX, e.clientY - startY);
+    scale = Math.min(MAX_SCALE, baseScale + dist/110);
+    apply();
+    if(popIfNeeded()) dragging = false;
+  });
+  const endDrag = ()=>{
+    if(!dragging) return;
+    dragging = false;
+    if(!popIfNeeded()) springBack();
+  };
+  icon.addEventListener('pointerup', endDrag);
+  icon.addEventListener('pointercancel', endDrag);
+
+  // two-finger pinch on touch devices
+  icon.addEventListener('touchstart', (e)=>{
+    if(e.touches.length !== 2) return;
+    dragging = false;
+    baseScale = scale;
+    const [a,b] = e.touches;
+    pinchStartDist = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+    icon.classList.remove('springback');
+    icon.classList.add('stretching');
+  }, { passive:true });
+  icon.addEventListener('touchmove', (e)=>{
+    if(e.touches.length !== 2 || !pinchStartDist) return;
+    const [a,b] = e.touches;
+    const dist = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+    scale = Math.min(MAX_SCALE, Math.max(1, baseScale * (dist/pinchStartDist)));
+    apply();
+    if(popIfNeeded()) pinchStartDist = 0;
+  }, { passive:true });
+  const endPinch = ()=>{
+    if(!pinchStartDist) return;
+    pinchStartDist = 0;
+    if(!popIfNeeded()) springBack();
+  };
+  icon.addEventListener('touchend', endPinch);
+  icon.addEventListener('touchcancel', endPinch);
 }
 
 function applyStaticText(){
@@ -2169,7 +2307,6 @@ document.getElementById('bgmNote').textContent = currentLang==='ja'
   const lever = document.getElementById('slotLever');
   const windowEl = document.getElementById('slotWindow');
   const jackpotEl = document.getElementById('slotJackpot');
-  const shutter = document.getElementById('slotShutter');
 
   const reels = [0,1,2].map(i=>{
     const strip = document.getElementById('slotStrip'+i);
@@ -2210,10 +2347,6 @@ document.getElementById('bgmNote').textContent = currentLang==='ja'
     lever.disabled = true;
     jackpotEl.classList.remove('show');
     windowEl.classList.remove('win');
-    sfxLeverPull();
-    shutter.classList.remove('flick');
-    void shutter.offsetWidth;
-    shutter.classList.add('flick');
     stopRatchet = startRatchet(70);
     reels.forEach((r, i)=>{
       r.spinning = true;
@@ -2252,16 +2385,26 @@ document.getElementById('bgmNote').textContent = currentLang==='ja'
     r.strip.addEventListener('transitionend', onDone, { once:true });
   }
 
+  let noWinStreak = 0;
   function finishRound(){
     if(stopRatchet){ stopRatchet(); stopRatchet = null; }
     const [a,b,c] = reels.map(r => r.landed);
     if(a === b && b === c){
+      noWinStreak = 0;
       jackpotEl.classList.add('show');
       windowEl.classList.add('win');
       sfxJackpotFanfare();
       const r = windowEl.getBoundingClientRect();
       burstInk(r.left + r.width/2, r.top + r.height/2);
       coinRain();
+    } else {
+      noWinStreak++;
+      // ten dry spins in a row earns you a garbage-rain razzing instead of a payout
+      if(noWinStreak >= 10){
+        noWinStreak = 0;
+        sfxHazureBuzzer();
+        trashRain();
+      }
     }
     roundActive = false;
     lever.disabled = false;
@@ -2269,6 +2412,23 @@ document.getElementById('bgmNote').textContent = currentLang==='ja'
 
   lever.addEventListener('click', startSpin);
   reels.forEach((r, i)=> r.stopBtn.addEventListener('click', ()=> stopReel(i)));
+
+  // physical press-in / spring-back feel for the knob, decoupled from CSS
+  // :active so the release can overshoot instead of just snapping back
+  function releaseLever(){
+    if(!lever.classList.contains('pressed')) return;
+    lever.classList.remove('pressed');
+    lever.classList.add('bounce');
+    lever.addEventListener('animationend', ()=> lever.classList.remove('bounce'), { once:true });
+  }
+  lever.addEventListener('pointerdown', ()=>{
+    if(lever.disabled) return;
+    lever.classList.remove('bounce');
+    lever.classList.add('pressed');
+    sfxLeverPull();
+  });
+  lever.addEventListener('pointerup', releaseLever);
+  lever.addEventListener('pointerleave', releaseLever);
 })();
 
 // coins raining down across the whole viewport for a slot jackpot
@@ -2300,6 +2460,38 @@ function coinRain(){
     coin.style.fontSize = (18 + Math.random()*16) + 'px';
     layer.appendChild(coin);
     coin.addEventListener('animationend', ()=> coin.remove());
+  }
+  setTimeout(()=> layer.remove(), 3600);
+
+  // a jangling jingle timed roughly to the coins landing, on top of the fanfare
+  const jingleIv = setInterval(()=> sfxCoinJingle(), 90);
+  setTimeout(()=> clearInterval(jingleIv), 2800);
+}
+
+// ten dry spins in a row: garbage rains down instead, with a sour buzzer
+function trashRain(){
+  const layer = document.createElement('div');
+  layer.className = 'coin-rain-layer';
+  document.body.appendChild(layer);
+  const faces = ['🗑️','🍂','🥫','🦴','🍌'];
+  const count = 55;
+  for(let i=0; i<count; i++){
+    const piece = document.createElement('div');
+    piece.className = 'coin';
+    piece.textContent = faces[Math.floor(Math.random()*faces.length)];
+    const left = Math.random()*100;
+    const delay = Math.random()*0.9;
+    const dur = 1.7 + Math.random()*1.3;
+    const fallDist = window.innerHeight + 80;
+    const spin = (Math.random()>0.5?1:-1) * (200 + Math.random()*300);
+    piece.style.left = left + 'vw';
+    piece.style.animationDelay = delay + 's';
+    piece.style.animationDuration = dur + 's';
+    piece.style.setProperty('--fall-dist', fallDist + 'px');
+    piece.style.setProperty('--spin', spin + 'deg');
+    piece.style.fontSize = (16 + Math.random()*14) + 'px';
+    layer.appendChild(piece);
+    piece.addEventListener('animationend', ()=> piece.remove());
   }
   setTimeout(()=> layer.remove(), 3600);
 }
@@ -2344,6 +2536,29 @@ function initMagnetic(selector, strength){
 }
 initMagnetic('#tickerBtn, #langBtn, #spPlay, #closeBtn', 0.28);
 initMagnetic('#heroPlay', 0.35);
+
+// a handful of faint dots/squares scattered (not gridded) over the stage's
+// mood-tinted backdrop, each drifting at its own size/speed/angle
+(function buildStageFx(){
+  const layer = document.getElementById('stageFx');
+  const count = 9;
+  for(let i=0; i<count; i++){
+    const shape = document.createElement('div');
+    const isDot = Math.random() > 0.45;
+    shape.className = 'stage-shape' + (isDot ? ' dot' : '');
+    const size = 5 + Math.random()*16;
+    shape.style.width = size + 'px';
+    shape.style.height = size + 'px';
+    shape.style.left = (Math.random()*94) + '%';
+    shape.style.top = (Math.random()*88) + '%';
+    shape.style.setProperty('--r', (Math.random()*40 - 20) + 'deg');
+    shape.style.setProperty('--dx', (Math.random()*30 - 15) + 'px');
+    shape.style.setProperty('--dy', (Math.random()*34 - 17) + 'px');
+    shape.style.setProperty('--dur', (7 + Math.random()*7).toFixed(1) + 's');
+    shape.style.setProperty('--delay', (-Math.random()*8).toFixed(1) + 's');
+    layer.appendChild(shape);
+  }
+})();
 
 // headline text drops in character-by-character with a springy overshoot,
 // instead of just swapping instantly when you hover a different file
