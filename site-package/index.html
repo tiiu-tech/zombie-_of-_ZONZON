@@ -444,7 +444,10 @@
   .how-list{font-family:'Shippori Mincho',serif; font-size:12.5px; line-height:2; color:var(--ink-soft); margin:0 0 16px; padding-left:18px;}
 
   /* ---------- player overlay ---------- */
-  .overlay{position:fixed; inset:0; background:rgba(15,13,9,0.95); z-index:50; display:none; align-items:center; justify-content:center; padding:20px;}
+  /* highest of all the full-screen overlays (BGM dial 80, evidence lightbox
+     90/95) — the video is the primary experience and must never end up
+     playing invisibly behind another leftover overlay */
+  .overlay{position:fixed; inset:0; background:rgba(15,13,9,0.95); z-index:100; display:none; align-items:center; justify-content:center; padding:20px;}
   .overlay.open{display:flex;}
   .player-wrap{width:fit-content; max-width:96vw; background:var(--paper); border:1px solid var(--ink); padding:6px;}
   .overlay.open .player-wrap{animation:popOut .5s cubic-bezier(.22,1.4,.36,1);}
@@ -1754,6 +1757,10 @@ function onYouTubeIframeAPIReady(){ ytReady = true; }
 function openPlayer(ep){
   hideSynopsis();
   hideHeroPreview();
+  // close any other full-screen overlay that might still be open underneath —
+  // otherwise the video can end up playing invisibly behind it (audio only)
+  document.getElementById('bgmDialOverlay').classList.remove('open');
+  document.getElementById('evidenceLightbox').classList.remove('open');
   bgmWasPlaying = !bgmAudio.paused;
   if(bgmWasPlaying){ bgmAudio.pause(); bgmPlayBtn.textContent = '▶'; }
   if(activeCard) deselectCard(activeCard);
