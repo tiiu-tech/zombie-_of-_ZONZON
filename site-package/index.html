@@ -126,9 +126,12 @@
 
   main{position:relative; z-index:2; max-width:1080px; margin:0 auto; padding:26px 24px 90px;}
 
-  /* ---------- section reveal: fade + rise on page load and on first scroll into view ---------- */
-  .reveal{opacity:0; transform:translateY(22px); transition:opacity .65s cubic-bezier(.22,1,.36,1), transform .65s cubic-bezier(.22,1,.36,1);}
-  .reveal.in{opacity:1; transform:translateY(0);}
+  /* ---------- section reveal: unfolds into view (clip-path wipe) with a
+     fade + rise underneath, rather than a plain fade ---------- */
+  .reveal{opacity:0; transform:translateY(22px); clip-path:inset(0 0 100% 0);
+    transition:opacity .65s cubic-bezier(.22,1,.36,1), transform .65s cubic-bezier(.22,1,.36,1),
+      clip-path .7s cubic-bezier(.65,0,.35,1);}
+  .reveal.in{opacity:1; transform:translateY(0); clip-path:inset(0 0 0% 0);}
 
   /* ---------- case brief (plain — no drop cap) ---------- */
   .case-box{border:1px solid var(--ink); background:var(--paper-2); padding:20px 22px; margin-bottom:10px;}
@@ -167,7 +170,8 @@
   }
   .cast-face .icon{position:relative; width:auto; height:98px; margin-bottom:8px;
     display:flex; align-items:flex-end; justify-content:center;
-    transform-origin:center bottom; touch-action:none;}
+    transform-origin:center bottom; touch-action:none;
+    transition:transform .25s cubic-bezier(.22,1,.36,1);}
   .cast-face .icon.stretching{transition:none;}
   .cast-face .icon.springback{transition:transform .4s cubic-bezier(.34,1.56,.64,1);}
   .cast-face .icon.popping{animation:balloonPop .45s ease-out forwards;}
@@ -1198,15 +1202,20 @@ function sfxBalloonPop(){
   }catch(e){}
 }
 // speaks a short word/phrase aloud via the browser's TTS voice
-function speakWord(text){
-  try{
-    if(!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = currentLang === 'ja' ? 'ja-JP' : 'en-US';
-    u.rate = 1.1;
-    u.pitch = 1.05;
-    window.speechSynthesis.speak(u);
+// a friendly two-note rising blip for a cast icon "greeting" on hover
+function sfxCastGreetBeep(idx){
+  try{ ensureAudio(); const t0 = audioCtx.currentTime;
+    const base = idx === 0 ? 520 : 640;
+    tone(base, base, t0, 0.07, 'square', 0.05, 0);
+    tone(base*1.5, base*1.5, t0+0.08, 0.09, 'square', 0.05, 0);
+  }catch(e){}
+}
+// a punchier double-blip "reaction" beep on click
+function sfxCastReactBeep(idx){
+  try{ ensureAudio(); const t0 = audioCtx.currentTime;
+    const base = idx === 0 ? 700 : 900;
+    tone(base, base*1.3, t0, 0.06, 'square', 0.07, 0);
+    tone(base*1.3, base*0.8, t0+0.07, 0.1, 'square', 0.06, 0);
   }catch(e){}
 }
 document.addEventListener('pointerdown', ()=>ensureAudio(), { once:true });
@@ -1325,14 +1334,6 @@ function buildCast(){
       });
     }
     initBalloonStretch(card.querySelector('.cast-face .icon'));
-    // character-flavored greeting on hover, reaction on click — confident
-    // for the pursuer (idx 0), startled for the one fleeing (idx 1)
-    const greetings = idx === 0
-      ? (currentLang==='ja' ? ['よう!','おっす!'] : ['Hey!','Yo!'])
-      : (currentLang==='ja' ? ['ひっ!','うわっ!'] : ['Eek!','Whoa!']);
-    const reactions = idx === 0
-      ? (currentLang==='ja' ? ['ワオ!','おう!'] : ['Wow!','Yeah!'])
-      : (currentLang==='ja' ? ['やめて!','こわい!'] : ['Not you again!','Ah!']);
     const icon = card.querySelector('.cast-face .icon');
     const face = card.querySelector('.cast-face');
     const popEmoji = idx === 0 ? ['🎭','🔍','👣','📸','🕵️'] : ['💨','👟','😱','🌀','❗'];
@@ -1350,7 +1351,7 @@ function buildCast(){
       pop.addEventListener('animationend', ()=> pop.remove());
     }
     icon.addEventListener('mouseenter', ()=>{
-      speakWord(greetings[Math.floor(Math.random()*greetings.length)]);
+      sfxCastGreetBeep(idx);
       if(popTimer) return;
       spawnIconPop();
       popTimer = setInterval(spawnIconPop, 550);
@@ -1360,7 +1361,7 @@ function buildCast(){
       popTimer = null;
     });
     icon.addEventListener('click', ()=>{
-      speakWord(reactions[Math.floor(Math.random()*reactions.length)]);
+      sfxCastReactBeep(idx);
     });
     grid.appendChild(card);
   });
@@ -1371,8 +1372,9 @@ function buildCast(){
 function initBalloonStretch(icon){
   const POP_SCALE = 2.2, MAX_SCALE = 2.6;
   let scale = 1, dragging = false, startX = 0, startY = 0, baseScale = 1, pinchStartDist = 0;
+  let px = 0, py = 0; // cursor-follow parallax offset, composed with the scale
 
-  function apply(){ icon.style.transform = `scale(${scale})`; }
+  function apply(){ icon.style.transform = `translate(${px}px, ${py}px) scale(${scale})`; }
   function popIfNeeded(){
     if(scale < POP_SCALE) return false;
     icon.style.setProperty('--pop-scale', scale.toFixed(2));
@@ -1384,9 +1386,30 @@ function initBalloonStretch(icon){
     icon.addEventListener('animationend', ()=>{
       icon.classList.remove('popping');
       icon.style.transform = '';
-      scale = 1;
+      scale = 1; px = 0; py = 0;
     }, { once:true });
     return true;
+  }
+
+  // the character leans toward the cursor while it's anywhere over the card,
+  // like the icon is tracking you (buttermax.net-style image parallax)
+  const card = icon.closest('.cast-card');
+  const MAX_PARALLAX = 10;
+  if(card){
+    card.addEventListener('mousemove', (e)=>{
+      if(dragging || icon.classList.contains('popping')) return;
+      const r = card.getBoundingClientRect();
+      const relX = (e.clientX - (r.left + r.width/2)) / (r.width/2);
+      const relY = (e.clientY - (r.top + r.height/2)) / (r.height/2);
+      px = Math.max(-MAX_PARALLAX, Math.min(MAX_PARALLAX, relX * MAX_PARALLAX));
+      py = Math.max(-MAX_PARALLAX, Math.min(MAX_PARALLAX, relY * MAX_PARALLAX));
+      apply();
+    });
+    card.addEventListener('mouseleave', ()=>{
+      if(dragging) return;
+      px = 0; py = 0;
+      apply();
+    });
   }
   function springBack(){
     icon.classList.remove('stretching');
