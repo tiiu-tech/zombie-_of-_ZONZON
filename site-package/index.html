@@ -1872,6 +1872,9 @@ function openPlayer(ep){
   // otherwise the video can end up playing invisibly behind it (audio only)
   document.getElementById('bgmDialOverlay').classList.remove('open');
   document.getElementById('evidenceLightbox').classList.remove('open');
+  // a stray curtain-wipe (z-index 300, above everything) could in theory
+  // get stuck mid-animation and permanently hide the video behind it
+  document.querySelectorAll('.curtain-wipe').forEach(el => el.remove());
   bgmWasPlaying = !bgmAudio.paused;
   if(bgmWasPlaying){ bgmAudio.pause(); bgmPlayBtn.textContent = '▶'; }
   if(activeCard) deselectCard(activeCard);
@@ -2830,16 +2833,30 @@ function curtainWipe(onMidpoint){
   const curtain = document.createElement('div');
   curtain.className = 'curtain-wipe';
   document.body.appendChild(curtain);
+  let midpointDone = false;
+  const runMidpoint = ()=>{
+    if(midpointDone) return;
+    midpointDone = true;
+    try{ onMidpoint(); }catch(e){}
+    curtain.classList.remove('down');
+    curtain.classList.add('up');
+    let removed = false;
+    const remove = ()=>{ if(removed) return; removed = true; curtain.remove(); };
+    curtain.addEventListener('animationend', remove, { once:true });
+    // if the tab was backgrounded (animations freeze) or anything else
+    // stops the 'up' animation from ever finishing, this guarantees the
+    // curtain — which sits above everything, including the video — is
+    // never left stuck covering the screen indefinitely
+    setTimeout(remove, 700);
+  };
   requestAnimationFrame(()=>{
     curtain.classList.add('down');
-    curtain.addEventListener('animationend', function onDown(){
-      curtain.removeEventListener('animationend', onDown);
-      try{ onMidpoint(); }catch(e){}
-      curtain.classList.remove('down');
-      curtain.classList.add('up');
-      curtain.addEventListener('animationend', ()=> curtain.remove(), { once:true });
-    }, { once:true });
+    curtain.addEventListener('animationend', runMidpoint, { once:true });
+    setTimeout(runMidpoint, 700);
   });
+  // belt-and-suspenders: if rAF itself never fires (tab backgrounded the
+  // instant this was called), still force the swap through
+  setTimeout(()=>{ if(!curtain.classList.contains('down')) runMidpoint(); }, 900);
 }
 
 // custom neon-arrow cursor over tappable elements — idly wiggles like it's
