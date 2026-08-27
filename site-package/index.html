@@ -476,17 +476,19 @@
   /* highest of all the full-screen overlays (BGM dial 80, evidence lightbox
      90/95) — the video is the primary experience and must never end up
      playing invisibly behind another leftover overlay */
-  .overlay{position:fixed; inset:0; background:rgba(15,13,9,0.95); z-index:100; display:none; align-items:center; justify-content:center; padding:20px;
-    perspective:900px;}
+  .overlay{position:fixed; inset:0; background:rgba(15,13,9,0.95); z-index:100; display:none; align-items:center; justify-content:center; padding:20px;}
   .overlay.open{display:flex;}
-  .player-wrap{width:fit-content; max-width:96vw; background:var(--paper); border:1px solid var(--ink); padding:6px; transform-style:preserve-3d;}
-  /* a camera-dolly feel: the frame starts small/tilted/pulled back and
-     swoops toward the viewer with a slight overshoot before settling flat */
+  .player-wrap{width:fit-content; max-width:96vw; background:var(--paper); border:1px solid var(--ink); padding:6px;}
+  /* a camera-dolly feel: the frame starts small/pulled back and swoops
+     toward the viewer with a slight overshoot before settling flat.
+     2D-only (no perspective/preserve-3d/translateZ) — Safari can fail to
+     paint an iframe at all when it sits inside a 3D transform context,
+     which made the video play (audio) but never actually show */
   .overlay.open .player-wrap{animation:cameraDolly .6s cubic-bezier(.22,1,.36,1);}
   @keyframes cameraDolly{
-    0%{ transform:translateZ(-260px) translateY(26px) rotateX(10deg) scale(.82); opacity:0; }
-    65%{ transform:translateZ(18px) translateY(-4px) rotateX(-1.5deg) scale(1.015); opacity:1; }
-    100%{ transform:translateZ(0) translateY(0) rotateX(0deg) scale(1); opacity:1; }
+    0%{ transform:translateY(26px) scale(.82); opacity:0; }
+    65%{ transform:translateY(-4px) scale(1.03); opacity:1; }
+    100%{ transform:translateY(0) scale(1); opacity:1; }
   }
   .overlay.closing{background:rgba(15,13,9,0); transition:background .35s ease;}
   .overlay.closing .player-wrap{animation:popIn .35s cubic-bezier(.4,0,.7,1) forwards;}
