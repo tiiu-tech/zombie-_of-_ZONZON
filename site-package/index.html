@@ -65,12 +65,12 @@
      not just hovered — magnetic buttons get their own JS version of this
      so the two don't fight over the transform property */
   .ctrl-btn, .bgm-play-btn, .bgm-toggle, .scroll-close, .sp-speak, .play-btn,
-  .lang-btn, .bgm-head, details.how summary{
+  .lang-btn, .bgm-head, details.how summary, .bgm-track-open, .bgm-dial-hole, .bgm-dial-close{
     transition:transform .12s cubic-bezier(.4,0,.6,1), background .18s ease, color .18s ease;
   }
   .ctrl-btn:active, .bgm-play-btn:active, .bgm-toggle:active, .scroll-close:active,
   .sp-speak:active, .play-btn:active, .lang-btn:active, .bgm-head:active,
-  details.how summary:active{
+  details.how summary:active, .bgm-track-open:active, .bgm-dial-close:active{
     transform:scale(.92);
   }
   .fx-link:hover{letter-spacing:.07em; color:var(--red-bright);}
@@ -126,7 +126,6 @@
   .cast-card{perspective:1000px; height:190px; cursor:var(--cursor-tap); transition:transform .25s cubic-bezier(.22,1,.36,1);
     position:relative; z-index:1;}
   .cast-card.flipped{z-index:5;}
-  .cast-card:hover{transform:translateY(-6px);}
   .cast-inner{position:relative; width:100%; height:100%; transition:transform .5s; transform-style:preserve-3d;}
   .cast-card.flipped .cast-inner{transform:rotateY(180deg);}
   .cast-face, .cast-back{position:absolute; inset:0; backface-visibility:hidden; border:1px solid var(--ink); border-radius:0;
@@ -208,8 +207,38 @@
   /* an invisible counterweight matching the side column's width, so the
      photo itself lands dead-center on the page instead of the whole
      photo+text pair being centered as one lopsided block */
-  .stage-spacer{flex:0 0 260px;}
+  .stage-spacer{flex:0 0 260px; display:flex; align-items:stretch;}
   @media (max-width:820px){ .stage-main{flex-direction:column;} .stage-spacer{display:none;} }
+
+  /* a little arcade fixture living in the counterweight column — reuses
+     motif art that used to sit in the now-removed "coming soon" cards */
+  .slot-machine{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:12px; background:linear-gradient(180deg, #23201b, #100e0b); border:1px solid var(--ink);
+    box-shadow:inset 0 0 0 1px rgba(233,225,205,0.08), 0 20px 44px rgba(28,24,17,0.28); padding:16px 12px;}
+  .slot-marquee{font-family:'Anton',sans-serif; letter-spacing:.1em; font-size:13px; color:var(--red-bright);
+    text-shadow:0 0 6px rgba(178,58,72,.7); text-align:center;}
+  .slot-window{position:relative; display:flex; gap:8px; background:#000; border:2px solid #3a352c;
+    border-radius:4px; padding:8px; box-shadow:inset 0 3px 10px rgba(0,0,0,.8);}
+  .slot-reel{position:relative; width:66px; height:66px; background:#0c0a08; border:1px solid #2a251d;
+    border-radius:3px; overflow:hidden; display:flex; align-items:center; justify-content:center;}
+  .slot-reel img{width:88%; height:88%; object-fit:contain; filter:sepia(15%) contrast(1.05);}
+  .slot-reel.spinning img{filter:sepia(15%) contrast(1.05) blur(2.5px);}
+  .slot-payline{position:absolute; left:6px; right:6px; top:50%; height:2px; margin-top:-1px;
+    background:rgba(178,58,72,.55); pointer-events:none; z-index:2;}
+  .slot-lever{font-family:'Anton',sans-serif; letter-spacing:.08em; font-size:13px; color:var(--paper);
+    background:var(--red); border:1px solid var(--paper); border-radius:20px; padding:8px 22px;
+    cursor:var(--cursor-tap); box-shadow:0 3px 0 #6e1f26; transition:transform .08s ease, box-shadow .08s ease, background .18s ease;}
+  .slot-lever:hover{background:var(--red-bright);}
+  .slot-lever:active, .slot-lever.pulling{transform:translateY(3px); box-shadow:0 0 0 #6e1f26;}
+  .slot-lever:disabled{opacity:.5; cursor:default;}
+  .slot-jackpot{font-family:'Anton',sans-serif; letter-spacing:.06em; font-size:18px; text-align:center;
+    color:#fff2b8; text-shadow:0 0 6px #ffce4a, 0 0 16px #ff9a2e; opacity:0; height:1.3em; margin:0;}
+  .slot-jackpot.show{opacity:1; animation:jackpotFlash .35s steps(2) infinite;}
+  @keyframes jackpotFlash{ 0%,100%{ opacity:1; } 50%{ opacity:.25; } }
+  .slot-window.win{animation:winShake .4s ease-in-out 2;}
+  @keyframes winShake{
+    0%,100%{ transform:translateX(0); } 25%{ transform:translateX(-4px); } 75%{ transform:translateX(4px); }
+  }
   .stage-photo{position:relative; background:#000; flex:1 1 auto; min-width:0; height:clamp(300px,58vh,600px);
     overflow:hidden; border:1px solid var(--ink); box-shadow:0 20px 44px rgba(28,24,17,0.28);}
   .stage-photo.pop{animation:heroPop .5s cubic-bezier(.34,1.56,.64,1);}
@@ -266,7 +295,7 @@
   }
   .fan-track .card:first-child{margin-left:0;}
   .card.sel{
-    border-radius:14px; border-color:var(--red);
+    border-radius:7px; border-color:var(--red);
     animation:cardGlow 1.5s ease-in-out infinite alternate, cardPop .5s cubic-bezier(.34,1.56,.64,1) forwards;
   }
   @keyframes cardGlow{
@@ -447,9 +476,10 @@
     overflow:hidden; text-overflow:ellipsis;}
   .bgm-track-sub{font-family:'Courier Prime',monospace; font-size:8.5px; color:rgba(233,225,205,0.65);
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .bgm-track-select{font-family:'Courier Prime',monospace; font-size:8px; color:rgba(233,225,205,0.85);
+  .bgm-track-open{font-family:'Courier Prime',monospace; font-size:9px; letter-spacing:.04em; color:rgba(233,225,205,0.9);
     background:rgba(255,255,255,0.08); border:1px solid rgba(233,225,205,0.3); border-radius:2px;
-    padding:1px 2px; max-width:100%; cursor:var(--cursor-tap);}
+    padding:2px 6px; max-width:100%; cursor:var(--cursor-tap); transition:background .18s ease, border-color .18s ease;}
+  .bgm-track-open:hover{background:rgba(255,255,255,0.16); border-color:var(--red-bright); color:#fff;}
   .bgm-volume{width:56px; accent-color:var(--red-bright); cursor:var(--cursor-tap); flex-shrink:0;}
   .bgm-link-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 10px;
     border:1px solid var(--ink); background:var(--paper-2); margin-bottom:7px; text-decoration:none; color:var(--ink);}
@@ -478,7 +508,7 @@
   @keyframes neonFlicker{
     0%{opacity:0;} 8%{opacity:1;} 13%{opacity:.35;} 21%{opacity:1;} 29%{opacity:.55;} 38%{opacity:1;} 100%{opacity:1;}
   }
-  .bgm-zoom-preview{position:fixed; z-index:70; width:420px; max-width:88vw; pointer-events:none;
+  .bgm-zoom-preview{position:fixed; z-index:70; width:560px; max-width:92vw; pointer-events:none;
     opacity:0; transform:scale(.82); transform-origin:bottom right;
     transition:opacity .1s ease, transform .22s cubic-bezier(.22,1.5,.36,1);
     border-radius:6px; overflow:hidden; background:#0c0c10;
@@ -503,13 +533,44 @@
   .bgm-zoom-preview img{display:block; width:100%; height:auto;}
   .bgm-zoom-highlight{position:absolute; border:2px solid var(--red-bright); border-radius:4px;
     box-shadow:0 0 0 3px rgba(178,58,72,.35), 0 0 18px 5px rgba(178,58,72,.55);}
-  .bgm-zoom-cursor{position:absolute; z-index:4; font-size:34px; transform:translate(-18%,-12%);
+  .bgm-zoom-cursor{position:absolute; z-index:4; font-size:44px; transform:translate(-18%,-12%);
     filter:drop-shadow(0 3px 6px rgba(0,0,0,.55)); pointer-events:none;}
-  .bgm-zoom-caption{position:absolute; left:0; right:0; bottom:0; padding:7px 10px;
-    background:linear-gradient(to top, rgba(0,0,0,.85), transparent);
-    font-family:'Anton',sans-serif; letter-spacing:.05em; font-size:15px; color:#eafcff;
-    text-shadow:0 0 6px #4fd6ff; text-align:center;}
+  .bgm-zoom-caption{position:absolute; left:0; right:0; bottom:0; padding:12px 14px;
+    background:linear-gradient(to top, rgba(0,0,0,.88), transparent);
+    font-family:'Anton',sans-serif; letter-spacing:.05em; font-size:22px; color:#eafcff;
+    text-shadow:0 0 8px #4fd6ff; text-align:center;}
   .bgm-note{font-family:'Courier Prime',monospace; font-size:8.5px; color:var(--ink-soft); margin-top:2px; line-height:1.5;}
+
+  /* ---------- BGM rotary-dial track picker ---------- */
+  .bgm-dial-overlay{position:fixed; inset:0; z-index:80; background:rgba(10,8,6,0.92); display:none;
+    align-items:center; justify-content:center; padding:20px;}
+  .bgm-dial-overlay.open{display:flex;}
+  .bgm-dial-panel{position:relative; width:min(380px,92vw); background:var(--paper); border:1px solid var(--ink);
+    padding:30px 22px 24px; text-align:center; box-shadow:0 24px 55px rgba(0,0,0,0.55);}
+  .bgm-dial-close{position:absolute; top:8px; right:8px; width:28px; height:28px; border-radius:50%;
+    border:1px solid var(--ink); background:var(--paper-2); color:var(--ink); font-size:14px; cursor:var(--cursor-tap);}
+  .bgm-dial-close:hover{background:var(--red); color:var(--paper); border-color:var(--red);}
+  .bgm-dial-title{font-family:'Anton',sans-serif; letter-spacing:.08em; font-size:21px; color:var(--ink); margin-bottom:20px;}
+  .bgm-dial-wrap{position:relative; width:260px; height:260px; margin:0 auto 18px;}
+  .bgm-dial-base{position:absolute; inset:0; border-radius:50%;
+    background:radial-gradient(circle at 34% 28%, #423d34, #16130e 72%);
+    box-shadow:inset 0 0 0 7px #0b0906, inset 0 -8px 18px rgba(0,0,0,.6), 0 14px 28px rgba(0,0,0,.5);}
+  .bgm-dial-face{position:absolute; inset:0; border-radius:50%; transform:rotate(0deg);}
+  .bgm-dial-hole{position:absolute; width:50px; height:50px; margin:-25px 0 0 -25px; border-radius:50%;
+    background:var(--paper); box-shadow:inset 0 2px 5px rgba(0,0,0,.45), 0 1px 1px rgba(255,255,255,.2);
+    display:flex; align-items:center; justify-content:center; font-family:'Anton',sans-serif; font-size:19px;
+    color:var(--ink); cursor:var(--cursor-tap); transition:background .18s ease, box-shadow .18s ease, color .18s ease;}
+  .bgm-dial-hole:hover{background:#fff8ea; box-shadow:inset 0 2px 5px rgba(0,0,0,.3), 0 0 0 3px var(--red-bright);}
+  .bgm-dial-hole.active{background:var(--red); color:var(--paper);}
+  .bgm-dial-stop{position:absolute; top:-3px; left:50%; width:7px; height:20px; margin-left:-3.5px;
+    background:linear-gradient(#d8cfba,#8a8072); border-radius:2px; box-shadow:0 2px 3px rgba(0,0,0,.4); z-index:3;}
+  .bgm-dial-cap{position:absolute; left:50%; top:50%; width:76px; height:76px; margin:-38px 0 0 -38px;
+    border-radius:50%; background:radial-gradient(circle at 38% 32%, #514c42, #1c1913 75%);
+    box-shadow:inset 0 0 0 3px #0b0906, 0 4px 10px rgba(0,0,0,.5); z-index:2;
+    display:flex; align-items:center; justify-content:center; font-size:22px;}
+  .bgm-dial-cap::after{content:'☎'; color:rgba(233,225,205,.8);}
+  .bgm-dial-readout{font-family:'Shippori Mincho',serif; font-weight:700; font-size:16px; color:var(--ink);
+    min-height:1.6em; line-height:1.4;}
 
   /* ---------- motion upgrade: hover spotlight, magnetic buttons, kinetic type, ink bursts ---------- */
   .spotlight{position:fixed; width:360px; height:360px; border-radius:50%; pointer-events:none; z-index:1;
@@ -584,7 +645,19 @@
   <section class="stage" id="heroSection">
     <div class="stage-inner">
       <div class="stage-main">
-        <div class="stage-spacer" aria-hidden="true"></div>
+        <div class="stage-spacer">
+          <div class="slot-machine" id="slotMachine">
+            <div class="slot-marquee">LUCKY FILE</div>
+            <div class="slot-window" id="slotWindow">
+              <div class="slot-reel" id="slotReel0"><img id="slotImg0" alt=""></div>
+              <div class="slot-reel" id="slotReel1"><img id="slotImg1" alt=""></div>
+              <div class="slot-reel" id="slotReel2"><img id="slotImg2" alt=""></div>
+              <div class="slot-payline"></div>
+            </div>
+            <p class="slot-jackpot" id="slotJackpot">GOGO!!</p>
+            <button class="slot-lever" id="slotLever" type="button">PULL</button>
+          </div>
+        </div>
         <div class="stage-photo">
           <img id="heroImg" alt="">
           <div class="hero-preview" id="heroPreview"><div id="heroPreviewPlayer"></div></div>
@@ -680,14 +753,8 @@
     <div class="bgm-player" id="bgmPlayer">
       <button class="bgm-play-btn" id="bgmPlayBtn">▶</button>
       <div class="bgm-track-info">
-        <div class="bgm-track-name">Purun Purip Rappa</div>
-        <select class="bgm-track-select" id="bgmTrackSelect">
-          <option value="assets/bgm-glitched-electro.mp3">Glitched Electro Echo Mix</option>
-          <option value="assets/bgm-glitched-electro-2.mp3">Glitched Electro Echo Mix (Alt)</option>
-          <option value="assets/bgm-retro-anime.mp3">Retro Cute Anime OP Mix</option>
-          <option value="assets/bgm-retro-anime-2.mp3">Retro Cute Anime OP Mix (Alt)</option>
-          <option value="assets/bgm-hype-harmony.mp3">2nd Performance Hype Harmony Ver.</option>
-        </select>
+        <div class="bgm-track-name" id="bgmTrackName">Purun Purip Rappa</div>
+        <button class="bgm-track-open" id="bgmTrackOpen" type="button">☎ DIAL A TRACK</button>
       </div>
       <input type="range" class="bgm-volume" id="bgmVolume" min="0" max="100" value="55" aria-label="Volume">
     </div>
@@ -708,6 +775,20 @@
   </div>
 </div>
 <audio id="bgmAudio" src="assets/bgm-glitched-electro.mp3" loop preload="none"></audio>
+
+<div class="bgm-dial-overlay" id="bgmDialOverlay">
+  <div class="bgm-dial-panel">
+    <button class="bgm-dial-close" id="bgmDialClose" type="button" aria-label="Close">✕</button>
+    <div class="bgm-dial-title" id="bgmDialTitle">DIAL A TRACK</div>
+    <div class="bgm-dial-wrap">
+      <div class="bgm-dial-base"></div>
+      <div class="bgm-dial-face" id="bgmDialFace"></div>
+      <div class="bgm-dial-stop"></div>
+      <div class="bgm-dial-cap"></div>
+    </div>
+    <div class="bgm-dial-readout" id="bgmDialReadout"></div>
+  </div>
+</div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
@@ -886,6 +967,12 @@ function sfxCastHover(){
 function sfxBgmBlip(){
   try{ ensureAudio(); const t0 = audioCtx.currentTime;
     tone(1200, 1800, t0, 0.05, 'square', 0.035, 0);
+  }catch(e){}
+}
+// a quick typewriter-key tick for the synopsis popup's character-by-character reveal
+function sfxTypeTick(){
+  try{ ensureAudio(); const t0 = audioCtx.currentTime;
+    tone(1350 + Math.random()*450, 900, t0, 0.026, 'square', 0.02, 0);
   }catch(e){}
 }
 document.addEventListener('pointerdown', ()=>ensureAudio(), { once:true });
@@ -1311,6 +1398,7 @@ const popup = document.getElementById('synopsisPopup');
 const spFile = document.getElementById('spFile');
 const spBody = document.getElementById('spBody');
 let typeTimer = null;
+let lastTypeSfxAt = 0;
 
 function showSynopsis(cardEl, ep, idx, title){
   const data = (SYNOPSIS[ep.id] && SYNOPSIS[ep.id][currentLang]) ? SYNOPSIS[ep.id][currentLang] : SYNOPSIS_FALLBACK[currentLang];
@@ -1361,6 +1449,10 @@ function typewriterReveal(container, text){
       const s = document.createElement('span'); s.className='mc'; s.textContent = ch; return s;
     })();
     container.insertBefore(node, cursor);
+    if(ch.trim() !== ''){
+      const now = performance.now();
+      if(now - lastTypeSfxAt > 35){ sfxTypeTick(); lastTypeSfxAt = now; }
+    }
     i++;
     typeTimer = setTimeout(tick, stepTime);
   }
@@ -1892,16 +1984,144 @@ bgmPlayBtn.onclick = ()=>{
   else { bgmAudio.pause(); bgmPlayBtn.textContent = '▶'; }
 };
 bgmVolume.addEventListener('input', ()=>{ bgmAudio.volume = bgmVolume.value / 100; });
-document.getElementById('bgmTrackSelect').addEventListener('change', (e)=>{
-  const wasPlaying = !bgmAudio.paused;
-  bgmAudio.src = e.target.value;
-  if(wasPlaying){ bgmAudio.play().catch(()=>{}); }
-});
+
+/* ---------- rotary-dial track picker: pull a hole to the stop, it springs
+   back and dials in that track — like an old black telephone ---------- */
+const LOCAL_BGM_TRACKS = [
+  { src:'assets/bgm-glitched-electro.mp3', label:'Glitched Electro Echo Mix' },
+  { src:'assets/bgm-glitched-electro-2.mp3', label:'Glitched Electro Echo Mix (Alt)' },
+  { src:'assets/bgm-retro-anime.mp3', label:'Retro Cute Anime OP Mix' },
+  { src:'assets/bgm-retro-anime-2.mp3', label:'Retro Cute Anime OP Mix (Alt)' },
+  { src:'assets/bgm-hype-harmony.mp3', label:'2nd Performance Hype Harmony Ver.' },
+];
+(function setupBgmDial(){
+  const overlay = document.getElementById('bgmDialOverlay');
+  const face = document.getElementById('bgmDialFace');
+  const readout = document.getElementById('bgmDialReadout');
+  const trackNameEl = document.getElementById('bgmTrackName');
+  const openBtn = document.getElementById('bgmTrackOpen');
+  const closeBtn = document.getElementById('bgmDialClose');
+
+  const n = LOCAL_BGM_TRACKS.length;
+  const GAP = 60, span = 360 - GAP, step = span / (n - 1);
+  const R = 94, C = 130; // wrap is 260x260
+  const pullAmount = LOCAL_BGM_TRACKS.map((t, i)=> GAP/2 + i*step);
+  const restAngle = pullAmount.map(p => (360 - p) % 360);
+
+  let currentIndex = 0;
+  let rotating = false;
+  const holes = [];
+
+  LOCAL_BGM_TRACKS.forEach((t, i)=>{
+    const rad = (restAngle[i]) * Math.PI/180;
+    const x = C + R*Math.sin(rad), y = C - R*Math.cos(rad);
+    const hole = document.createElement('div');
+    hole.className = 'bgm-dial-hole';
+    hole.style.left = x + 'px'; hole.style.top = y + 'px';
+    hole.textContent = String(i+1);
+    hole.title = t.label;
+    hole.addEventListener('mouseenter', ()=>{ if(!rotating) readout.textContent = t.label; });
+    hole.addEventListener('mouseleave', ()=>{ if(!rotating) readout.textContent = LOCAL_BGM_TRACKS[currentIndex].label; });
+    hole.addEventListener('click', ()=> dial(i));
+    face.appendChild(hole);
+    holes.push(hole);
+  });
+
+  function selectTrack(i){
+    currentIndex = i;
+    holes.forEach((h, hi)=> h.classList.toggle('active', hi===i));
+    const t = LOCAL_BGM_TRACKS[i];
+    trackNameEl.textContent = t.label;
+    readout.textContent = t.label;
+    const wasPlaying = !bgmAudio.paused;
+    bgmAudio.src = t.src;
+    if(wasPlaying) bgmAudio.play().catch(()=>{});
+  }
+
+  function dial(i){
+    if(rotating) return;
+    rotating = true;
+    if(typeof sfxClick === 'function') sfxClick();
+    face.style.transition = 'transform .5s cubic-bezier(.55,0,.85,.35)';
+    face.style.transform = `rotate(${pullAmount[i]}deg)`;
+    const onPull = ()=>{
+      face.removeEventListener('transitionend', onPull);
+      selectTrack(i);
+      face.style.transition = 'transform .6s cubic-bezier(.25,1.4,.4,1)';
+      face.style.transform = 'rotate(0deg)';
+      face.addEventListener('transitionend', ()=>{ rotating = false; }, { once:true });
+    };
+    face.addEventListener('transitionend', onPull, { once:true });
+  }
+
+  selectTrack(0);
+  openBtn.addEventListener('click', ()=>{
+    readout.textContent = LOCAL_BGM_TRACKS[currentIndex].label;
+    overlay.classList.add('open');
+  });
+  closeBtn.addEventListener('click', ()=> overlay.classList.remove('open'));
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) overlay.classList.remove('open'); });
+})();
 
 buildBgmLinks();
 document.getElementById('bgmNote').textContent = currentLang==='ja'
   ? '※ Spotifyが開きます。ログイン済みならフル再生、未ログインなら試聴のみになります。'
   : '※ Opens in Spotify. Full playback if you\'re logged in there; preview only if not.';
+
+/* ---------- lucky-file slot machine — three reels of leftover motif art,
+   pull the lever, three-in-a-row is a jackpot (Juggler-style GOGO flash) ---------- */
+(function setupSlotMachine(){
+  const SYMBOLS = [
+    'assets/motif-hq-raid.png',
+    'assets/motif-gochagocha-base.png',
+    'assets/motif-rusty-raider.png',
+    'assets/motif-graffiti-pole.png',
+  ];
+  const reelImgs = [document.getElementById('slotImg0'), document.getElementById('slotImg1'), document.getElementById('slotImg2')];
+  const reelEls = [document.getElementById('slotReel0'), document.getElementById('slotReel1'), document.getElementById('slotReel2')];
+  const lever = document.getElementById('slotLever');
+  const windowEl = document.getElementById('slotWindow');
+  const jackpotEl = document.getElementById('slotJackpot');
+  const rand = ()=> Math.floor(Math.random()*SYMBOLS.length);
+  reelImgs.forEach(img => img.src = SYMBOLS[rand()]);
+
+  function spinReel(i, duration, finalIdx){
+    return new Promise(resolve=>{
+      reelEls[i].classList.add('spinning');
+      const iv = setInterval(()=>{ reelImgs[i].src = SYMBOLS[rand()]; }, 65);
+      setTimeout(()=>{
+        clearInterval(iv);
+        reelImgs[i].src = SYMBOLS[finalIdx];
+        reelEls[i].classList.remove('spinning');
+        resolve();
+      }, duration);
+    });
+  }
+
+  let spinning = false;
+  lever.addEventListener('click', async ()=>{
+    if(spinning) return;
+    spinning = true;
+    lever.disabled = true;
+    jackpotEl.classList.remove('show');
+    windowEl.classList.remove('win');
+    if(typeof sfxClick === 'function') sfxClick();
+    const results = [rand(), rand(), rand()];
+    await Promise.all([
+      spinReel(0, 650, results[0]),
+      spinReel(1, 1000, results[1]),
+      spinReel(2, 1450, results[2]),
+    ]);
+    if(results[0] === results[1] && results[1] === results[2]){
+      jackpotEl.classList.add('show');
+      windowEl.classList.add('win');
+      const r = windowEl.getBoundingClientRect();
+      burstInk(r.left + r.width/2, r.top + r.height/2);
+    }
+    spinning = false;
+    lever.disabled = false;
+  });
+})();
 
 /* ============================================================
    MOTION UPGRADE — hover spotlight, magnetic buttons,
@@ -2000,7 +2220,7 @@ function burstInk(x, y){
 // custom neon-arrow cursor over tappable elements — idly wiggles like it's
 // nudging you to click if you hover and stay still for a moment
 document.body.classList.add('jscursor');
-const CURSOR_SELECTOR = '.fx-link, .cast-card, .card:not(.coming), .history-row, details.how summary, .seek-track, .ctrl-btn, .scroll-close, .sp-speak, .sp-play, .bgm-head, .bgm-toggle, .bgm-link-row, .bgm-hotspot, .cast-evidence';
+const CURSOR_SELECTOR = '.fx-link, .cast-card, .card:not(.coming), .history-row, details.how summary, .seek-track, .ctrl-btn, .scroll-close, .sp-speak, .sp-play, .bgm-head, .bgm-toggle, .bgm-link-row, .bgm-hotspot, .cast-evidence, .bgm-track-open, .bgm-dial-hole, .bgm-dial-close, .slot-lever';
 const customCursor = document.getElementById('customCursor');
 const customCursorImg = document.getElementById('customCursorImg');
 let cursorLastMoveAt = Date.now();
