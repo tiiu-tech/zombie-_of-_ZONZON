@@ -45,15 +45,30 @@
   ::selection{background:var(--red); color:var(--paper);}
 
   body::before{
-    content:''; position:fixed; inset:0; pointer-events:none; z-index:1; opacity:.5;
+    content:''; position:fixed; inset:-6px; pointer-events:none; z-index:1; opacity:.5;
     background-image:radial-gradient(rgba(28,24,17,0.05) 1px, transparent 1px),
       radial-gradient(rgba(28,24,17,0.04) 1px, transparent 1px);
     background-size:3px 3px, 5px 5px; background-position:0 0, 2px 2px; mix-blend-mode:multiply;
+    animation:paperGrainWobble 14s ease-in-out infinite;
+  }
+  /* the paper texture drifts a hair, like grain settling under light rather
+     than sitting perfectly still */
+  @keyframes paperGrainWobble{
+    0%,100%{ transform:translate(0,0); } 25%{ transform:translate(1.5px,-1px); }
+    50%{ transform:translate(-1px,1.5px); } 75%{ transform:translate(1px,1px); }
   }
   body::after{
     content:''; position:fixed; inset:0; pointer-events:none; z-index:1;
     background:radial-gradient(ellipse at center, transparent 40%, rgba(28,24,17,0.10) 100%);
   }
+
+  /* a solid curtain that drops down to cover a state change, then lifts
+     away to reveal it — used for the language toggle */
+  .curtain-wipe{position:fixed; inset:0; z-index:300; background:var(--ink); pointer-events:none; transform:translateY(-100%);}
+  .curtain-wipe.down{animation:curtainDown .38s cubic-bezier(.7,0,.3,1) forwards;}
+  .curtain-wipe.up{animation:curtainUp .38s cubic-bezier(.7,0,.3,1) forwards;}
+  @keyframes curtainDown{ from{ transform:translateY(-100%); } to{ transform:translateY(0); } }
+  @keyframes curtainUp{ from{ transform:translateY(0); } to{ transform:translateY(100%); } }
 
   .serif{font-family:'Shippori Mincho',serif;}
   .display{font-family:'Playfair Display',serif;}
@@ -82,6 +97,11 @@
   .lang-btn{font-family:'Courier Prime',monospace; font-size:10.5px; letter-spacing:.08em; background:var(--ink); color:var(--paper);
     border:none; padding:4px 10px; cursor:var(--cursor-tap);}
   .lang-btn:hover{background:var(--red);}
+  /* the label swaps via a line-slide instead of an instant text change */
+  .line-swap{position:relative; display:inline-block; height:1em; overflow:hidden; vertical-align:top;}
+  .line-swap .ls-a, .line-swap .ls-b{display:block; transition:transform .32s cubic-bezier(.65,0,.35,1);}
+  .line-swap .ls-b{position:absolute; left:0; top:100%;}
+  .lang-btn:hover .ls-a, .lang-btn:hover .ls-b{transform:translateY(-100%);}
   .masthead{display:flex; align-items:center; justify-content:center; padding:16px 0 8px; text-align:center;}
   .masthead h1{font-family:'Playfair Display',serif; font-weight:900; font-size:44px; margin:0; letter-spacing:.01em; line-height:1;
     position:relative; display:inline-block;}
@@ -104,10 +124,7 @@
     font-family:'Courier Prime',monospace; font-size:11px; letter-spacing:.06em; padding:8px 14px; white-space:nowrap;}
   .ticker-btn:hover{background:var(--red-bright);}
 
-  main{position:relative; z-index:2; max-width:1080px; margin:0 auto; padding:26px 24px 90px;
-    transition:opacity .18s ease;}
-  main.lang-transition{opacity:.2;}
-  ::view-transition-old(root), ::view-transition-new(root){ animation-duration:.32s; }
+  main{position:relative; z-index:2; max-width:1080px; margin:0 auto; padding:26px 24px 90px;}
 
   /* ---------- section reveal: fade + rise on page load and on first scroll into view ---------- */
   .reveal{opacity:0; transform:translateY(22px); transition:opacity .65s cubic-bezier(.22,1,.36,1), transform .65s cubic-bezier(.22,1,.36,1);}
@@ -370,9 +387,17 @@
   }
   .fan-track .card:first-child{margin-left:0;}
   .card.sel{
-    border-radius:7px; border-color:var(--red);
+    border-radius:7px; border-color:var(--red); isolation:isolate;
     animation:cardGlow 1.5s ease-in-out infinite alternate, cardPop .5s cubic-bezier(.34,1.56,.64,1) forwards;
   }
+  /* a "liquid metal" ring of light flowing around the selected card's edge */
+  .card.sel::before{
+    content:''; position:absolute; inset:-3px; z-index:-1; border-radius:inherit; pointer-events:none;
+    background:conic-gradient(from 0deg, transparent 0deg, #fff 14deg, var(--red-bright) 38deg,
+      transparent 88deg, transparent 272deg, var(--red) 318deg, #fff 344deg, transparent 360deg);
+    animation:liquidMetalSpin 2.3s linear infinite;
+  }
+  @keyframes liquidMetalSpin{ to{ transform:rotate(360deg); } }
   @keyframes cardGlow{
     0%{ box-shadow:0 0 0 2px var(--red), 0 0 10px 1px rgba(178,58,72,0.35), 0 18px 20px rgba(28,24,17,0.38); }
     100%{ box-shadow:0 0 0 2px var(--red-bright), 0 0 20px 6px rgba(178,58,72,0.6), 0 18px 20px rgba(28,24,17,0.38); }
@@ -447,11 +472,18 @@
   /* highest of all the full-screen overlays (BGM dial 80, evidence lightbox
      90/95) — the video is the primary experience and must never end up
      playing invisibly behind another leftover overlay */
-  .overlay{position:fixed; inset:0; background:rgba(15,13,9,0.95); z-index:100; display:none; align-items:center; justify-content:center; padding:20px;}
+  .overlay{position:fixed; inset:0; background:rgba(15,13,9,0.95); z-index:100; display:none; align-items:center; justify-content:center; padding:20px;
+    perspective:900px;}
   .overlay.open{display:flex;}
-  .player-wrap{width:fit-content; max-width:96vw; background:var(--paper); border:1px solid var(--ink); padding:6px;}
-  .overlay.open .player-wrap{animation:popOut .5s cubic-bezier(.22,1.4,.36,1);}
-  @keyframes popOut{ 0%{transform:scale(.55); opacity:0;} 60%{transform:scale(1.03); opacity:1;} 100%{transform:scale(1);} }
+  .player-wrap{width:fit-content; max-width:96vw; background:var(--paper); border:1px solid var(--ink); padding:6px; transform-style:preserve-3d;}
+  /* a camera-dolly feel: the frame starts small/tilted/pulled back and
+     swoops toward the viewer with a slight overshoot before settling flat */
+  .overlay.open .player-wrap{animation:cameraDolly .6s cubic-bezier(.22,1,.36,1);}
+  @keyframes cameraDolly{
+    0%{ transform:translateZ(-260px) translateY(26px) rotateX(10deg) scale(.82); opacity:0; }
+    65%{ transform:translateZ(18px) translateY(-4px) rotateX(-1.5deg) scale(1.015); opacity:1; }
+    100%{ transform:translateZ(0) translateY(0) rotateX(0deg) scale(1); opacity:1; }
+  }
   .overlay.closing{background:rgba(15,13,9,0); transition:background .35s ease;}
   .overlay.closing .player-wrap{animation:popIn .35s cubic-bezier(.4,0,.7,1) forwards;}
   @keyframes popIn{ 0%{transform:scale(1); opacity:1;} 100%{transform:scale(.55); opacity:0;} }
@@ -481,9 +513,12 @@
     left:0%; transform:translateX(-50%); pointer-events:none; transition:transform .1s ease;}
   .seek-track:hover .seek-knob, .seek-track.dragging .seek-knob{transform:translateX(-50%) scale(1.3);}
   .ctrl-bar{position:absolute; left:8px; bottom:20px; z-index:3; display:flex; gap:6px;}
-  .ctrl-btn{background:rgba(28,24,17,0.72); color:var(--paper); border:1px solid rgba(233,225,205,0.4); border-radius:3px;
-    width:30px; height:30px; font-size:13px; cursor:var(--cursor-tap);}
-  .ctrl-btn:hover{background:var(--red);}
+  .ctrl-btn{background:radial-gradient(circle at 35% 30%, rgba(80,72,58,.85), rgba(20,17,12,.85) 78%);
+    color:var(--paper); border:1px solid rgba(233,225,205,0.4); border-radius:50%;
+    width:30px; height:30px; font-size:13px; cursor:var(--cursor-tap);
+    box-shadow:inset 0 1px 1px rgba(255,255,255,.35), inset 0 -2px 3px rgba(0,0,0,.5), 0 2px 3px rgba(0,0,0,.4);}
+  .ctrl-btn:hover{background:radial-gradient(circle at 35% 30%, var(--red-bright), var(--red) 78%);}
+  .ctrl-btn:active{box-shadow:inset 0 2px 4px rgba(0,0,0,.6), inset 0 -1px 1px rgba(255,255,255,.15);}
   .copy-toast{position:absolute; left:8px; bottom:56px; z-index:4; background:var(--ink); color:var(--paper);
     font-family:'Courier Prime',monospace; font-size:10.5px; letter-spacing:.05em; padding:6px 12px;
     opacity:0; transform:translateY(6px); transition:opacity .2s ease, transform .2s ease; pointer-events:none;}
@@ -501,6 +536,12 @@
   .scroll-popup{position:fixed; z-index:70; width:min(310px, 82vw); opacity:0; transform:scaleY(.05); transform-origin:top center;
     transition:opacity .3s ease, transform .35s cubic-bezier(.22,1,.36,1); pointer-events:none;}
   .scroll-popup.show{opacity:1; transform:scaleY(1); pointer-events:auto;}
+  /* closing flicks the card away instead of just shrinking back down */
+  .scroll-popup.dismiss{transition:none; animation:popupFlickAway .4s cubic-bezier(.5,-0.2,.7,.3) forwards; pointer-events:none;}
+  @keyframes popupFlickAway{
+    0%{ transform:scaleY(1) translate(0,0) rotate(0deg); opacity:1; }
+    100%{ transform:scaleY(.7) translate(60px,-42px) rotate(18deg); opacity:0; }
+  }
   .scroll-cap{height:13px; background:linear-gradient(180deg, #c9bc98, var(--paper-2) 65%); border:1px solid var(--ink); border-radius:9px;
     box-shadow:0 2px 3px rgba(0,0,0,0.28);}
   .scroll-inner{background:var(--paper); border-left:1px solid var(--ink); border-right:1px solid var(--ink); padding:14px 16px 10px;
@@ -528,9 +569,16 @@
 
   /* ---------- magnifying-glass lens ---------- */
   .lens{position:fixed; width:120px; height:120px; border-radius:50%; border:6px solid #3b2f22;
-    box-shadow:0 4px 10px rgba(0,0,0,0.4), inset 0 0 0 2px rgba(255,255,255,0.35);
+    box-shadow:0 4px 10px rgba(0,0,0,0.4), inset 0 0 0 2px rgba(255,255,255,0.35),
+      inset 0 -4px 7px rgba(0,0,0,.22), inset 0 4px 9px rgba(255,255,255,.55),
+      0 0 0 1.5px rgba(255,60,60,.5), 0 0 0 3px rgba(60,220,255,.32);
     overflow:hidden; pointer-events:none; z-index:80; display:none; background:var(--paper);}
   .lens.show{display:block;}
+  /* glass-shader gloss: a bright highlight arcing across the upper-left,
+     as if light is refracting through the lens */
+  .lens::before{content:''; position:absolute; inset:0; border-radius:50%; z-index:2;
+    background:radial-gradient(circle at 32% 26%, rgba(255,255,255,.6), rgba(255,255,255,.06) 34%, transparent 55%);
+    mix-blend-mode:screen; pointer-events:none;}
   .lens::after{content:''; position:absolute; width:14px; height:44px; background:#3b2f22; border-radius:6px;
     right:-9px; bottom:-32px; transform:rotate(45deg); box-shadow:0 3px 4px rgba(0,0,0,0.3);}
   .lens-inner{position:absolute; top:0; left:0; font-family:'Shippori Mincho',serif; font-size:12.5px; line-height:1.85; color:var(--ink-soft); white-space:normal;}
@@ -692,7 +740,7 @@
 <header>
   <div class="masthead-top">
     <span id="editionDate"></span>
-    <button class="lang-btn fx-link" id="langBtn">日本語</button>
+    <button class="lang-btn fx-link" id="langBtn"><span class="line-swap"><span class="ls-a">日本語</span><span class="ls-b" aria-hidden="true">日本語</span></span></button>
   </div>
   <div class="masthead">
     <div>
@@ -1333,7 +1381,7 @@ function initBalloonStretch(icon){
 function applyStaticText(){
   const S = STRINGS[currentLang];
   document.documentElement.lang = currentLang === 'ja' ? 'ja' : 'en';
-  document.getElementById('langBtn').textContent = S.langBtn;
+  document.querySelectorAll('#langBtn .ls-a, #langBtn .ls-b').forEach(el => el.textContent = S.langBtn);
   document.getElementById('mastheadSub').textContent = S.mastheadSub;
   document.getElementById('tickerText').textContent = S.tickerText;
   document.getElementById('tickerBtn').textContent = S.tickerBtn;
@@ -1657,7 +1705,10 @@ function showSynopsis(cardEl, ep, idx, title){
   document.getElementById('spPlay').onclick = ()=> openPlayer(ep);
 }
 function hideSynopsis(){
+  if(!popup.classList.contains('show')) return;
   popup.classList.remove('show');
+  popup.classList.add('dismiss');
+  setTimeout(()=> popup.classList.remove('dismiss'), 420);
   clearTimeout(typeTimer);
   hideLens();
   try{ window.speechSynthesis && window.speechSynthesis.cancel(); }catch(e){}
@@ -1738,15 +1789,8 @@ document.getElementById('langBtn').onclick = ()=>{
       ? '※ Spotifyが開きます。ログイン済みならフル再生、未ログインなら試聴のみになります。'
       : '※ Opens in Spotify. Full playback if you\'re logged in there; preview only if not.';
   };
-  // View Transitions API gives a native cross-fade between the two
-  // language states; older browsers fall back to the manual opacity fade
-  if(document.startViewTransition){
-    document.startViewTransition(doSwitch);
-  } else {
-    const main = document.querySelector('main');
-    main.classList.add('lang-transition');
-    setTimeout(()=>{ doSwitch(); main.classList.remove('lang-transition'); }, 160);
-  }
+  // a curtain drops to cover the swap, then lifts to reveal the new language
+  curtainWipe(doSwitch);
 };
 document.getElementById('tickerBtn').onclick = ()=> openPlayer(EPISODES[0]);
 
@@ -2676,6 +2720,24 @@ function burstInk(x, y){
     document.body.appendChild(dot);
     dot.addEventListener('animationend', ()=> dot.remove());
   }
+}
+
+// a solid curtain drops down over the whole screen, runs the state change
+// while fully covered, then lifts away to reveal the new state
+function curtainWipe(onMidpoint){
+  const curtain = document.createElement('div');
+  curtain.className = 'curtain-wipe';
+  document.body.appendChild(curtain);
+  requestAnimationFrame(()=>{
+    curtain.classList.add('down');
+    curtain.addEventListener('animationend', function onDown(){
+      curtain.removeEventListener('animationend', onDown);
+      try{ onMidpoint(); }catch(e){}
+      curtain.classList.remove('down');
+      curtain.classList.add('up');
+      curtain.addEventListener('animationend', ()=> curtain.remove(), { once:true });
+    }, { once:true });
+  });
 }
 
 // custom neon-arrow cursor over tappable elements — idly wiggles like it's
