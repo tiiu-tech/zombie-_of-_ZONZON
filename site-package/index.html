@@ -79,12 +79,12 @@
   /* a quick tactile shrink the instant any button is actually pressed,
      not just hovered — magnetic buttons get their own JS version of this
      so the two don't fight over the transform property */
-  .ctrl-btn, .bgm-play-btn, .bgm-toggle, .scroll-close, .sp-speak, .play-btn,
+  .ctrl-btn, .bgm-play-btn, .bgm-toggle, .scroll-close, .sp-speak, .play-btn, .sp-play,
   .lang-btn, .bgm-head, details.how summary, .bgm-track-open, .bgm-dial-hole, .bgm-dial-close{
     transition:transform .12s cubic-bezier(.4,0,.6,1), background .18s ease, color .18s ease;
   }
   .ctrl-btn:active, .bgm-play-btn:active, .bgm-toggle:active, .scroll-close:active,
-  .sp-speak:active, .play-btn:active, .lang-btn:active, .bgm-head:active,
+  .sp-speak:active, .play-btn:active, .sp-play:active, .lang-btn:active, .bgm-head:active,
   details.how summary:active, .bgm-track-open:active, .bgm-dial-close:active{
     transform:scale(.92);
   }
@@ -536,12 +536,9 @@
   .scroll-popup{position:fixed; z-index:70; width:min(310px, 82vw); opacity:0; transform:scaleY(.05); transform-origin:top center;
     transition:opacity .3s ease, transform .35s cubic-bezier(.22,1,.36,1); pointer-events:none;}
   .scroll-popup.show{opacity:1; transform:scaleY(1); pointer-events:auto;}
-  /* closing flicks the card away instead of just shrinking back down */
-  .scroll-popup.dismiss{transition:none; animation:popupFlickAway .4s cubic-bezier(.5,-0.2,.7,.3) forwards; pointer-events:none;}
-  @keyframes popupFlickAway{
-    0%{ transform:scaleY(1) translate(0,0) rotate(0deg); opacity:1; }
-    100%{ transform:scaleY(.7) translate(60px,-42px) rotate(18deg); opacity:0; }
-  }
+  /* closing is just a quick clean fade, not a flick/rotate */
+  .scroll-popup.dismiss{transition:none; animation:popupFadeOut .2s ease forwards; pointer-events:none;}
+  @keyframes popupFadeOut{ from{ opacity:1; } to{ opacity:0; } }
   .scroll-cap{height:13px; background:linear-gradient(180deg, #c9bc98, var(--paper-2) 65%); border:1px solid var(--ink); border-radius:9px;
     box-shadow:0 2px 3px rgba(0,0,0,0.28);}
   .scroll-inner{background:var(--paper); border-left:1px solid var(--ink); border-right:1px solid var(--ink); padding:14px 16px 10px;
@@ -570,8 +567,7 @@
   /* ---------- magnifying-glass lens ---------- */
   .lens{position:fixed; width:120px; height:120px; border-radius:50%; border:6px solid #3b2f22;
     box-shadow:0 4px 10px rgba(0,0,0,0.4), inset 0 0 0 2px rgba(255,255,255,0.35),
-      inset 0 -4px 7px rgba(0,0,0,.22), inset 0 4px 9px rgba(255,255,255,.55),
-      0 0 0 1.5px rgba(255,60,60,.5), 0 0 0 3px rgba(60,220,255,.32);
+      inset 0 -4px 7px rgba(0,0,0,.22), inset 0 4px 9px rgba(255,255,255,.55);
     overflow:hidden; pointer-events:none; z-index:80; display:none; background:var(--paper);}
   .lens.show{display:block;}
   /* glass-shader gloss: a bright highlight arcing across the upper-left,
@@ -1128,9 +1124,12 @@ function startRatchet(intervalMs){
   return ()=> clearInterval(iv);
 }
 // heavier mechanical clunk for a slot reel locking into place
+// a quick "bakyuun" laser-zap whoosh for a slot reel locking into place
 function sfxReelStop(){
   try{ ensureAudio(); const t0 = audioCtx.currentTime;
-    tone(160, 60, t0, 0.09, 'square', 0.09, 0);
+    tone(1800, 140, t0, 0.14, 'sawtooth', 0.08, 0);
+    tone(2600, 300, t0, 0.07, 'square', 0.05, 0);
+    tone(140, 50, t0+0.1, 0.08, 'square', 0.08, 0);
   }catch(e){}
 }
 // punchy thunk for the slot lever
@@ -1708,7 +1707,7 @@ function hideSynopsis(){
   if(!popup.classList.contains('show')) return;
   popup.classList.remove('show');
   popup.classList.add('dismiss');
-  setTimeout(()=> popup.classList.remove('dismiss'), 420);
+  setTimeout(()=> popup.classList.remove('dismiss'), 220);
   clearTimeout(typeTimer);
   hideLens();
   try{ window.speechSynthesis && window.speechSynthesis.cancel(); }catch(e){}
@@ -2605,7 +2604,7 @@ function initMagnetic(selector, strength){
     btn.addEventListener('mouseup', ()=>{ pressed = false; apply(); });
   });
 }
-initMagnetic('#tickerBtn, #langBtn, #spPlay, #closeBtn', 0.28);
+initMagnetic('#tickerBtn, #langBtn, #closeBtn', 0.28);
 initMagnetic('#heroPlay', 0.35);
 
 // a handful of faint dots/squares scattered (not gridded) over the stage's
