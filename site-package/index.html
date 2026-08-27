@@ -1283,7 +1283,7 @@ function initBalloonStretch(icon){
     startX = e.clientX; startY = e.clientY;
     icon.classList.remove('springback');
     icon.classList.add('stretching');
-    icon.setPointerCapture(e.pointerId);
+    try{ icon.setPointerCapture(e.pointerId); }catch(err){}
   });
   icon.addEventListener('pointermove', (e)=>{
     if(!dragging) return;
