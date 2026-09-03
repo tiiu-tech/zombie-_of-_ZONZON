@@ -806,6 +806,34 @@
     100%{ opacity:0; transform:translate(var(--sx), var(--sy)) rotate(var(--sr)) scale(.5); }
   }
 
+  /* ---------- aftermath ----------
+     What happens after the bang is the part that sells it. A shock runs out
+     from the tear, and the recoil shakes things loose from above. ---------- */
+  .jolt{animation:joltShake .5s cubic-bezier(.36,.07,.19,.97) both;}
+  @keyframes joltShake{
+    0%{ transform:translate(0,0) rotate(0); }
+    18%{ transform:translate(-7px,4px) rotate(-1.1deg); }
+    38%{ transform:translate(6px,-3px) rotate(.8deg); }
+    58%{ transform:translate(-4px,2px) rotate(-.5deg); }
+    78%{ transform:translate(2px,-1px) rotate(.24deg); }
+    100%{ transform:translate(0,0) rotate(0); }
+  }
+
+  .fallout{position:fixed; inset:0; z-index:118; pointer-events:none; overflow:hidden;}
+  .debris{position:absolute; top:-140px; width:var(--dw,64px);
+    animation:debrisFall var(--dd,1.9s) cubic-bezier(.35,.02,.62,1) var(--ddelay,0s) forwards;
+    filter:drop-shadow(0 6px 10px rgba(0,0,0,.4));}
+  @keyframes debrisFall{
+    0%  { transform:translateY(0) rotate(0deg); opacity:0; }
+    6%  { opacity:1; }
+    62% { transform:translateY(var(--dfloor,70vh)) rotate(var(--dr,220deg)); opacity:1; }
+    /* the landing: squashes, kicks back up, settles */
+    72% { transform:translateY(calc(var(--dfloor,70vh) - 34px)) rotate(calc(var(--dr,220deg) + 26deg)); }
+    84% { transform:translateY(var(--dfloor,70vh)) rotate(calc(var(--dr,220deg) + 40deg)); }
+    92% { transform:translateY(calc(var(--dfloor,70vh) - 11px)) rotate(calc(var(--dr,220deg) + 48deg)); }
+    100%{ transform:translateY(var(--dfloor,70vh)) rotate(calc(var(--dr,220deg) + 52deg)); opacity:0; }
+  }
+
   /* ---------- living text: every character is its own element so it can lean
      away from the cursor and breathe when nothing is happening. The page should
      never feel like type printed flat onto a surface ---------- */
@@ -3059,7 +3087,28 @@ const Sfx = (function(){
     o.start(now); o.stop(now + 0.52);
   }
 
-  return { tick, strain, strainOff, tear, boing };
+  // something hitting the floor — a short body with a click of contact on top
+  function thud(freq){
+    const c = ensure(); if(!c || c.state !== 'running') return;
+    const now = c.currentTime;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(freq, now);
+    o.frequency.exponentialRampToValueAtTime(freq * 0.45, now + 0.14);
+    g.gain.setValueAtTime(0.55, now);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+    o.connect(g); g.connect(master);
+    o.start(now); o.stop(now + 0.22);
+
+    const buf = c.createBuffer(1, c.sampleRate * 0.05, c.sampleRate);
+    const d = buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i] = (Math.random()*2-1) * (1 - i/d.length);
+    const s = c.createBufferSource(); s.buffer = buf;
+    const sg = c.createGain(); sg.gain.value = 0.22;
+    s.connect(sg); sg.connect(master); s.start(now);
+  }
+
+  return { tick, strain, strainOff, tear, boing, thud };
 })();
 
 /* ---------- the sheet: grab the page and it stretches ----------
@@ -3151,11 +3200,60 @@ const Sfx = (function(){
   addEventListener('pointercancel', end, {passive:true});
 })();
 
-/* The moment it lets go: the bang, then the hole. */
+/* The moment it lets go: the bang, the hole, then everything the bang knocked
+   loose. The aftermath is what makes it land — a page that just pops and
+   returns to normal reads as a gimmick. */
 function snap(x, y){
   Sfx.tear();
   Sfx.boing();
   burst(x, y);
+  shockwave(x, y);
+  fallout();
+}
+
+/* A jolt travels out from the tear, reaching each block a little later the
+   further it sits from the hole. */
+function shockwave(x, y){
+  const blocks = document.querySelectorAll('.case-box, .section, .cast-card, .follow, footer, .ticker-wrap');
+  blocks.forEach(el=>{
+    const r = el.getBoundingClientRect();
+    const d = Math.hypot((r.left + r.width/2) - x, (r.top + r.height/2) - y);
+    const delay = Math.min(520, d * 0.42);
+    setTimeout(()=>{
+      el.classList.add('jolt');
+      setTimeout(()=> el.classList.remove('jolt'), 520);
+    }, delay);
+  });
+}
+
+/* The recoil shakes things down out of the sky. They tumble, hit the floor,
+   bounce once, and are gone — the page is left as it was. */
+function fallout(){
+  const art = ['deco-tanuki.png','deco-evidence-camera.png','deco-ramen-menu.png',
+               'deco-ghost-garden.png','deco-bakemono-coffee.png','motif-rusty-raider.png'];
+  const layer = document.createElement('div');
+  layer.className = 'fallout';
+  const n = 7;
+  for(let i=0;i<n;i++){
+    const img = document.createElement('img');
+    img.className = 'debris';
+    img.src = 'assets/' + art[i % art.length];
+    img.alt = '';
+    const w = 44 + Math.random()*54;
+    img.style.left = (6 + Math.random()*84) + 'vw';
+    img.style.setProperty('--dw', w.toFixed(0)+'px');
+    img.style.setProperty('--dd', (1.5 + Math.random()*1.1).toFixed(2)+'s');
+    img.style.setProperty('--ddelay', (0.12 + Math.random()*0.75).toFixed(2)+'s');
+    img.style.setProperty('--dr', (Math.random()*520 - 260).toFixed(0)+'deg');
+    img.style.setProperty('--dfloor', (62 + Math.random()*22).toFixed(0)+'vh');
+    layer.appendChild(img);
+    // a thud as each one lands, timed to the 62% point of its fall
+    const dd = parseFloat(img.style.getPropertyValue('--dd'));
+    const del = parseFloat(img.style.getPropertyValue('--ddelay'));
+    setTimeout(()=> Sfx.thud(80 + Math.random()*70), (del + dd * 0.62) * 1000);
+  }
+  document.body.appendChild(layer);
+  setTimeout(()=> layer.remove(), 4200);
 }
 
 /* Opens a ragged hole at (x,y), throws paper scraps out of it, and lets the
