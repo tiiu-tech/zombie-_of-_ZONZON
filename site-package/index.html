@@ -819,6 +819,33 @@
     100%{ transform:translate(0,0) rotate(0); }
   }
 
+  /* ---------- losing its temper ---------- */
+  .rage-shout{position:fixed; left:50%; top:44%; z-index:140; pointer-events:none;
+    transform:translate(-50%,-50%) scale(.2) rotate(-14deg); opacity:0;
+    font-family:'Anton',sans-serif; text-transform:uppercase; white-space:nowrap;
+    font-size:clamp(46px, 13vw, 168px); line-height:.9; color:var(--red-bright);
+    -webkit-text-stroke:3px var(--ink);
+    text-shadow:7px 7px 0 var(--ink), -2px -2px 0 var(--ink);
+    animation:shoutSlam 1.5s cubic-bezier(.2,1.7,.3,1) forwards;}
+  @keyframes shoutSlam{
+    0%  { transform:translate(-50%,-50%) scale(.2) rotate(-14deg); opacity:0; }
+    12% { transform:translate(-50%,-50%) scale(1.32) rotate(4deg); opacity:1; }
+    22% { transform:translate(-50%,-50%) scale(.96) rotate(-3deg); opacity:1; }
+    32% { transform:translate(-50%,-50%) scale(1.08) rotate(2deg); opacity:1; }
+    70% { transform:translate(-50%,-50%) scale(1) rotate(0deg); opacity:1; }
+    100%{ transform:translate(-50%,-52%) scale(1.06) rotate(0deg); opacity:0; }
+  }
+  body.furious{animation:furiousShake .62s cubic-bezier(.36,.07,.19,.97) 2;}
+  @keyframes furiousShake{
+    0%,100%{ transform:translate(0,0) rotate(0); }
+    10%{ transform:translate(-14px,7px) rotate(-1.4deg); }
+    25%{ transform:translate(13px,-9px) rotate(1.2deg); }
+    40%{ transform:translate(-11px,-5px) rotate(-.9deg); }
+    55%{ transform:translate(9px,8px) rotate(.7deg); }
+    72%{ transform:translate(-6px,-3px) rotate(-.4deg); }
+    88%{ transform:translate(3px,2px) rotate(.2deg); }
+  }
+
   .fallout{position:fixed; inset:0; z-index:118; pointer-events:none; overflow:hidden;}
   .debris{position:absolute; top:-140px; width:var(--dw,64px);
     animation:debrisFall var(--dd,1.9s) cubic-bezier(.35,.02,.62,1) var(--ddelay,0s) forwards;
@@ -837,7 +864,44 @@
   /* ---------- living text: every character is its own element so it can lean
      away from the cursor and breathe when nothing is happening. The page should
      never feel like type printed flat onto a surface ---------- */
-  .live-char{display:inline-block; will-change:transform; transform-origin:50% 60%;}
+  .live-char{display:inline-block; position:relative; will-change:transform; transform-origin:50% 60%;}
+
+  /* ---------- mischief ----------
+     Small type shouldn't get to sit there unbothered. Now and then a character
+     sprouts legs and wanders off, ducks out of the line, or trades places with
+     its neighbour — and the letters around it react. ---------- */
+  .live-char.walk{animation:charStroll var(--wdur,3.4s) ease-in-out forwards;}
+  @keyframes charStroll{
+    0%  { transform:translate(0,0); }
+    8%  { transform:translate(0,-2px); }
+    46% { transform:translate(var(--wdist,26px), 0) rotate(2deg); }
+    54% { transform:translate(var(--wdist,26px), 0) rotate(-2deg); }
+    100%{ transform:translate(0,0); }
+  }
+  /* the legs: two little strokes that alternate while it's on the move */
+  .live-char.walk::before, .live-char.walk::after{
+    content:''; position:absolute; bottom:-5px; width:1.5px; height:5px;
+    background:currentColor; border-radius:1px; opacity:.85;
+  }
+  .live-char.walk::before{left:30%;  animation:legFront .3s steps(2,end) infinite;}
+  .live-char.walk::after {right:30%; animation:legBack  .3s steps(2,end) infinite;}
+  @keyframes legFront{ 0%,49%{transform:rotate(16deg);} 50%,100%{transform:rotate(-16deg);} }
+  @keyframes legBack { 0%,49%{transform:rotate(-16deg);} 50%,100%{transform:rotate(16deg);} }
+  /* neighbours lean aside to let it past, then close the gap again */
+  .live-char.yield{animation:charYield var(--wdur,3.4s) ease-in-out forwards;}
+  @keyframes charYield{
+    0%,100%{ transform:translate(0,0); }
+    40%,60%{ transform:translate(var(--ydir,3px), 1px) rotate(var(--yrot,-4deg)); }
+  }
+  /* ducking out of sight and peeking back */
+  .live-char.duck{animation:charDuck 1.9s cubic-bezier(.5,0,.3,1) forwards;}
+  @keyframes charDuck{
+    0%{ transform:translateY(0) scaleY(1); opacity:1; }
+    22%{ transform:translateY(11px) scaleY(.25); opacity:0; }
+    68%{ transform:translateY(11px) scaleY(.25); opacity:0; }
+    86%{ transform:translateY(-3px) scaleY(1.1); opacity:1; }
+    100%{ transform:translateY(0) scaleY(1); opacity:1; }
+  }
   /* depth: the pointer pulls letters toward the viewer, so the line stops
      reading as ink lying flat on the page */
   [data-live="1"]{perspective:520px; transform-style:preserve-3d;}
@@ -1666,7 +1730,9 @@ function applyStaticText(){
 
   // bring the headings to life — done after the strings are in place, and
   // repeated on every language switch because the text is rewritten each time
-  ['.case-box h2', '.section-head h3', '.follow-head', '.follow-sub', '.masthead .sub']
+  // the small type gets it too — nothing on the page is allowed to just sit there
+  ['.case-box h2', '.section-head h3', '.follow-head', '.follow-sub', '.masthead .sub',
+   '#editionDate', '.case-kicker', '.cast-note', '.section-note', 'footer']
     .forEach(sel => document.querySelectorAll(sel).forEach(el => LiveText.register(el)));
   document.getElementById('howTitle').textContent = S.howTitle;
   document.getElementById('closeBtn').textContent = S.closeFile;
@@ -3108,7 +3174,41 @@ const Sfx = (function(){
     s.connect(sg); sg.connect(master); s.start(now);
   }
 
-  return { tick, strain, strainOff, tear, boing, thud };
+
+  // the shout itself: a snarling, detuned body with grit scraped over it
+  function roar(){
+    const c = ensure(); if(!c || c.state !== 'running') return;
+    const now = c.currentTime, dur = 1.1;
+    const shaper = c.createWaveShaper();
+    const curve = new Float32Array(1024);
+    for(let i=0;i<1024;i++){ const t = i/1023*2-1; curve[i] = Math.tanh(t*7); }
+    shaper.curve = curve;
+    const out = c.createGain();
+    out.gain.setValueAtTime(0.0001, now);
+    out.gain.exponentialRampToValueAtTime(0.95, now + 0.05);
+    out.gain.setValueAtTime(0.95, now + 0.55);
+    out.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    shaper.connect(out); out.connect(master);
+
+    [1, 1.005, 0.497].forEach((mult, i)=>{
+      const o = c.createOscillator(), g = c.createGain();
+      o.type = i === 2 ? 'square' : 'sawtooth';
+      o.frequency.setValueAtTime(126 * mult, now);
+      o.frequency.exponentialRampToValueAtTime(74 * mult, now + dur);
+      g.gain.value = i === 2 ? 0.3 : 0.55;
+      o.connect(g); g.connect(shaper);
+      o.start(now); o.stop(now + dur + 0.05);
+    });
+
+    const buf = c.createBuffer(1, c.sampleRate * dur, c.sampleRate);
+    const d = buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i] = (Math.random()*2-1) * (1 - i/d.length) * 0.5;
+    const nz = c.createBufferSource(); nz.buffer = buf;
+    const nf = c.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = 900; nf.Q.value = .8;
+    nz.connect(nf); nf.connect(shaper); nz.start(now);
+  }
+
+  return { tick, strain, strainOff, tear, boing, thud, roar };
 })();
 
 /* ---------- the sheet: grab the page and it stretches ----------
@@ -3126,7 +3226,8 @@ const Sfx = (function(){
   const LIMIT = 190;                 // drag distance at which the paper gives way
   const IGNORE = 'a,button,input,textarea,select,summary,details,video,iframe,' +
                  '.card,.fan-wrap,.bgm-panel,.cast-card,.scroll-popup,.overlay,.follow-tag';
-  let dragging = false, torn = false, sx = 0, sy = 0;
+  let dragging = false, sx = 0, sy = 0;
+  let tears = 0, cooling = false;   // keep pulling and it stops being amused
   const pointers = new Map();
   let pinchStart = 0;
 
@@ -3161,6 +3262,16 @@ const Sfx = (function(){
     setTimeout(()=> sheet.classList.remove('settling','snapping'), snapped ? 760 : 600);
   }
 
+
+  /* Pull it apart once and it's a surprise. Keep doing it and it stops being
+     charmed — the third tear is where the page loses its temper. */
+  function tear(x, y){
+    tears++;
+    cooling = true;
+    setTimeout(()=>{ cooling = false; }, 900);   // no double-fire from one pull
+    if(tears >= 3){ rage(x, y); } else { snap(x, y); }
+  }
+
   addEventListener('pointerdown', e=>{
     pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
     if(pointers.size === 2){
@@ -3182,13 +3293,13 @@ const Sfx = (function(){
       const now = Math.hypot(a.x-b.x, a.y-b.y);
       const spread = now - pinchStart;
       const t = setStretch(0, 0, Math.max(0, spread) / 900);
-      if(spread > 260 && !torn){ torn = true; snap((a.x+b.x)/2, (a.y+b.y)/2); release(true); }
+      if(spread > 260 && !cooling){ tear((a.x+b.x)/2, (a.y+b.y)/2); release(true); }
       return;
     }
     if(!dragging) return;
     const dx = e.clientX - sx, dy = e.clientY - sy;
     const t = setStretch(dx, dy);
-    if(t >= 1 && !torn){ torn = true; snap(e.clientX, e.clientY); release(true); }
+    if(t >= 1 && !cooling){ tear(e.clientX, e.clientY); release(true); }
   }, {passive:true});
 
   function end(e){
@@ -3211,6 +3322,26 @@ function snap(x, y){
   fallout();
 }
 
+/* Pushed too far. The page shouts, the whole thing shakes, and everything the
+   shout dislodges comes down at once. */
+function rage(x, y){
+  Sfx.roar();
+  const shout = document.createElement('div');
+  shout.className = 'rage-shout';
+  shout.textContent = (typeof currentLang !== 'undefined' && currentLang === 'ja')
+    ? 'ガッデム！！！' : 'GODDAMN!!!';
+  document.body.appendChild(shout);
+  setTimeout(()=> shout.remove(), 1600);
+
+  document.body.classList.add('furious');
+  setTimeout(()=> document.body.classList.remove('furious'), 1300);
+
+  burst(x, y);
+  shockwave(x, y);
+  // it throws considerably more at you when it's angry
+  fallout(14);
+}
+
 /* A jolt travels out from the tear, reaching each block a little later the
    further it sits from the hole. */
 function shockwave(x, y){
@@ -3228,12 +3359,12 @@ function shockwave(x, y){
 
 /* The recoil shakes things down out of the sky. They tumble, hit the floor,
    bounce once, and are gone — the page is left as it was. */
-function fallout(){
+function fallout(count){
   const art = ['deco-tanuki.png','deco-evidence-camera.png','deco-ramen-menu.png',
                'deco-ghost-garden.png','deco-bakemono-coffee.png','motif-rusty-raider.png'];
   const layer = document.createElement('div');
   layer.className = 'fallout';
-  const n = 7;
+  const n = count || 7;
   for(let i=0;i<n;i++){
     const img = document.createElement('img');
     img.className = 'debris';
@@ -3348,6 +3479,9 @@ const LiveText = (function(){
       const r = g.el.getBoundingClientRect();
       if(r.bottom < -200 || r.top > innerHeight + 200){ continue; }
       for(const c of g.chars){
+        // a character that's off doing something keeps its own animation —
+        // the frame loop would otherwise overwrite the transform every tick
+        if(c.dataset.busy === '1') continue;
         const cr = c.getBoundingClientRect();
         const cx = cr.left + cr.width/2, cy = cr.top + cr.height/2;
         const phase = parseFloat(c.dataset.phase) || 0;
@@ -3410,7 +3544,95 @@ const LiveText = (function(){
     }, {passive:true});
     addEventListener('touchend', ()=>{ hasPointer = false; }, {passive:true});
   }
-  return { register };
+  function allChars(){
+    const out = [];
+    for(const g of groups){
+      const r = g.el.getBoundingClientRect();
+      if(r.bottom < 0 || r.top > innerHeight) continue;   // only bother the visible ones
+      for(const c of g.chars){
+        if(c.dataset.busy === '1') continue;
+        if(!c.textContent.trim()) continue;                // spaces stay put
+        out.push({c, chars:g.chars});
+      }
+    }
+    return out;
+  }
+
+  return { register, allChars };
+})();
+
+/* ---------- mischief ----------
+   Every so often one character decides it has somewhere else to be. It grows
+   legs and strolls off while its neighbours lean aside, or it ducks out of the
+   line and peeks back. Only one antic runs at a time, and only while the tab
+   is being looked at. */
+(function mischief(){
+  if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  let busy = false;
+
+  function free(el, cls){
+    el.classList.remove(cls);
+    el.style.removeProperty('--wdur');
+    el.style.removeProperty('--wdist');
+    el.style.removeProperty('--ydir');
+    el.style.removeProperty('--yrot');
+    el.dataset.busy = '';
+    el.style.transform = '';
+  }
+
+  function stroll(){
+    const pool = LiveText.allChars();
+    if(!pool.length) return;
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    const c = pick.c, siblings = pick.chars;
+    const i = siblings.indexOf(c);
+    const dur = (2.8 + Math.random() * 2.2).toFixed(2) + 's';
+
+    if(Math.random() < 0.32){
+      // duck out of the line and come back up
+      busy = true;
+      c.dataset.busy = '1';
+      c.style.setProperty('--wdur', dur);
+      c.classList.add('duck');
+      setTimeout(()=>{ free(c, 'duck'); busy = false; }, 1950);
+      return;
+    }
+
+    // a walk: pick a direction and take the neighbours with you
+    const dir = Math.random() < 0.5 ? -1 : 1;
+    const dist = (18 + Math.random() * 26) * dir;
+    busy = true;
+    c.dataset.busy = '1';
+    c.style.setProperty('--wdur', dur);
+    c.style.setProperty('--wdist', dist.toFixed(0) + 'px');
+    c.classList.add('walk');
+
+    const yields = [];
+    for(const n of [siblings[i-1], siblings[i+1], siblings[i+2*dir]]){
+      if(!n || n.dataset.busy === '1' || !n.textContent.trim()) continue;
+      n.dataset.busy = '1';
+      n.style.setProperty('--wdur', dur);
+      n.style.setProperty('--ydir', (dir * (2 + Math.random()*3)).toFixed(1) + 'px');
+      n.style.setProperty('--yrot', (dir * (3 + Math.random()*5)).toFixed(1) + 'deg');
+      n.classList.add('yield');
+      yields.push(n);
+    }
+    const ms = parseFloat(dur) * 1000 + 60;
+    setTimeout(()=>{
+      free(c, 'walk');
+      yields.forEach(n => free(n, 'yield'));
+      busy = false;
+    }, ms);
+  }
+
+  function schedule(){
+    const wait = 2600 + Math.random() * 5200;
+    setTimeout(()=>{
+      if(!document.hidden && !busy) stroll();
+      schedule();
+    }, wait);
+  }
+  schedule();
 })();
 
 /* Borrowed from Slush: the stickers around the headline drift and turn as the
