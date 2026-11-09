@@ -452,16 +452,78 @@
   .card-body .sub{font-family:'Courier Prime',monospace; font-size:8px; color:var(--ink-soft);}
   .fan-hint{font-family:'Courier Prime',monospace; font-size:10px; color:var(--ink-soft); text-align:center; margin-top:-6px;}
 
-  /* ---------- history ---------- */
-  .history-row{display:flex; gap:14px; align-items:center; padding:12px 4px; border-bottom:1px dashed var(--rule); cursor:var(--cursor-tap);}
-  .history-row:hover .h-title{color:var(--red); letter-spacing:.02em;}
-  .history-row img{width:64px; aspect-ratio:9/16; object-fit:cover; flex-shrink:0; background:#000;
-    filter:grayscale(60%) sepia(20%) contrast(1.06) brightness(.92); border:1px solid var(--ink); transition:transform .2s ease;}
-  .history-row img.landscape{width:110px; aspect-ratio:16/10;}
-  .history-row:hover img{transform:translateY(-4px);}
-  .h-title{font-family:'Shippori Mincho',serif; font-size:13.5px; margin:0 0 4px; transition:color .18s ease, letter-spacing .18s ease;}
-  .h-sub{font-family:'Courier Prime',monospace; font-size:10px; color:var(--ink-soft);}
-  .empty{font-family:'Courier Prime',monospace; font-size:11.5px; color:var(--ink-soft); padding:16px 4px;}
+  /* ---------- evidence board (viewed files) ----------
+     the watch history is a detective's cork board: one pinned polaroid per
+     episode you've opened, red string run between them in the order you saw
+     them, and a dashed gap for every file still missing from the case */
+  .ev-board{position:relative; margin-top:4px; border-radius:4px; overflow:hidden; touch-action:pan-y;
+    user-select:none; -webkit-user-select:none; height:420px;
+    background:
+      radial-gradient(rgba(60,28,6,.38) 1px, transparent 1.7px) 0 0/7px 7px,
+      radial-gradient(rgba(255,226,180,.20) 1px, transparent 1.9px) 3px 4px/11px 11px,
+      radial-gradient(rgba(70,34,8,.22) 2px, transparent 3px) 5px 1px/23px 19px,
+      radial-gradient(ellipse at 28% 18%, rgba(214,160,100,.55), transparent 55%),
+      radial-gradient(ellipse at 80% 90%, rgba(70,36,10,.35), transparent 60%),
+      linear-gradient(135deg, #b47d47, #9b6536 55%, #a8703c);
+    box-shadow:inset 0 0 0 9px #5b3a1d, inset 0 0 0 11px #3a230f, inset 2px 2px 0 11px rgba(255,220,170,.18),
+      inset 0 0 46px rgba(40,18,4,.6), 0 12px 26px rgba(28,24,17,.3);}
+  .ev-board.empty-board .ev-slot{opacity:.55;}
+  .ev-plate{position:absolute; left:22px; top:18px; z-index:4; padding:5px 12px 6px; transform:rotate(-1.6deg);
+    background:linear-gradient(rgba(246,238,214,.93), rgba(232,222,194,.93)); color:var(--ink);
+    box-shadow:0 2px 4px rgba(0,0,0,.25); font-family:'Courier Prime',monospace; line-height:1.25; pointer-events:none;}
+  .ev-plate::before, .ev-plate::after{content:''; position:absolute; top:-6px; width:34px; height:13px;
+    background:rgba(240,232,205,.62); box-shadow:0 1px 1px rgba(0,0,0,.08);}
+  .ev-plate::before{left:-10px; transform:rotate(-24deg);} .ev-plate::after{right:-10px; transform:rotate(21deg);}
+  .ev-plate b{display:block; font-size:12px; letter-spacing:.08em;}
+  .ev-plate span{display:block; font-size:9.5px; color:var(--ink-soft); letter-spacing:.02em;}
+  .ev-strings{position:absolute; left:0; top:0; z-index:3; pointer-events:none; overflow:visible;}
+  .ev-strings .str{fill:none; stroke:#c4231b; stroke-width:2.1; stroke-linecap:round;}
+  .ev-strings .str-sh{fill:none; stroke:rgba(30,10,0,.32); stroke-width:2.4; stroke-linecap:round;}
+  .ev-slot, .ev-photo{position:absolute; left:0; top:0; width:var(--pw);}
+  .ev-slot{border:1.5px dashed rgba(255,236,204,.38); border-radius:2px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:4px; color:rgba(255,236,204,.55); cursor:var(--cursor-tap);
+    font-family:'Courier Prime',monospace; font-size:var(--fs); letter-spacing:.06em; transition:border-color .2s, color .2s, background .2s;}
+  .ev-slot::before{content:''; position:absolute; top:6px; left:50%; width:4px; height:4px; margin-left:-2px; border-radius:50%;
+    background:rgba(40,18,4,.65); box-shadow:0 1px 0 rgba(255,230,190,.25);}
+  .ev-slot .q{font-family:'Playfair Display',serif; font-weight:900; font-size:calc(var(--fs)*3); line-height:1;}
+  .ev-slot .u{opacity:0; transition:opacity .2s;}
+  .ev-slot:hover, .ev-slot:focus-visible{border-color:rgba(255,236,204,.85); color:rgba(255,240,214,.95); background:rgba(40,18,4,.18); outline:none;}
+  .ev-slot:hover .u, .ev-slot:focus-visible .u{opacity:1;}
+  .ev-slot.filled{visibility:hidden;}
+  .ev-photo{z-index:1; background:#f2ecdc; padding:5px 5px 0; transform-origin:50% 9px; cursor:var(--cursor-tap);
+    box-shadow:0 1px 2px rgba(0,0,0,.35), 0 7px 12px rgba(30,12,0,.28); will-change:transform; touch-action:pan-y;}
+  .ev-photo:focus-visible{outline:2px solid var(--paper); outline-offset:3px;}
+  .ev-photo.lift{z-index:2; box-shadow:0 2px 4px rgba(0,0,0,.3), 0 22px 30px rgba(30,12,0,.38);}
+  .ev-photo.wait{opacity:0;}
+  .ev-img{position:relative; aspect-ratio:4/5; overflow:hidden; background:#16120c;}
+  .ev-img img{display:block; width:100%; height:100%; object-fit:cover; pointer-events:none; -webkit-user-drag:none;
+    filter:grayscale(55%) sepia(26%) contrast(1.08) brightness(.9); transition:filter .3s ease;}
+  .ev-photo:hover .ev-img img, .ev-photo.lift .ev-img img{filter:grayscale(0%) sepia(6%) contrast(1.04);}
+  .ev-img .bar{position:absolute; left:0; right:0; bottom:0; height:3px; background:rgba(28,24,17,.45);}
+  .ev-img .bar i{display:block; height:100%; background:var(--red-bright);}
+  .ev-stamp{position:absolute; right:6%; bottom:9%; transform:rotate(-14deg); border:2px solid #b3201a; color:#b3201a;
+    padding:1px 5px; font-family:'Courier Prime',monospace; font-weight:700; font-size:calc(var(--fs)*1.05); letter-spacing:.08em;
+    background:rgba(242,236,220,.82); box-shadow:0 0 0 1px rgba(242,236,220,.5); opacity:.95;}
+  .ev-cap{height:var(--caph); padding:4px 2px 0; font-family:'Courier Prime',monospace; font-size:var(--fs); line-height:1.3;
+    color:#2a231a; overflow:hidden; white-space:nowrap;}
+  .ev-cap b{display:block; letter-spacing:.04em;}
+  .ev-cap .t{display:block; font-family:'Shippori Mincho',serif; font-weight:700; overflow:hidden; text-overflow:ellipsis;}
+  .ev-cap .a{display:block; color:#6a5e4a;}
+  .ev-closed{position:absolute; left:50%; top:50%; z-index:5; pointer-events:none; white-space:nowrap;
+    font-family:'Dela Gothic One','Playfair Display',sans-serif; font-size:clamp(26px, 7vw, 62px); letter-spacing:.08em; color:#b3201a;
+    border:6px double #b3201a; padding:4px 22px; background:rgba(242,232,208,.86);
+    box-shadow:0 0 0 3px rgba(242,232,208,.86), 0 10px 26px rgba(30,12,0,.45);
+    opacity:0; transform:translate(-50%,-50%) rotate(-11deg) scale(2.4);}
+  .ev-closed.on{opacity:.96; transform:translate(-50%,-50%) rotate(-11deg) scale(1);
+    transition:transform .32s cubic-bezier(.3,1.6,.5,1), opacity .12s ease;}
+  .ev-empty{position:absolute; z-index:4; left:50%; top:50%; width:min(78%, 300px); padding:16px 16px 18px;
+    transform:translate(-50%,-40%) rotate(2.2deg); background:#f3dc7a; color:#3a3018;
+    box-shadow:0 2px 3px rgba(0,0,0,.2), 0 12px 18px rgba(30,12,0,.3); font-family:'Courier Prime',monospace;
+    font-size:12px; line-height:1.5; text-align:center; pointer-events:none; display:none;}
+  .ev-empty::before{content:''; position:absolute; top:-5px; left:50%; width:12px; height:12px; margin-left:-6px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #ff8a7a, #c8231a 45%, #5e0c08); box-shadow:1px 3px 3px rgba(0,0,0,.35);}
+  .ev-board.empty-board .ev-empty{display:block;}
+  @media (max-width:560px){ .ev-plate{left:16px; top:14px;} .ev-plate b{font-size:11px;} .ev-plate span{font-size:8.5px;} }
 
   /* ---------- how to use ---------- */
   details.how{border:1px solid var(--ink); background:var(--paper-2); padding:4px 18px;}
@@ -1246,12 +1308,17 @@ const STRINGS = {
           'Episodes auto-advance to the next file when one finishes.',
           'Your progress saves automatically as you watch.',
           'A red “VIEWED” stamp marks episodes you\'ve finished.',
+          'Every file you open gets pinned to the evidence board — drag the photos around and strum the red string.',
           'Use the button in the top corner to switch languages.' ],
     closeFile:'CLOSE FILE ✕', unread:'UNREAD', comingSoon:'COMING SOON',
     totalFiles:n=>`TOTAL ${n} FILES`, watchedPct:p=>`${p}% VIEWED`,
     viewedStamp:'VIEWED', ago:{d:'d ago', h:'h ago', m:'m ago', now:'just now'},
     spHint:'Move over the text with the lens. Tap 🔊 to hear it.',
-    nextUp:f=>`▶ NEXT UP… ${f}`
+    nextUp:f=>`▶ NEXT UP… ${f}`,
+    boardCount:(n,t)=>`EVIDENCE ${String(n).padStart(2,'0')} / ${t}`,
+    boardHint:'drag the photos · strum the red string',
+    boardHintTouch:'tap a photo to replay · tap the red string',
+    boardUnseen:'UNSEEN', caseClosed:'CASE CLOSED'
   },
   ja: {
     mastheadSub:'ショートドラマ・シリーズ', langBtn:'EN',
@@ -1280,12 +1347,17 @@ const STRINGS = {
           '1話が終わると、自動で次の話に進みます。',
           '視聴した分は自動で保存されます。',
           '赤い「既読」スタンプは、見終えた話につきます。',
+          '開いたファイルは証拠ボードにピン留めされます。写真はドラッグで動かせて、赤い糸は弾けます。',
           '右上の言語ボタンで表示を切り替えられます。' ],
     closeFile:'閉じる ✕', unread:'未読', comingSoon:'近日公開',
     totalFiles:n=>`全${n}話`, watchedPct:p=>`${p}% 既読`,
     viewedStamp:'既読', ago:{d:'日前', h:'時間前', m:'分前', now:'たった今'},
     spHint:'虫眼鏡でテキストの上をなぞってみてください。🔊で読み上げ。',
-    nextUp:f=>`▶ 次話へ… ${f}`
+    nextUp:f=>`▶ 次話へ… ${f}`,
+    boardCount:(n,t)=>`証拠品 ${String(n).padStart(2,'0')} / ${t}`,
+    boardHint:'写真はドラッグで動かせる・赤い糸は弾ける',
+    boardHintTouch:'写真タップで再生・赤い糸はタップで弾ける',
+    boardUnseen:'未確認', caseClosed:'事件解決'
   }
 };
 
@@ -1461,7 +1533,7 @@ function sfxCastReactBeep(idx){
 document.addEventListener('pointerdown', ()=>ensureAudio(), { once:true });
 
 // simple buttons: hover+click via delegation (works well on desktop; click works on tap too)
-const SFX_SELECTOR = '#langBtn, #tickerBtn, #closeBtn, #ctrlPlay, #ctrlRewind, #ctrlMute, #ctrlShare, #ctrlNext, #bgmHead, .bgm-link-row, details.how summary, #spClose, #spSpeak, #spPlay, .history-row';
+const SFX_SELECTOR = '#langBtn, #tickerBtn, #closeBtn, #ctrlPlay, #ctrlRewind, #ctrlMute, #ctrlShare, #ctrlNext, #bgmHead, .bgm-link-row, details.how summary, #spClose, #spSpeak, #spPlay';
 let sfxLastHover = null;
 document.addEventListener('mouseover', (e)=>{
   const el = e.target.closest(SFX_SELECTOR);
@@ -1876,30 +1948,538 @@ function render(){
     track.appendChild(card);
   });
 
-  const watchedIds = Object.keys(progressCache).sort((a,b)=>progressCache[b].lastWatchedAt-progressCache[a].lastWatchedAt);
-  const histWrap = document.getElementById('historyList');
-  if(watchedIds.length===0){
-    histWrap.innerHTML = `<div class="empty">${S.historyEmpty}</div>`;
-  } else {
-    histWrap.innerHTML = '';
-    watchedIds.forEach(id=>{
-      const idx = EPISODES.findIndex(e=>e.id===id);
-      const ep = EPISODES[idx];
-      if(!ep || ep.coming) return;
-      const title = epTitle(idx);
-      const row = document.createElement('div');
-      row.className='history-row';
-      row.innerHTML = `
-        <img class="${ep.landscape ? 'landscape' : ''}" src="${thumbHi(ep.youtubeId)}" onerror="this.onerror=null;this.src='${thumbLo(ep.youtubeId)}'" alt="">
-        <div>
-          <p class="h-title">${ep.file} ／ ${title}</p>
-          <div class="h-sub">${timeAgo(progressCache[id].lastWatchedAt)} ・ ${S.watchedPct(pct(id))}${isWatched(id)?` ・ ${S.viewedStamp}`:''}</div>
-        </div>`;
-      row.onclick = ()=>openPlayer(ep);
-      histWrap.appendChild(row);
+  EvidenceBoard.update();
+}
+
+/* ============================================================
+   EVIDENCE BOARD — the viewed files as a detective's cork board
+   Every episode has a fixed place on the board, so it fills up as you
+   watch instead of reshuffling. A file you've opened is a pinned polaroid;
+   one you haven't is a dashed gap with a pinhole. Red string runs from pin
+   to pin in the order you actually watched them.
+
+   The photos hang from their pin, so they swing about it — nudge them with
+   the cursor, or drag one somewhere else and it trails behind your hand.
+   The string is a real string: sweep across it and it twangs, pitched by
+   its length (a plucked-string synth, so short runs ring high and long
+   ones low, always on the same pentatonic scale the headings use).
+   ============================================================ */
+const EvidenceBoard = (function(){
+  const reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const finePointer = !!(window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches);
+  const NS = 'http://www.w3.org/2000/svg';
+  const slots = new Map();       // episode id -> slot state
+  const segs = new Map();        // "a>b" -> string segment between two pins
+  let board = null, svg, gStr, gPins, plateCount, plateHint, closedEl, emptyEl;
+  let W = 0, H = 0, pw = 0, ph = 0;
+  let visible = false, revealedOnce = false, raf = 0, lastFrame = 0;
+  let drag = null, mouse = null, closedShown = false;
+
+  function hash(str){
+    let h = 2166136261;
+    for(let i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return (h >>> 0) / 4294967295;
+  }
+  const overlayOpen = ()=> document.getElementById('overlay').classList.contains('open');
+  const now = ()=> performance.now();
+
+  /* ---------- sound ---------- */
+  function ctx(){
+    try{ ensureAudio(); }catch(e){ return null; }
+    return (audioCtx && audioCtx.state === 'running') ? audioCtx : null;
+  }
+  // Karplus–Strong: a burst of noise fed round a short delay line that
+  // averages itself down — which is, more or less, what a plucked string does
+  const ksCache = new Map();
+  function ksBuffer(c, f){
+    const key = Math.round(f);
+    if(ksCache.has(key)) return ksCache.get(key);
+    const sr = c.sampleRate, len = Math.floor(sr * 1.5), N = Math.max(2, Math.round(sr / f));
+    const buf = c.createBuffer(1, len, sr), d = buf.getChannelData(0);
+    const ring = new Float32Array(N);
+    for(let i = 0; i < N; i++) ring[i] = Math.random() * 2 - 1;
+    let p = 0;
+    for(let i = 0; i < len; i++){
+      const nx = (p + 1) % N, v = ring[p];
+      d[i] = v;
+      ring[p] = (v + ring[nx]) * 0.4985;
+      p = nx;
+    }
+    ksCache.set(key, buf);
+    return buf;
+  }
+  const PENTA = [1, 9/8, 5/4, 3/2, 5/3];
+  function noteForLength(L){
+    // longest runs sit around G3, the shortest two octaves up
+    const steps = 11;
+    const k = Math.round((1 - Math.max(0, Math.min(1, (L - 50) / 700))) * (steps - 1));
+    return 196 * PENTA[k % 5] * Math.pow(2, Math.floor(k / 5));
+  }
+  function sfxPluck(L, strength){
+    const c = ctx(); if(!c) return;
+    const t = c.currentTime;
+    const src = c.createBufferSource(); src.buffer = ksBuffer(c, noteForLength(L));
+    src.playbackRate.value = 1 + (Math.random() - 0.5) * 0.006;
+    const g = c.createGain(); g.gain.value = 0.1 + 0.16 * strength;
+    const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1800 + 3200 * strength;
+    src.connect(lp); lp.connect(g); g.connect(c.destination);
+    src.start(t); src.stop(t + 1.5);
+  }
+  // a push-pin going home: a tiny click of the point, then the cork's thump
+  function sfxPin(vol){
+    const c = ctx(); if(!c) return;
+    const t = c.currentTime, v = vol == null ? 1 : vol;
+    tone(2200, 1100, t, 0.022, 'square', 0.025 * v, 0);
+    tone(180 + Math.random() * 30, 62, t + 0.008, 0.14, 'sine', 0.14 * v, 0);
+  }
+  function sfxUnpin(){
+    const c = ctx(); if(!c) return;
+    const t = c.currentTime;
+    tone(420, 1200, t, 0.07, 'triangle', 0.05, 0);
+  }
+
+  /* ---------- build ---------- */
+  function build(host){
+    board = document.createElement('div');
+    board.className = 'ev-board';
+    board.innerHTML =
+      '<div class="ev-plate"><b class="ev-count"></b><span class="ev-hint"></span></div>' +
+      '<svg class="ev-strings" aria-hidden="true"><defs>' +
+        '<radialGradient id="evPinG" cx="35%" cy="30%" r="72%"><stop offset="0" stop-color="#ff9182"/>' +
+        '<stop offset=".45" stop-color="#c8231a"/><stop offset="1" stop-color="#5a0b07"/></radialGradient>' +
+      '</defs><g class="ev-str"></g><g class="ev-pins"></g></svg>' +
+      '<div class="ev-closed"></div><div class="ev-empty"></div>';
+    host.appendChild(board);
+    svg = board.querySelector('svg');
+    gStr = board.querySelector('.ev-str');
+    gPins = board.querySelector('.ev-pins');
+    plateCount = board.querySelector('.ev-count');
+    plateHint = board.querySelector('.ev-hint');
+    closedEl = board.querySelector('.ev-closed');
+    emptyEl = board.querySelector('.ev-empty');
+
+    EPISODES.forEach((ep, idx)=>{
+      if(ep.coming) return;
+      const hole = document.createElement('div');
+      hole.className = 'ev-slot';
+      hole.tabIndex = 0;
+      hole.setAttribute('role', 'button');
+      hole.innerHTML = `<span>No.${String(idx+1).padStart(2,'0')}</span><span class="q">?</span><span class="u"></span>`;
+      hole.addEventListener('click', ()=> openPlayer(ep));
+      hole.addEventListener('keydown', e=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openPlayer(ep); } });
+      board.appendChild(hole);
+      slots.set(ep.id, {
+        ep, idx, hole, el:null, pin:null, present:false, state:'wait',
+        x:0, y:0, fx:null, fy:null,
+        rest:(hash(ep.id + 'r') - 0.5) * 13, theta:0, omega:0,
+        appearAt:0, landedAt:0
+      });
+    });
+
+    board.addEventListener('pointermove', onBoardMove);
+    board.addEventListener('pointerleave', ()=>{ mouse = null; });
+    board.addEventListener('pointerdown', onBoardDown);
+    new ResizeObserver(()=>{ layout(); paint(); }).observe(board);
+    new IntersectionObserver(entries=>{
+      visible = entries[0].isIntersecting;
+      if(visible) flush();
+    }, { threshold:0.2 }).observe(board);
+    new MutationObserver(()=>{ if(!overlayOpen()) flush(); })
+      .observe(document.getElementById('overlay'), { attributes:true, attributeFilter:['class'] });
+  }
+
+  function makePhoto(s){
+    const ep = s.ep;
+    const el = document.createElement('figure');
+    el.className = 'ev-photo';
+    el.style.margin = '0';
+    el.tabIndex = 0;
+    el.setAttribute('role', 'button');
+    el.innerHTML = `<div class="ev-img"><img class="${ep.landscape ? 'landscape' : ''}" alt="" draggable="false"
+        src="${thumbHi(ep.youtubeId)}" onerror="this.onerror=null;this.src='${thumbLo(ep.youtubeId)}'"></div>
+      <figcaption class="ev-cap"><b>${ep.file}</b><span class="t"></span><span class="a"></span></figcaption>`;
+    el.addEventListener('pointerdown', e=> onPhotoDown(e, s));
+    el.addEventListener('click', ()=>{
+      if(s.justDragged){ s.justDragged = false; return; }
+      openPlayer(ep);
+    });
+    el.addEventListener('keydown', e=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openPlayer(ep); } });
+    el.addEventListener('mouseenter', ()=>{
+      if(drag || reduce) return;
+      s.omega += (Math.random() < 0.5 ? -1 : 1) * (70 + Math.random() * 50);
+      kick();
+    });
+    board.appendChild(el);
+
+    const pin = document.createElementNS(NS, 'g');
+    pin.innerHTML = '<ellipse cx="2.4" cy="4" rx="5.4" ry="4" fill="rgba(25,8,0,.35)"/>' +
+      '<circle r="5.6" fill="url(#evPinG)"/><circle cx="-1.9" cy="-2" r="1.6" fill="#fff" opacity=".75"/>';
+    gPins.appendChild(pin);
+    s.el = el; s.pin = pin;
+    s.theta = s.rest;
+  }
+
+  /* ---------- layout ---------- */
+  function layout(){
+    if(!board) return;
+    W = board.clientWidth;
+    if(!W) return;
+    const cols = W >= 900 ? 6 : W >= 600 ? 5 : 4;
+    const padX = W < 560 ? 14 : 22, padTop = W < 560 ? 62 : 72, padBot = 22;
+    const cellW = (W - padX * 2) / cols;
+    pw = Math.round(Math.min(132, cellW * 0.8));
+    const fs = Math.max(7, Math.min(10.5, pw * 0.078));
+    const capH = Math.round(fs * 1.3 * 3 + 7);
+    ph = Math.round(5 + (pw - 10) * 1.25 + capH);
+    const cellH = ph + (W < 560 ? 18 : 30);
+    const n = slots.size, rows = Math.ceil(n / cols);
+    H = padTop + rows * cellH + padBot;
+    board.style.height = H + 'px';
+    board.style.setProperty('--pw', pw + 'px');
+    board.style.setProperty('--fs', fs.toFixed(2) + 'px');
+    board.style.setProperty('--caph', capH + 'px');
+    svg.setAttribute('width', W); svg.setAttribute('height', H);
+    let i = 0;
+    slots.forEach((s, id)=>{
+      const col = i % cols, row = Math.floor(i / cols);
+      const cx = padX + cellW * (col + 0.5) + (hash(id + 'x') - 0.5) * cellW * 0.16;
+      s.bx = cx - pw / 2;
+      s.by = padTop + row * cellH + (hash(id + 'y') - 0.5) * 14;
+      s.hole.style.height = ph + 'px';
+      s.hole.style.transform = `translate(${s.bx}px, ${s.by}px)`;
+      i++;
     });
   }
-}
+  // where the photo actually hangs: its home cell, unless it's been moved
+  function place(s){
+    if(s.fx != null){
+      s.x = clamp(s.fx * W - pw / 2, 12, W - pw - 12);
+      s.y = clamp(s.fy * H - 9, 12, H - ph - 12);
+    } else { s.x = s.bx; s.y = s.by; }
+  }
+  const clamp = (v, a, b)=> Math.max(a, Math.min(b, v));
+  const pinOf = s => ({ x: s.x + pw / 2, y: s.y + 9 });
+
+  /* ---------- update from progress ---------- */
+  function update(){
+    const host = document.getElementById('historyList');
+    if(!board || !host.contains(board)){ host.innerHTML = ''; build(host); layout(); }
+    const S = STRINGS[currentLang];
+    let count = 0, watchedAll = true;
+    slots.forEach((s, id)=>{
+      const has = !!progressCache[id];
+      if(has){
+        count++;
+        if(!s.present){
+          s.present = true;
+          makePhoto(s);
+          s.hole.classList.add('filled');
+          s.state = reduce ? 'up' : 'wait';
+          if(s.state === 'wait') s.el.classList.add('wait');
+        }
+        const p = pct(id);
+        s.el.querySelector('.t').textContent = epTitle(s.idx);
+        s.el.querySelector('.a').textContent = timeAgo(progressCache[id].lastWatchedAt);
+        s.el.setAttribute('aria-label', `${s.ep.file} ${epTitle(s.idx)} — ${S.watchedPct(p)}`);
+        const img = s.el.querySelector('.ev-img');
+        let stamp = img.querySelector('.ev-stamp'), bar = img.querySelector('.bar');
+        if(isWatched(id)){
+          if(bar) bar.remove();
+          if(!stamp){ stamp = document.createElement('span'); stamp.className = 'ev-stamp'; img.appendChild(stamp); }
+          stamp.textContent = S.viewedStamp;
+        } else {
+          if(stamp) stamp.remove();
+          if(!bar){ bar = document.createElement('span'); bar.className = 'bar'; bar.innerHTML = '<i></i>'; img.appendChild(bar); }
+          bar.firstChild.style.width = p + '%';
+        }
+      }
+      if(!isWatched(id)) watchedAll = false;
+      s.hole.setAttribute('aria-label', `${s.ep.file} — ${S.boardUnseen}`);
+      s.hole.querySelector('.u').textContent = S.boardUnseen;
+    });
+    plateCount.textContent = S.boardCount(count, slots.size);
+    // nothing to drag or strum until something is pinned up
+    plateHint.textContent = count === 0 ? '' : finePointer ? S.boardHint : S.boardHintTouch;
+    emptyEl.textContent = S.historyEmpty;
+    closedEl.textContent = S.caseClosed;
+    board.classList.toggle('empty-board', count === 0);
+    board.dataset.closed = watchedAll && count > 0 ? '1' : '';
+
+    syncStrings();
+    paint();
+    flush();
+  }
+
+  // the string follows the order the files were watched in
+  function syncStrings(){
+    const order = [...slots.values()].filter(s=>s.present)
+      .sort((a,b)=> progressCache[a.ep.id].lastWatchedAt - progressCache[b.ep.id].lastWatchedAt);
+    const want = new Set();
+    for(let i = 1; i < order.length; i++){
+      const a = order[i-1], b = order[i], key = a.ep.id + '>' + b.ep.id;
+      want.add(key);
+      if(segs.has(key)) continue;
+      const sh = document.createElementNS(NS, 'path'); sh.setAttribute('class', 'str-sh');
+      const ln = document.createElementNS(NS, 'path'); ln.setAttribute('class', 'str');
+      gStr.appendChild(sh); gStr.appendChild(ln);
+      const ready = a.state === 'up' && b.state === 'up' && revealedOnce && !overlayOpen() && visible;
+      segs.set(key, { a, b, sh, ln, amp:0, pluckAt:0, last:0, order:i,
+        draw: reduce || ready ? null : { pending:true, at:0 } });
+    }
+    segs.forEach((g, key)=>{
+      if(want.has(key)) return;
+      g.sh.remove(); g.ln.remove(); segs.delete(key);
+    });
+  }
+
+  // anything waiting to be revealed goes up now, if the board can be seen
+  function flush(){
+    if(!board || !visible || overlayOpen()) return;
+    revealedOnce = true;
+    const t0 = now();
+    let k = 0;
+    const waiting = [...slots.values()].filter(s=>s.present && s.state === 'wait')
+      .sort((a,b)=> progressCache[a.ep.id].lastWatchedAt - progressCache[b.ep.id].lastWatchedAt);
+    waiting.forEach(s=>{
+      s.state = 'in';
+      s.appearAt = t0 + 120 + k * 110;
+      k++;
+    });
+    const photosDone = t0 + 120 + k * 110 + 380;
+    let j = 0;
+    [...segs.values()].sort((a,b)=>a.order-b.order).forEach(g=>{
+      if(g.draw && g.draw.pending){
+        g.draw = { pending:false, at: photosDone + j * 170 };
+        j++;
+      }
+    });
+    const closeAt = photosDone + j * 170 + 200;
+    if(board.dataset.closed === '1' && !closedShown){
+      closedShown = true;
+      setTimeout(()=>{ closedEl.classList.add('on'); sfxPin(1.6); }, reduce ? 0 : closeAt - t0);
+    } else if(board.dataset.closed !== '1'){
+      closedShown = false; closedEl.classList.remove('on');
+    }
+    kick();
+  }
+
+  /* ---------- frame loop ---------- */
+  function kick(){
+    if(raf) return;
+    lastFrame = now();
+    raf = requestAnimationFrame(step);
+  }
+  function step(t){
+    raf = 0;
+    const dt = Math.min(0.034, Math.max(0.001, (t - lastFrame) / 1000));
+    lastFrame = t;
+    let busy = !!drag;
+    slots.forEach(s=>{
+      if(!s.present) return;
+      if(s.state === 'in'){ busy = true; return; }
+      if(reduce){ s.theta = s.rest; return; }
+      // a pendulum hanging from its pin, with some air resistance
+      const a = -62 * (s.theta - s.rest) - 4.2 * s.omega;
+      s.omega += a * dt;
+      s.theta = clamp(s.theta + s.omega * dt, s.rest - 45, s.rest + 45);
+      if(Math.abs(s.omega) > 0.4 || Math.abs(s.theta - s.rest) > 0.08) busy = true;
+      else { s.omega = 0; s.theta = s.rest; }
+    });
+    segs.forEach(g=>{
+      if(g.amp && t - g.pluckAt < 1400) busy = true;
+      if(g.draw && (g.draw.pending || t < g.draw.at + 400)) busy = busy || !g.draw.pending;
+    });
+    paint(t);
+    if(busy) raf = requestAnimationFrame(step);
+  }
+
+  const easeOutBack = p => 1 + 2.4 * Math.pow(p - 1, 3) + 1.4 * Math.pow(p - 1, 2);
+  function paint(t){
+    if(!board || !W) return;
+    t = t || now();
+    slots.forEach(s=>{
+      if(!s.present) return;
+      place(s);
+      let dy = 0, sc = 1, op = 1, rot = s.theta;
+      if(s.state === 'wait'){ op = 0; }
+      else if(s.state === 'in'){
+        const p = (t - s.appearAt) / 420;
+        if(p < 0){ op = 0; }
+        else if(p >= 1){
+          s.state = 'up'; s.landedAt = t; s.el.classList.remove('wait');
+          s.omega = (hash(s.ep.id + 'w') - 0.5) * 160;
+          sfxPin(0.8);
+        } else {
+          s.el.classList.remove('wait');
+          const e = easeOutBack(p);
+          dy = -60 * (1 - e); sc = 1.35 - 0.35 * e; rot = s.rest + (1 - p) * 16;
+          op = Math.min(1, p * 3);
+        }
+      }
+      const lift = s.el.classList.contains('lift') ? 1.06 : 1;
+      s.el.style.opacity = op === 1 ? '' : op;
+      s.el.style.transform = `translate(${s.x}px, ${s.y + dy}px) rotate(${rot.toFixed(2)}deg) scale(${(sc * lift).toFixed(3)})`;
+      const pin = pinOf(s);
+      const pinUp = s.state === 'up';
+      const press = pinUp ? 1 + 0.9 * Math.max(0, 1 - (t - s.landedAt) / 150) : 0;
+      s.pin.setAttribute('transform', `translate(${pin.x.toFixed(1)} ${pin.y.toFixed(1)}) scale(${press.toFixed(3)})`);
+      s.pin.style.opacity = pinUp ? '' : '0';
+    });
+    segs.forEach(g=>{
+      if(g.a.state !== 'up' || g.b.state !== 'up' || (g.draw && g.draw.pending)){
+        g.ln.style.display = g.sh.style.display = 'none'; return;
+      }
+      g.ln.style.display = g.sh.style.display = '';
+      const d = segPath(g, t);
+      g.ln.setAttribute('d', d.path);
+      g.sh.setAttribute('d', d.path);
+      g.sh.setAttribute('transform', 'translate(1.6 3.2)');
+      if(g.draw){
+        const p = clamp((t - g.draw.at) / 360, 0, 1);
+        if(p >= 1){
+          g.draw = null;
+          g.ln.removeAttribute('stroke-dasharray'); g.sh.removeAttribute('stroke-dasharray');
+          g.ln.removeAttribute('stroke-dashoffset'); g.sh.removeAttribute('stroke-dashoffset');
+          pluck(g, 0.35, 1, true);
+        } else {
+          const L = d.len * 1.08;
+          [g.ln, g.sh].forEach(el=>{
+            el.setAttribute('stroke-dasharray', `${L} ${L}`);
+            el.setAttribute('stroke-dashoffset', (L * (1 - p)).toFixed(1));
+          });
+        }
+      }
+    });
+  }
+
+  // a run of string hangs in a shallow curve between its two pins; a pluck
+  // pushes the middle sideways and lets it ring down
+  function segGeom(g, t){
+    const A = pinOf(g.a), B = pinOf(g.b);
+    const dx = B.x - A.x, dy = B.y - A.y, len = Math.hypot(dx, dy) || 1;
+    const sag = Math.min(34, len * 0.07) + 3;
+    let cx = (A.x + B.x) / 2, cy = (A.y + B.y) / 2 + sag * 2;
+    if(g.amp && !reduce){
+      const age = (t - g.pluckAt) / 1000;
+      const off = g.amp * Math.exp(-age * 4.5) * Math.cos(age * Math.PI * 2 * 10);
+      cx += (-dy / len) * off * 2; cy += (dx / len) * off * 2;
+    }
+    return { A, B, cx, cy, len };
+  }
+  function segPath(g, t){
+    const q = segGeom(g, t);
+    return { path:`M${q.A.x.toFixed(1)} ${q.A.y.toFixed(1)} Q${q.cx.toFixed(1)} ${q.cy.toFixed(1)} ${q.B.x.toFixed(1)} ${q.B.y.toFixed(1)}`, len:q.len };
+  }
+  function samples(g){
+    const q = segGeom(g, now()), pts = [];
+    for(let i = 0; i <= 12; i++){
+      const u = i / 12, v = 1 - u;
+      pts.push({ x: v*v*q.A.x + 2*v*u*q.cx + u*u*q.B.x, y: v*v*q.A.y + 2*v*u*q.cy + u*u*q.B.y });
+    }
+    return { pts, len:q.len };
+  }
+  function pluck(g, strength, dir, quiet){
+    const t = now();
+    if(t - g.last < 120) return;
+    g.last = t; g.pluckAt = t;
+    g.amp = (dir || 1) * (3 + 9 * strength);
+    sfxPluck(g.len || Math.hypot(pinOf(g.b).x - pinOf(g.a).x, pinOf(g.b).y - pinOf(g.a).y), quiet ? strength * 0.5 : strength);
+    kick();
+  }
+  function cross(p, q, a, b){
+    const d = (q.x - p.x) * (b.y - a.y) - (q.y - p.y) * (b.x - a.x);
+    if(!d) return 0;
+    const u = ((a.x - p.x) * (b.y - a.y) - (a.y - p.y) * (b.x - a.x)) / d;
+    const v = ((a.x - p.x) * (q.y - p.y) - (a.y - p.y) * (q.x - p.x)) / d;
+    return (u >= 0 && u <= 1 && v >= 0 && v <= 1) ? (d > 0 ? 1 : -1) : 0;
+  }
+  function local(e){
+    const r = board.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+
+  /* ---------- pointer: strum, drag ---------- */
+  function onBoardMove(e){
+    if(e.pointerType !== 'mouse') return;
+    const p = local(e);
+    if(drag && drag.id === e.pointerId) moveDrag(e, p);
+    else if(mouse){
+      const speed = Math.hypot(p.x - mouse.x, p.y - mouse.y);
+      if(speed > 0.5){
+        segs.forEach(g=>{
+          if(g.draw || g.a.state !== 'up' || g.b.state !== 'up') return;
+          const { pts, len } = samples(g);
+          g.len = len;
+          for(let i = 1; i < pts.length; i++){
+            const dir = cross(mouse, p, pts[i-1], pts[i]);
+            if(dir){ pluck(g, clamp(speed / 40, 0.2, 1), dir); break; }
+          }
+        });
+      }
+    }
+    mouse = p;
+  }
+  // a tap on (or very near) the string plucks it — the way to play it on touch
+  function onBoardDown(e){
+    if(e.target.closest('.ev-photo, .ev-slot')) return;
+    const p = local(e);
+    let best = null, bd = e.pointerType === 'mouse' ? 10 : 20;
+    segs.forEach(g=>{
+      if(g.draw) return;
+      const { pts, len } = samples(g);
+      g.len = len;
+      pts.forEach(q=>{ const d = Math.hypot(q.x - p.x, q.y - p.y); if(d < bd){ bd = d; best = g; } });
+    });
+    if(best) pluck(best, 0.8, 1);
+  }
+
+  function onPhotoDown(e, s){
+    if(e.pointerType !== 'mouse' || e.button !== 0 || s.state !== 'up') return;
+    e.preventDefault();
+    const p = local(e), pin = pinOf(s);
+    drag = { s, id:e.pointerId, sx:p.x, sy:p.y, offX: pin.x - p.x, offY: pin.y - p.y, moved:false, lx:p.x };
+    try{ s.el.setPointerCapture(e.pointerId); }catch(err){}
+    s.el.addEventListener('pointermove', onCapturedMove);
+    s.el.addEventListener('pointerup', endDrag);
+    s.el.addEventListener('pointercancel', endDrag);
+  }
+  function onCapturedMove(e){ if(drag && drag.id === e.pointerId) moveDrag(e, local(e)); }
+  function moveDrag(e, p){
+    const s = drag.s;
+    if(!drag.moved){
+      if(Math.hypot(p.x - drag.sx, p.y - drag.sy) < 5) return;
+      drag.moved = true;
+      s.el.classList.add('lift');
+      sfxUnpin();
+    }
+    s.fx = (p.x + drag.offX) / W;
+    s.fy = (p.y + drag.offY) / H;
+    // the photo trails behind the hand, swinging out the way it was dragged from
+    s.omega -= (p.x - drag.lx) * 7;
+    drag.lx = p.x;
+    kick();
+  }
+  function endDrag(e){
+    if(!drag || drag.id !== e.pointerId) return;
+    const s = drag.s;
+    s.el.removeEventListener('pointermove', onCapturedMove);
+    s.el.removeEventListener('pointerup', endDrag);
+    s.el.removeEventListener('pointercancel', endDrag);
+    if(drag.moved){
+      s.justDragged = true;
+      setTimeout(()=>{ s.justDragged = false; }, 0);
+      s.el.classList.remove('lift');
+      s.landedAt = now();
+      sfxPin(1);
+      // pinning it again tugs on whatever string is tied to it
+      segs.forEach(g=>{ if(g.a === s || g.b === s){ g.len = 0; if(!g.draw) pluck(g, 0.3, 1, true); } });
+    }
+    drag = null;
+    kick();
+  }
+
+  return { update };
+})();
 
 /* ---------- fan card select (mouse hover + touch drag) ---------- */
 let activeCard = null;
@@ -2954,7 +3534,7 @@ function trashRain(){
 // the background glows a soft red wherever the cursor hovers a
 // card/photo, like the scene is reacting to what you're looking at
 const spotlightEl = document.getElementById('spotlight');
-const SPOTLIGHT_TARGETS = '.cast-card, .card:not(.coming), .stage-photo, .history-row';
+const SPOTLIGHT_TARGETS = '.cast-card, .card:not(.coming), .stage-photo, .ev-photo';
 document.addEventListener('mousemove', (e)=>{
   if(e.target.closest(SPOTLIGHT_TARGETS)){
     spotlightEl.classList.add('show');
@@ -3268,7 +3848,7 @@ const Sfx = (function(){
 
   const LIMIT = 190;                 // drag distance at which the paper gives way
   const IGNORE = 'a,button,input,textarea,select,summary,details,video,iframe,' +
-                 '.card,.fan-wrap,.bgm-panel,.cast-card,.scroll-popup,.overlay,.follow-tag';
+                 '.card,.fan-wrap,.bgm-panel,.cast-card,.scroll-popup,.overlay,.follow-tag,.ev-board';
   let dragging = false, sx = 0, sy = 0;
   let tears = 0, cooling = false;   // keep pulling and it stops being amused
   const pointers = new Map();
@@ -3819,7 +4399,7 @@ function curtainWipe(onMidpoint){
 // custom neon-arrow cursor over tappable elements — idly wiggles like it's
 // nudging you to click if you hover and stay still for a moment
 document.body.classList.add('jscursor');
-const CURSOR_SELECTOR = '.fx-link, .cast-card, .card:not(.coming), .history-row, details.how summary, .seek-track, .ctrl-btn, .scroll-close, .sp-speak, .sp-play, .bgm-head, .bgm-toggle, .bgm-link-row, .bgm-hotspot, .cast-evidence, .bgm-track-open, .bgm-dial-hole, .bgm-dial-close, .bgm-dial-cap, .slot-lever, .slot-stop';
+const CURSOR_SELECTOR = '.fx-link, .cast-card, .card:not(.coming), .ev-photo, .ev-slot, details.how summary, .seek-track, .ctrl-btn, .scroll-close, .sp-speak, .sp-play, .bgm-head, .bgm-toggle, .bgm-link-row, .bgm-hotspot, .cast-evidence, .bgm-track-open, .bgm-dial-hole, .bgm-dial-close, .bgm-dial-cap, .slot-lever, .slot-stop';
 const customCursor = document.getElementById('customCursor');
 const customCursorImg = document.getElementById('customCursorImg');
 let cursorLastMoveAt = Date.now();
